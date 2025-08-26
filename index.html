@@ -661,11 +661,13 @@
                 
                 try {
                     let parts = [];
+                    // Add text to the request
                     if (prompt) {
                         parts.push({ text: `Phân tích nội dung sau và đưa ra đánh giá về độ tin cậy. Dựa trên các tiêu chí: nguồn gốc, tính xác thực của thông tin, và các dấu hiệu của tin giả (như ngôn ngữ giật gân, thiếu tham chiếu). Đưa ra câu trả lời ngắn gọn, trực tiếp, chỉ bao gồm 2 phần: đánh giá về độ tin cậy ("Đánh giá: [nhãn]") và một đoạn giải thích ngắn gọn ("Giải thích: [đoạn văn]"). Sử dụng các nhãn: "Tin thật", "Có thể là tin giả", "Tin giả", "Không đủ thông tin".
 
 Nội dung: ${prompt}` });
                     }
+                    // Add image to the request
                     if (uploadedImageBase64) {
                         parts.push({
                             inlineData: {
