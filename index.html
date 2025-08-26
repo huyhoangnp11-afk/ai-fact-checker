@@ -54,6 +54,16 @@
             border-color: #0f766e; /* border-brand */
             background-color: #f0fdfa; /* teal-50 */
         }
+        /* Draggable styles */
+        .draggable {
+            cursor: grab;
+        }
+        .dropzone {
+            transition: background-color 0.3s ease;
+        }
+        .dropzone.drag-over {
+            background-color: #ccfbf1; /* teal-100 */
+        }
         /* Values Compass */
         .value-card {
             transition: all 0.2s ease-in-out;
@@ -112,6 +122,9 @@
                 <button class="tab-btn whitespace-nowrap py-4 px-2 border-b-2 font-medium text-sm" data-tab="values-compass">La Bàn Giá Trị</button>
                 <button class="tab-btn whitespace-nowrap py-4 px-2 border-b-2 font-medium text-sm" data-tab="narrative-reframer">Tái Tạo Câu Chuyện</button>
                 <button class="tab-btn whitespace-nowrap py-4 px-2 border-b-2 font-medium text-sm" data-tab="habit-lab">Phòng Thí Nghiệm</button>
+                <button class="tab-btn whitespace-nowrap py-4 px-2 border-b-2 font-medium text-sm" data-tab="time-machine">Cỗ Máy Thời Gian</button>
+                <button class="tab-btn whitespace-nowrap py-4 px-2 border-b-2 font-medium text-sm" data-tab="influence-circle">Vòng Tròn Ảnh Hưởng</button>
+                <button class="tab-btn whitespace-nowrap py-4 px-2 border-b-2 font-medium text-sm" data-tab="voices-theater">Nhà Hát Nội Tâm</button>
                 <button class="tab-btn whitespace-nowrap py-4 px-2 border-b-2 font-medium text-sm" data-tab="about">Giới Thiệu</button>
             </nav>
         </div>
@@ -304,6 +317,83 @@
                     <div id="habit-lab-result" class="mt-8 pt-6 border-t border-slate-200 hidden">
                         <div id="habit-lab-loader" class="flex justify-center my-4 hidden"><div class="loader"></div></div>
                         <div id="habit-lab-content" class="space-y-4"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Time Machine Tab -->
+            <section id="time-machine-tab" class="tab-panel hidden">
+                <div class="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-lg border border-slate-200/80">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold text-slate-800">Cỗ Máy Thời Gian Nội Tâm</h2>
+                        <p class="mt-2 text-slate-600">Hãy hình dung về một tương lai nơi vấn đề của bạn đã được giải quyết.</p>
+                    </div>
+                    <div>
+                        <label for="miracle-description" class="block text-sm font-medium text-slate-700 mb-2">"Giả sử đêm nay một phép màu xảy ra. Khi thức dậy, điều gì sẽ khác đi để bạn biết vấn đề đã biến mất?"</label>
+                        <textarea id="miracle-description" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-teal-500 focus:border-teal-500" rows="5" placeholder="Hãy mô tả chi tiết ngày mai của bạn: bạn cảm thấy gì, làm gì, người khác nói gì về bạn..."></textarea>
+                        <button id="get-first-steps-btn" class="w-full mt-4 bg-brand text-white px-8 py-3 rounded-lg font-bold text-lg cta-button hover:bg-teal-800 flex items-center justify-center">
+                            <i data-lucide="footprints" class="w-5 h-5 mr-2"></i>
+                            Tìm Bước Đi Đầu Tiên
+                        </button>
+                    </div>
+                    <div id="time-machine-result" class="mt-8 pt-6 border-t border-slate-200 hidden">
+                        <div id="time-machine-loader" class="flex justify-center my-4 hidden"><div class="loader"></div></div>
+                        <div id="time-machine-content" class="space-y-4"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Influence Circle Tab -->
+            <section id="influence-circle-tab" class="tab-panel hidden">
+                <div class="max-w-5xl mx-auto">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold text-slate-800">Vòng Tròn Ảnh Hưởng</h2>
+                        <p class="mt-2 text-slate-600">Hãy tập trung năng lượng vào những gì bạn có thể kiểm soát.</p>
+                    </div>
+                    <div class="mb-8">
+                        <label for="worry-input" class="block text-sm font-medium text-slate-700 mb-2">Liệt kê những điều khiến bạn lo lắng (mỗi điều một dòng):</label>
+                        <textarea id="worry-input" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-teal-500 focus:border-teal-500" rows="5" placeholder="Thời tiết xấu&#10;Deadline công việc&#10;Suy nghĩ của người khác về tôi"></textarea>
+                        <button id="sort-worries-btn" class="w-full md:w-auto mt-4 bg-brand text-white px-8 py-3 rounded-lg font-bold text-lg cta-button hover:bg-teal-800">Phân Loại</button>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div id="influence-zone" class="dropzone bg-white p-6 rounded-xl shadow-lg border-2 border-dashed border-slate-300 min-h-[200px]">
+                            <h3 class="text-xl font-bold text-center text-brand mb-4">Vòng Tròn Ảnh Hưởng</h3>
+                            <p class="text-center text-sm text-slate-500 mb-4">(Những điều bạn có thể kiểm soát)</p>
+                            <div id="influence-list" class="space-y-2"></div>
+                        </div>
+                        <div id="concern-zone" class="dropzone bg-white p-6 rounded-xl shadow-lg border-2 border-dashed border-slate-300 min-h-[200px]">
+                            <h3 class="text-xl font-bold text-center text-slate-500 mb-4">Vòng Tròn Quan Tâm</h3>
+                             <p class="text-center text-sm text-slate-500 mb-4">(Những điều bạn không thể kiểm soát)</p>
+                            <div id="concern-list" class="space-y-2"></div>
+                        </div>
+                    </div>
+                     <div id="influence-result" class="mt-8 pt-6 border-t border-slate-200 hidden">
+                        <div id="influence-loader" class="flex justify-center my-4 hidden"><div class="loader"></div></div>
+                        <div id="influence-content" class="space-y-4 bg-white p-6 rounded-xl shadow-lg"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Voices Theater Tab -->
+            <section id="voices-theater-tab" class="tab-panel hidden">
+                 <div class="max-w-3xl mx-auto bg-slate-800 text-slate-200 p-8 rounded-xl shadow-lg">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold text-white">Nhà Hát Của Những Giọng Nói</h2>
+                        <p class="mt-2 text-slate-400">Lắng nghe các "phần" bên trong bạn để thấu hiểu những xung đột nội tâm.</p>
+                    </div>
+                    <div>
+                        <label for="situation-input" class="block text-sm font-medium text-slate-300 mb-2">Mô tả một tình huống hoặc cảm xúc khó khăn:</label>
+                        <input type="text" id="situation-input" class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:ring-teal-500 focus:border-teal-500" placeholder="Ví dụ: Khi tôi muốn bắt đầu một dự án mới nhưng lại trì hoãn">
+                        <label for="voices-input" class="block text-sm font-medium text-slate-300 mt-4 mb-2">Những "giọng nói" nào đang vang lên trong đầu bạn? (ngăn cách bởi dấu phẩy)</label>
+                        <input type="text" id="voices-input" class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:ring-teal-500 focus:border-teal-500" placeholder="Ví dụ: Người Phê Bình, Kẻ Lười Biếng, Người Mộng Mơ">
+                        <button id="start-dialogue-btn" class="w-full mt-4 bg-indigo-600 text-white px-8 py-3 rounded-lg font-bold text-lg cta-button hover:bg-indigo-700 flex items-center justify-center">
+                            <i data-lucide="drama" class="w-5 h-5 mr-2"></i>
+                            Bắt Đầu Đối Thoại
+                        </button>
+                    </div>
+                    <div id="theater-result" class="mt-8 pt-6 border-t border-slate-600 hidden">
+                        <div id="theater-loader" class="flex justify-center my-4 hidden"><div class="loader"></div></div>
+                        <div id="theater-content" class="space-y-4 bg-slate-900 p-6 rounded-lg"></div>
                     </div>
                 </div>
             </section>
@@ -831,6 +921,132 @@
                     habitLabLoader.classList.add('hidden');
                 }
             });
+            
+            // --- Time Machine Logic ---
+            const getFirstStepsBtn = document.getElementById('get-first-steps-btn');
+            const miracleDescription = document.getElementById('miracle-description');
+            const timeMachineResult = document.getElementById('time-machine-result');
+            const timeMachineLoader = document.getElementById('time-machine-loader');
+            const timeMachineContent = document.getElementById('time-machine-content');
+
+            if (getFirstStepsBtn) {
+                getFirstStepsBtn.addEventListener('click', async () => {
+                    const description = miracleDescription.value.trim();
+                    if (!description) {
+                        alert('Vui lòng mô tả "ngày phép màu" của bạn.');
+                        return;
+                    }
+                    timeMachineResult.classList.remove('hidden');
+                    timeMachineLoader.classList.remove('hidden');
+                    timeMachineContent.innerHTML = '';
+                    try {
+                        const steps = await callTimeMachineAPI(description);
+                        timeMachineContent.innerHTML = steps.replace(/\n/g, '<br>');
+                    } catch (e) {
+                        timeMachineContent.textContent = 'Đã có lỗi xảy ra.';
+                    } finally {
+                        timeMachineLoader.classList.add('hidden');
+                    }
+                });
+            }
+
+            // --- Influence Circle Logic ---
+            const worryInput = document.getElementById('worry-input');
+            const sortWorriesBtn = document.getElementById('sort-worries-btn');
+            const influenceList = document.getElementById('influence-list');
+            const concernList = document.getElementById('concern-list');
+            const influenceZone = document.getElementById('influence-zone');
+            const concernZone = document.getElementById('concern-zone');
+            const influenceResult = document.getElementById('influence-result');
+            const influenceLoader = document.getElementById('influence-loader');
+            const influenceContent = document.getElementById('influence-content');
+            
+            if (sortWorriesBtn) {
+                sortWorriesBtn.addEventListener('click', () => {
+                    const worries = worryInput.value.split('\n').filter(w => w.trim() !== '');
+                    influenceList.innerHTML = '';
+                    concernList.innerHTML = '';
+                    worries.forEach(worryText => {
+                        const worryEl = document.createElement('div');
+                        worryEl.className = 'draggable bg-slate-100 p-2 rounded border cursor-grab';
+                        worryEl.textContent = worryText;
+                        worryEl.draggable = true;
+                        worryEl.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', worryText));
+                        concernList.appendChild(worryEl); // Start all in concern
+                    });
+                    analyzeInfluence(); // Initial analysis
+                });
+            }
+
+            [influenceZone, concernZone].forEach(zone => {
+                if (zone) {
+                    zone.addEventListener('dragover', e => {
+                        e.preventDefault();
+                        zone.classList.add('drag-over');
+                    });
+                    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+                    zone.addEventListener('drop', e => {
+                        e.preventDefault();
+                        zone.classList.remove('drag-over');
+                        const text = e.dataTransfer.getData('text/plain');
+                        const el = Array.from(document.querySelectorAll('.draggable')).find(d => d.textContent === text);
+                        if (el) {
+                            zone.querySelector('.space-y-2').appendChild(el);
+                            analyzeInfluence();
+                        }
+                    });
+                }
+            });
+
+            async function analyzeInfluence() {
+                const influenceItems = Array.from(influenceList.children).map(el => el.textContent);
+                const concernItems = Array.from(concernList.children).map(el => el.textContent);
+                if (influenceItems.length === 0 && concernItems.length === 0) {
+                    influenceResult.classList.add('hidden');
+                    return;
+                }
+                influenceResult.classList.remove('hidden');
+                influenceLoader.classList.remove('hidden');
+                influenceContent.innerHTML = '';
+                try {
+                    const analysis = await callInfluenceCircleAPI(influenceItems, concernItems);
+                    influenceContent.innerHTML = analysis.replace(/\n/g, '<br>');
+                } catch(e) {
+                    influenceContent.textContent = 'Đã có lỗi xảy ra.';
+                } finally {
+                    influenceLoader.classList.add('hidden');
+                }
+            }
+
+            // --- Voices Theater Logic ---
+            const startDialogueBtn = document.getElementById('start-dialogue-btn');
+            const situationInput = document.getElementById('situation-input');
+            const voicesInput = document.getElementById('voices-input');
+            const theaterResult = document.getElementById('theater-result');
+            const theaterLoader = document.getElementById('theater-loader');
+            const theaterContent = document.getElementById('theater-content');
+
+            if (startDialogueBtn) {
+                startDialogueBtn.addEventListener('click', async () => {
+                    const situation = situationInput.value.trim();
+                    const voices = voicesInput.value.trim();
+                    if (!situation || !voices) {
+                        alert('Vui lòng nhập đủ tình huống và các giọng nói.');
+                        return;
+                    }
+                    theaterResult.classList.remove('hidden');
+                    theaterLoader.classList.remove('hidden');
+                    theaterContent.innerHTML = '';
+                    try {
+                        const dialogue = await callVoicesTheaterAPI(situation, voices);
+                        theaterContent.innerHTML = dialogue.replace(/\n/g, '<br>');
+                    } catch(e) {
+                        theaterContent.textContent = 'Đã có lỗi xảy ra.';
+                    } finally {
+                        theaterLoader.classList.add('hidden');
+                    }
+                });
+            }
         });
         
         // --- All API call functions and helpers ---
@@ -1039,7 +1255,7 @@ Hãy đưa ra các ví dụ rất cụ thể liên quan trực tiếp đến th�
         }
 
         async function callGenericAPI(systemPrompt, userQuery) {
-            const apiKey = "AIzaSyBNwWO78tsZQ5ImgbQps6zUYHedSc-PaMI"; 
+            const apiKey = ""; 
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
             const payload = {
                 contents: [{ parts: [{ text: userQuery }] }],
@@ -1061,4 +1277,3 @@ Hãy đưa ra các ví dụ rất cụ thể liên quan trực tiếp đến th�
     </script>
 </body>
 </html>
-
