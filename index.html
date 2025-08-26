@@ -1,859 +1,1063 @@
 <!DOCTYPE html>
-<html lang="vi" class="scroll-smooth">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phân Tích Tương Tác: AI và Cuộc Chiến Chống Tin Giả trên Facebook</title>
-    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/vi_VN/sdk.js#xfbml=1&version=v17.0&appId=YOUR_APP_ID&autoLogAppEvents=1" nonce="aK8lW2bX"></script>
+    <title>Momentum Coaching - Lộ Trình Phân Tâm Học</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: Nature-Inspired Greens -->
-    <!-- Application Structure Plan: Ứng dụng được cấu trúc lại để phần Công cụ AI lên đầu, giúp người dùng tương tác ngay lập tức. Sau đó là các phần lý thuyết để người dùng tìm hiểu sâu hơn. Cấu trúc mới là: Giới thiệu -> Công cụ AI -> Các chủ đề chính (Hiểu về Tin giả, Các tác nhân, Công nghệ, Thách thức, Giải pháp). Cấu trúc này sử dụng các thẻ tab, sơ đồ trực quan và biểu đồ để tăng tính tương tác và khả năng tiếp thu thông tin. -->
-    <!-- Visualization & Content Choices: 1. Các loại tin giả (Mục tiêu: Tổ chức) -> Dùng các nút bấm tương tác để hiển thị định nghĩa, giúp cô đọng thông tin. 2. Các tác nhân (Mục tiêu: Tổ chức) -> Dùng layout dạng sơ đồ (HTML/CSS) để trực quan hóa mối quan hệ giữa các bên. 3. Tốc độ lan truyền (Mục tiêu: So sánh) -> Dùng biểu đồ cột (Chart.js) để làm nổi bật sự chênh lệch giữa tin giả và tin thật. 4. So sánh phương pháp AI (Mục tiêu: So sánh) -> Dùng bảng HTML để trình bày thông tin một cách có cấu trúc. 5. Các thách thức (Mục tiêu: Thông báo) -> Dùng layout thẻ (card) để trình bày các vấn đề phức tạp một cách rõ ràng. 6. Khuyến nghị (Mục tiêu: Thông báo -> Dùng accordion để nhóm các khuyến nghị cho từng đối tượng, giúp giao diện gọn gàng. Tất cả đều tuân thủ nguyên tắc không dùng SVG/Mermaid. -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
     <style>
+        /* Custom styles */
         body {
             font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-100 */
+            color: #334155;
         }
-        .nav-link {
-            transition: color 0.3s, border-bottom-color 0.3s;
+        .text-brand { color: #0f766e; }
+        .bg-brand { background-color: #0f766e; }
+        .bg-brand-light { background-color: #ccfbf1; }
+        .cta-button {
+            transition: all 0.3s ease;
         }
-        .nav-link:hover, .nav-link.active {
-            color: #0E7490; /* cyan-600 */
-            border-bottom-color: #0E7490;
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px -5px rgba(15, 118, 110, 0.25);
         }
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 700px;
-            margin-left: auto;
-            margin-right: auto;
-            height: 300px;
-            max-height: 400px;
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0f766e;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
         }
-        @media (min-width: 768px) {
-            .chart-container {
-                height: 400px;
-            }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-        .content-card, .actor-card, .challenge-card {
-            transition: transform 0.3s, box-shadow 0.3s;
+        /* Tab Styles */
+        .tab-btn {
+            transition: all 0.3s ease;
         }
-        .content-card:hover, .actor-card:hover, .challenge-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        .tab-btn.active {
+            color: #0f766e; /* text-brand */
+            border-color: #0f766e; /* border-brand */
+            background-color: #f0fdfa; /* teal-50 */
         }
-        .accordion-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.5s ease-in-out;
+        /* Values Compass */
+        .value-card {
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
         }
-
-        /* Light Mode Styles */
-        body {
-            background-color: #F5F5F4;
-            color: #1C1917;
+        .value-card.selected {
+            transform: scale(1.05);
+            background-color: #ccfbf1; /* teal-100 */
+            border-color: #0f766e; /* teal-700 */
         }
-        .bg-white { background-color: #ffffff; }
-        .bg-gray-200 { background-color: #E5E7EB; }
-        .text-gray-800 { color: #1F2937; }
-        .text-gray-600 { color: #4B5563; }
-        .text-gray-500 { color: #6B7280; }
-        .text-cyan-700 { color: #0E7490; }
-        .text-cyan-800 { color: #064E6C; }
-        .text-blue-600 { color: #2563EB; }
-        .text-emerald-600 { color: #059669; }
-        .text-red-500 { color: #EF4444; }
-        .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
-
-        /* Dark Mode Styles */
-        body.dark {
-            background-color: #121212;
-            color: #E0E0E0;
-        }
-        .dark .bg-white { background-color: #1E1E1E; }
-        .dark .bg-gray-200 { background-color: #333333; }
-        .dark .bg-gray-800 { background-color: #1E1E1E; }
-        .dark .text-gray-800 { color: #E0E0E0; }
-        .dark .text-gray-600 { color: #A0A0A0; }
-        .dark .text-gray-500 { color: #888888; }
-        .dark .text-cyan-700 { color: #40c0f0; }
-        .dark .text-cyan-800 { color: #67E8F9; }
-        .dark .text-blue-600 { color: #63b1ff; }
-        .dark .text-emerald-600 { color: #2dd4bf; }
-        .dark .text-red-500 { color: #ef6461; }
-        .dark .shadow-lg { box-shadow: 0 10px 15px -3px rgba(255, 255, 255, 0.05), 0 4px 6px -2px rgba(255, 255, 255, 0.05); }
+        /* Other feature styles */
+        #game-board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+        .game-card { aspect-ratio: 1 / 1; perspective: 1000px; cursor: pointer; }
+        .card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; }
+        .game-card.is-flipped .card-inner { transform: rotateY(180deg); }
+        .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; border-radius: 0.75rem; }
+        .card-front { background-color: #ccfbf1; }
+        .card-back { background-color: #fff; border: 2px solid #0f766e; transform: rotateY(180deg); }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        .belief-stone { transition: all 0.5s ease; background-color: #334155; border: 2px solid #475569; animation: pulse-dark 3s infinite; }
+        @keyframes pulse-dark { 0%, 100% { box-shadow: 0 0 0 0 rgba(51, 65, 85, 0.4); } 50% { box-shadow: 0 0 15px 5px rgba(51, 65, 85, 0.1); } }
+        .belief-stone.healed { background: radial-gradient(circle, #ecfdf5, #d1fae5); border-color: #10b981; animation: pulse-light 2s infinite; }
+        @keyframes pulse-light { 0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 50% { box-shadow: 0 0 20px 10px rgba(16, 185, 129, 0.1); } }
+        .energy-meter-bg { stroke: #e2e8f0; }
+        .energy-meter-fg { stroke: #f59e0b; transition: stroke-dashoffset 0.5s ease-out; transform: rotate(-90deg); transform-origin: 50% 50%; }
+        #cosmos-modal-content { background: #0f172a; background-image: radial-gradient(white 0.5px, transparent 0.5px), radial-gradient(white 0.5px, transparent 0.5px); background-size: 20px 20px, 40px 40px; background-position: 0 0, 10px 10px; overflow: hidden; }
+        .stardust { position: absolute; background-color: white; border-radius: 50%; animation: float-up 3s ease-out forwards; }
+        @keyframes float-up { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(-150px) scale(0.5); } }
+        .flower { font-size: 2rem; transition: transform 0.3s ease; cursor: pointer; }
+        .flower:hover { transform: scale(1.2); }
     </style>
 </head>
-<body class="antialiased">
+<body>
 
-    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
-        <nav class="container mx-auto px-6 py-4">
-            <div class="flex items-center justify-between">
-                <div class="text-xl font-bold text-cyan-700">AI Chống Tin Giả</div>
-                <div class="hidden md:flex items-center space-x-8">
-                    <a href="#problem" class="nav-link border-b-2 border-transparent pb-1">Vấn Đề</a>
-                    <a href="#actors" class="nav-link border-b-2 border-transparent pb-1">Các Tác Nhân</a>
-                    <a href="#technology" class="nav-link border-b-2 border-transparent pb-1">Công Nghệ</a>
-                    <a href="#interactive" class="nav-link border-b-2 border-transparent pb-1">Công Cụ AI</a>
-                    <a href="#challenges" class="nav-link border-b-2 border-transparent pb-1">Thách Thức</a>
-                    <a href="#solutions" class="nav-link border-b-2 border-transparent pb-1">Giải Pháp</a>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <button id="dark-mode-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition">
-                        <span id="dark-mode-icon" class="text-xl">🌙</span>
-                    </button>
-                    <div id="login-status" class="flex items-center space-x-2">
-                        <button id="fb-login-btn" class="bg-blue-600 text-white px-4 py-2 rounded-full font-semibold hover:bg-blue-700 transition">Đăng nhập với Facebook</button>
-                    </div>
-                </div>
-            </div>
-        </nav>
+    <!-- Header -->
+    <header class="bg-white/80 backdrop-blur-lg shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#" class="flex items-center gap-2 text-2xl font-bold text-brand">
+                <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 18L8 10L12 14L16 6L20 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Momentum</span>
+            </a>
+        </div>
     </header>
 
-    <main class="container mx-auto px-6 py-12">
-        
-        <section id="hero" class="text-center mb-24">
-            <h1 class="text-4xl md:text-5xl font-bold text-cyan-800 mb-4">Cuộc Chiến Chống Tin Giả</h1>
-            <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-                Một phân tích tương tác về cách Trí Tuệ Nhân Tạo (AI) được sử dụng để phát hiện và kiểm soát thông tin sai lệch trên nền tảng Facebook.
-            </p>
-        </section>
+    <main class="container mx-auto p-4 md:p-8">
+        <!-- Tab Navigation -->
+        <div class="mb-8 border-b border-slate-200 overflow-x-auto">
+            <nav id="tab-nav" class="-mb-px flex space-x-6" aria-label="Tabs">
+                <button class="tab-btn active whitespace-nowrap py-4 px-2 border-b-2 font-medium text-sm" data-tab="analysis">Phân Tích</button>
+                <button class="tab-btn whitespace-nowrap py-4 px-2 border-b-2 font-medium text-sm" data-tab="temple">Ngôi Đền</button>
+                <button class="tab-btn whitespace-nowrap py-4 px-2 border-b-2 font-medium text-sm" data-tab="shadow">Bóng Tối</button>
+                <button class="tab-btn whitespace-nowrap py-4 px-2 border-b-2 font-medium text-sm" data-tab="garden">Khu Vườn</button>
+                <button class="tab-btn whitespace-nowrap py-4 px-2 border-b-2 font-medium text-sm" data-tab="values-compass">La Bàn Giá Trị</button>
+                <button class="tab-btn whitespace-nowrap py-4 px-2 border-b-2 font-medium text-sm" data-tab="narrative-reframer">Tái Tạo Câu Chuyện</button>
+                <button class="tab-btn whitespace-nowrap py-4 px-2 border-b-2 font-medium text-sm" data-tab="habit-lab">Phòng Thí Nghiệm</button>
+                <button class="tab-btn whitespace-nowrap py-4 px-2 border-b-2 font-medium text-sm" data-tab="about">Giới Thiệu</button>
+            </nav>
+        </div>
 
-        <section id="interactive" class="mb-24 scroll-mt-20">
-            <h2 class="text-3xl font-bold text-center mb-4">Bộ Công Cụ AI Chống Tin Giả ✨</h2>
-            <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">
-                Sử dụng các công cụ AI được cung cấp dưới đây để kiểm tra thông tin hoặc tìm ý tưởng chiến lược.
-            </p>
-
-            <div class="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-lg">
-                <div class="flex border-b border-gray-200">
-                    <button data-tab="fact-check" class="tab-btn active px-4 py-2 font-semibold border-b-2 border-cyan-500 hover:border-cyan-500 focus:outline-none transition">
-                        Kiểm Tra Thông Tin
-                    </button>
-                    <button data-tab="brainstorm" class="tab-btn px-4 py-2 font-semibold border-b-2 border-transparent hover:border-cyan-500 focus:outline-none transition">
-                        Gợi Ý Chiến Lược
-                    </button>
-                </div>
-                
-                <div id="fact-check-tab" class="tab-content mt-8">
-                    <textarea id="text-input" rows="6" class="w-full p-4 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500 mb-4" placeholder="Nhập văn bản cần kiểm chứng hoặc dán đường dẫn (URL) tại đây..."></textarea>
-                    
-                    <div class="flex flex-col md:flex-row justify-center items-center gap-4 mb-4">
-                        <label class="bg-gray-200 text-gray-800 px-6 py-2 rounded-full font-semibold cursor-pointer hover:bg-gray-300 transition flex items-center space-x-2">
-                            <span class="text-xl">🖼️</span>
-                            <span>Tải hình ảnh lên</span>
-                            <input type="file" id="image-upload" class="hidden" accept="image/*">
-                        </label>
-                        <div id="image-preview" class="hidden w-20 h-20 rounded-lg overflow-hidden border-2 border-gray-300">
-                            <img id="preview-image" src="" alt="Image preview" class="w-full h-full object-cover">
+        <!-- Tab Content Panels -->
+        <div id="tab-content">
+            <!-- Analysis Tab -->
+            <section id="analysis-tab" class="tab-panel">
+                <div class="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-lg border border-slate-200/80">
+                    <div class="text-center mb-8">
+                        <h1 class="text-3xl md:text-4xl font-extrabold text-slate-800 leading-tight">Phân Tích Mục Tiêu</h1>
+                        <p class="mt-4 text-slate-600">Mục tiêu của bạn không chỉ là một mong muốn. Nó là biểu hiện của những động lực sâu thẳm bên trong.</p>
+                    </div>
+                    <div class="space-y-6">
+                        <div>
+                            <label for="goal-input" class="block text-sm font-medium text-slate-700 mb-2">Mục tiêu của bạn là gì?</label>
+                            <input type="text" id="goal-input" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-teal-500 focus:border-teal-500" placeholder="Ví dụ: Tôi muốn tự tin hơn khi thuyết trình">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Lĩnh vực:</label>
+                            <select id="goal-category" class="w-full px-4 py-3 border border-slate-300 rounded-lg bg-white focus:ring-teal-500 focus:border-teal-500">
+                                <option value="Life Coach">Cuộc sống & Sự nghiệp</option>
+                                <option value="Study Coach">Học tập & Phát triển</option>
+                                <option value="Finance Coach">Tài chính & Tự chủ</option>
+                            </select>
+                        </div>
+                        <div>
+                            <button id="generate-plan-btn" class="w-full bg-brand text-white px-8 py-3 rounded-lg font-bold text-lg cta-button hover:bg-teal-800 flex items-center justify-center">
+                                <i data-lucide="search" class="w-5 h-5 mr-2"></i>
+                                Bắt Đầu Phân Tích
+                            </button>
                         </div>
                     </div>
+                    <div id="ai-result" class="mt-8 pt-6 border-t border-slate-200" style="display: none;">
+                        <div id="loader" class="flex justify-center my-4" style="display: none;"><div class="loader"></div></div>
+                        <div id="plan-content" class="text-slate-700 space-y-4 leading-relaxed"></div>
+                    </div>
+                </div>
+                <!-- Memory Game Section -->
+                <section id="memory-game" class="max-w-3xl mx-auto mt-8 hidden">
+                    <div class="bg-white p-8 rounded-xl shadow-lg border border-slate-200/80 text-center">
+                        <h2 class="text-2xl md:text-3xl font-bold text-slate-800">Bài Tập Ghi Nhớ</h2>
+                        <p class="mt-2 text-slate-600">Biểu tượng của bạn đã được ẩn giấu. Hãy tìm tất cả chúng, nhưng hãy cẩn thận với cạm bẫy.</p>
+                        <div id="game-container" class="max-w-lg mx-auto mt-8">
+                            <div id="game-board" class="mb-6"></div>
+                            <p id="game-status" class="text-lg font-semibold text-brand h-8"></p>
+                        </div>
+                    </div>
+                </section>
+            </section>
 
-                    <div class="flex justify-center">
-                        <button id="analyze-btn" class="bg-blue-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-blue-700 transition flex items-center justify-center space-x-2">
-                            <span>Phân tích</span> ✨
+            <!-- Temple Tab -->
+            <section id="temple-tab" class="tab-panel hidden">
+                <div class="max-w-5xl mx-auto">
+                    <div class="text-center mb-12">
+                        <h1 class="text-3xl md:text-4xl font-bold text-slate-800">Ngôi Đền Niềm Tin</h1>
+                        <p class="mt-4 text-slate-600 max-w-2xl mx-auto">
+                            Bạn không đơn độc. Hãy gửi niềm tin giới hạn của bạn về với vũ trụ, và thắp sáng con đường cho những người khác.
+                        </p>
+                    </div>
+                    <!-- Submission Form -->
+                    <div class="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow-lg border border-slate-200/80 mb-12">
+                        <textarea id="belief-input" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 resize-none" rows="3" placeholder="Ví dụ: Tôi sợ mình không đủ giỏi..."></textarea>
+                        <button id="submit-belief-btn" class="w-full mt-4 bg-indigo-600 text-white px-8 py-3 rounded-lg font-bold text-lg cta-button hover:bg-indigo-700 flex items-center justify-center">
+                            <i data-lucide="sparkles" class="w-5 h-5 mr-2"></i>
+                            Gửi Về Vũ Trụ
                         </button>
                     </div>
-
-                    <div id="result-display" class="mt-8 p-4 border rounded-lg text-center hidden">
-                        <p id="result-emoji" class="text-5xl mb-2">🤔</p>
-                        <p id="result-text" class="text-lg font-semibold text-gray-800">Đang phân tích...</p>
-                        <p id="result-explanation" class="text-gray-600 mt-2 italic hidden"></p>
+                    <!-- Beliefs Display -->
+                    <div id="beliefs-container" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Belief cards will be inserted here by JS -->
                     </div>
                 </div>
-
-                <div id="brainstorm-tab" class="tab-content hidden mt-8">
-                    <input type="text" id="topic-input" class="w-full p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 mb-4" placeholder="Ví dụ: trong cộng đồng, cho thanh thiếu niên,...">
-                    <div class="flex justify-center">
-                        <button id="brainstorm-btn" class="bg-emerald-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-emerald-700 transition flex items-center justify-center space-x-2">
-                            <span>Gợi ý ý tưởng</span> ✨
+            </section>
+            
+            <!-- Shadow Journey Tab -->
+            <section id="shadow-tab" class="tab-panel hidden">
+                 <div id="shadow-journey" class="max-w-3xl mx-auto bg-slate-800 text-slate-200 p-8 rounded-xl shadow-lg">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold text-white">Hành Trình Đối Diện "Bóng Tối"</h2>
+                        <p class="mt-2 text-slate-400">Khám phá những phần bị chối bỏ của bản thân để trở nên toàn diện hơn.</p>
+                    </div>
+                    <div id="shadow-step-1">
+                        <label for="shadow-input" class="block text-sm font-medium text-slate-300 mb-2">Mô tả một đặc điểm ở người khác khiến bạn cực kỳ khó chịu:</label>
+                        <input type="text" id="shadow-input" class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:ring-teal-500 focus:border-teal-500" placeholder="Ví dụ: Sự khoe khoang, tính ích kỷ, sự yếu đuối...">
+                        <button id="analyze-shadow-btn" class="w-full mt-4 bg-indigo-600 text-white px-8 py-3 rounded-lg font-bold text-lg cta-button hover:bg-indigo-700 flex items-center justify-center">
+                            <i data-lucide="eye" class="w-5 h-5 mr-2"></i>
+                            Nhìn Vào "Bóng Tối"
                         </button>
                     </div>
-                    <div id="brainstorm-result" class="mt-8 hidden">
-                        <h3 class="font-bold text-xl mb-4">Những Ý Tưởng Dành Cho Bạn:</h3>
-                        <ul id="idea-list" class="list-disc list-inside space-y-2 text-gray-700">
-                            <li class="italic text-center text-gray-600">Đang tạo ý tưởng...</li>
-                        </ul>
+                    <div id="shadow-step-2" class="hidden">
+                        <div id="shadow-loader" class="flex justify-center my-4 hidden"><div class="loader"></div></div>
+                        <div id="shadow-analysis-content" class="space-y-4"></div>
+                        <div id="shadow-choices" class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+                    </div>
+                    <div id="shadow-step-3" class="hidden">
+                         <div id="shadow-conclusion-loader" class="flex justify-center my-4 hidden"><div class="loader"></div></div>
+                         <div id="shadow-conclusion-content" class="space-y-4"></div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <section id="problem" class="mb-24 scroll-mt-20">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-3xl font-bold">Hiểu Về "Rối Loạn Thông Tin"</h2>
-                <button id="listen-problem" class="text-cyan-700 hover:text-cyan-900 transition flex items-center space-x-1 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
-                    <span class="text-xl">🔊</span>
-                    <span class="hidden md:inline-block">Nghe bài viết</span>
-                </button>
-            </div>
-            <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">
-                "Tin giả" chỉ là một phần của một vấn đề lớn hơn. Để chống lại nó, trước tiên chúng ta cần hiểu rõ các loại thông tin sai lệch khác nhau. Hãy nhấp vào từng thuật ngữ để khám phá định nghĩa và đặc điểm của chúng.
-            </p>
-            <div class="flex flex-wrap justify-center gap-4 mb-8">
-                <button data-type="misinformation" class="info-btn bg-cyan-600 text-white px-6 py-2 rounded-full font-semibold shadow-md hover:bg-cyan-700 transition">Misinformation</button>
-                <button data-type="disinformation" class="info-btn bg-gray-200 text-gray-800 px-6 py-2 rounded-full font-semibold hover:bg-gray-300 transition">Disinformation</button>
-                <button data-type="malinformation" class="info-btn bg-gray-200 text-gray-800 px-6 py-2 rounded-full font-semibold hover:bg-gray-300 transition">Malinformation</button>
-            </div>
-            <div id="info-display" class="max-w-4xl mx-auto">
-            </div>
-        </section>
+            <!-- Gratitude Garden Tab -->
+            <section id="garden-tab" class="tab-panel hidden">
+                <div id="gratitude-garden" class="max-w-5xl mx-auto">
+                    <div class="text-center mb-12">
+                        <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Khu Vườn Lòng Biết Ơn</h2>
+                        <p class="mt-4 text-slate-600 max-w-2xl mx-auto">
+                            Mỗi ngày, hãy gieo một hạt giống biết ơn. Cùng nhau, chúng ta tạo nên một không gian rực rỡ và chữa lành.
+                        </p>
+                    </div>
+                    <div class="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow-lg border border-slate-200/80 mb-12">
+                        <textarea id="gratitude-input" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 resize-none" rows="3" placeholder="Hôm nay tôi biết ơn vì..."></textarea>
+                        <button id="add-gratitude-btn" class="w-full mt-4 bg-emerald-600 text-white px-8 py-3 rounded-lg font-bold text-lg cta-button hover:bg-emerald-700 flex items-center justify-center">
+                            <i data-lucide="sprout" class="w-5 h-5 mr-2"></i>
+                            Gieo Hạt
+                        </button>
+                    </div>
+                    <div id="garden-container" class="bg-white p-8 rounded-xl shadow-lg border border-slate-200/80 grid grid-cols-5 md:grid-cols-10 gap-4">
+                        <!-- Flowers will be planted here -->
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Values Compass Tab -->
+            <section id="values-compass-tab" class="tab-panel hidden">
+                 <div class="max-w-5xl mx-auto">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold text-slate-800">La Bàn Giá Trị</h2>
+                        <p class="mt-2 text-slate-600">Chọn 5 giá trị quan trọng nhất với bạn để xác định kim chỉ nam cho hành động.</p>
+                    </div>
+                    <div id="values-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <!-- Value cards will be inserted here -->
+                    </div>
+                     <div class="text-center mt-8">
+                        <button id="analyze-values-btn" class="bg-brand text-white px-8 py-3 rounded-lg font-bold text-lg cta-button hover:bg-teal-800 disabled:bg-slate-400 disabled:cursor-not-allowed" disabled>
+                            Phân Tích La Bàn (<span id="values-counter">0</span>/5)
+                        </button>
+                    </div>
+                     <div id="values-result" class="mt-8 pt-6 border-t border-slate-200 hidden">
+                        <div id="values-loader" class="flex justify-center my-4 hidden"><div class="loader"></div></div>
+                        <div id="values-content" class="space-y-4 max-w-3xl mx-auto bg-white p-6 rounded-xl shadow-lg"></div>
+                    </div>
+                </div>
+            </section>
 
-        <section id="actors" class="mb-24 scroll-mt-20">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-3xl font-bold">Cuộc Chiến Đa Mặt</h2>
-                <button id="listen-actors" class="text-cyan-700 hover:text-cyan-900 transition flex items-center space-x-1 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
-                    <span class="text-xl">🔊</span>
-                    <span class="hidden md:inline-block">Nghe bài viết</span>
-                </button>
-            </div>
-            <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">
-                Chống tin giả là một nỗ lực tập thể. Nhiều tác nhân, từ nền tảng công nghệ đến chính phủ và chính người dùng, đều đóng một vai trò quan trọng trong hệ sinh thái phức tạp này.
-            </p>
-            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div class="actor-card bg-white p-6 rounded-lg shadow-lg border-t-4 border-cyan-500">
-                    <h3 class="text-xl font-bold mb-2">Nền tảng Meta (Facebook)</h3>
-                    <p class="text-gray-600">Sử dụng mô hình lai "AI + Con người" với chiến lược 3 trụ cột: Gỡ bỏ, Giảm bớt, và Thông báo. AI quét nội dung, sau đó chuyển cho các đối tác kiểm chứng độc lập.</p>
+            <!-- Narrative Reframer Tab -->
+            <section id="narrative-reframer-tab" class="tab-panel hidden">
+                <div class="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-lg border border-slate-200/80">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold text-slate-800">Người Kể Chuyện Tái Tạo</h2>
+                        <p class="mt-2 text-slate-600">Thay đổi câu chuyện bạn tự kể về mình để thay đổi cuộc đời.</p>
+                    </div>
+                    <div class="space-y-4">
+                        <label for="problem-story-input" class="block text-sm font-medium text-slate-700">Viết ra "câu chuyện có vấn đề" về bản thân bạn:</label>
+                        <textarea id="problem-story-input" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-teal-500 focus:border-teal-500" rows="6" placeholder="Ví dụ: Tôi luôn là người bỏ cuộc giữa chừng. Mỗi khi bắt đầu một dự án mới, tôi rất hào hứng, nhưng chỉ được một thời gian là lại nản lòng và tìm lý do để dừng lại..."></textarea>
+                        <button id="reframe-story-btn" class="w-full bg-brand text-white px-8 py-3 rounded-lg font-bold text-lg cta-button hover:bg-teal-800">
+                            <i data-lucide="pen-tool" class="w-5 h-5 mr-2"></i>
+                            Viết Lại Câu Chuyện
+                        </button>
+                    </div>
+                    <div id="narrative-result" class="mt-8 pt-6 border-t border-slate-200 hidden">
+                        <div id="narrative-loader" class="flex justify-center my-4 hidden"><div class="loader"></div></div>
+                        <div id="narrative-content" class="space-y-4 bg-teal-50 p-6 rounded-lg"></div>
+                    </div>
                 </div>
-                <div class="actor-card bg-white p-6 rounded-lg shadow-lg border-t-4 border-teal-500">
-                    <h3 class="text-xl font-bold mb-2">Đối Tác Kiểm Chứng (IFCN)</h3>
-                    <p class="text-gray-600">Các tổ chức độc lập, được Mạng lưới Kiểm chứng Thông tin Quốc tế (IFCN) chứng nhận, chịu trách nhiệm xem xét và dán nhãn độ tin cậy cho nội dung.</p>
-                </div>
-                <div class="actor-card bg-white p-6 rounded-lg shadow-lg border-t-4 border-amber-500">
-                    <h3 class="text-xl font-bold mb-2">Cộng Đồng Người Dùng</h3>
-                    <p class="text-gray-600">Đóng vai trò là tuyến phòng thủ đầu tiên bằng cách báo cáo các nội dung nghi ngờ. Tín hiệu từ người dùng là một nguồn dữ liệu quan trọng cho hệ thống AI.</p>
-                </div>
-                <div class="actor-card bg-white p-6 rounded-lg shadow-lg border-t-4 border-red-500">
-                    <h3 class="text-xl font-bold mb-2">Cơ Quan Nhà Nước (VAFC)</h3>
-                    <p class="text-gray-600">Tại Việt Nam, Trung tâm Xử lý Tin giả (VAFC) tiếp nhận, thẩm định và công bố tin giả, theo triết lý "con người là trung tâm" trong việc xác thực thông tin.</p>
-                </div>
-            </div>
-        </section>
+            </section>
 
-        <section id="technology" class="mb-24 scroll-mt-20">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-3xl font-bold">Sức Mạnh Của AI</h2>
-                <button id="listen-technology" class="text-cyan-700 hover:text-cyan-900 transition flex items-center space-x-1 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
-                    <span class="text-xl">🔊</span>
-                    <span class="hidden md:inline-block">Nghe bài viết</span>
-                </button>
-            </div>
-            <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">
-                Trí tuệ nhân tạo là công cụ cốt lõi trong việc phát hiện tin giả ở quy mô lớn. Các thuật toán không chỉ phân tích nội dung mà còn cả cách thức thông tin lan truyền trên mạng xã hội để tìm ra những dấu hiệu bất thường.
-            </p>
-            <div class="bg-white p-8 rounded-lg shadow-lg mb-12">
-                <h3 class="text-2xl font-bold text-center mb-4">Tin Giả Lan Nhanh Hơn Tin Thật</h3>
-                <p class="text-center text-gray-600 mb-8">Nghiên cứu cho thấy thông tin sai lệch có xu hướng lan truyền nhanh và rộng hơn đáng kể so với tin tức xác thực. Biểu đồ dưới đây minh họa tốc độ lan truyền tương đối.</p>
-                <div class="chart-container">
-                    <canvas id="speedChart"></canvas>
+            <!-- Habit Lab Tab -->
+            <section id="habit-lab-tab" class="tab-panel hidden">
+                <div class="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-lg border border-slate-200/80">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold text-slate-800">Phòng Thí Nghiệm Thói Quen</h2>
+                        <p class="mt-2 text-slate-600">Sử dụng khoa học hành vi để thiết kế cuộc sống bạn mong muốn.</p>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <label class="p-4 border rounded-lg cursor-pointer has-[:checked]:bg-teal-50 has-[:checked]:border-brand">
+                                <input type="radio" name="habit-mode" value="build" class="sr-only" checked>
+                                <span class="font-bold text-lg text-emerald-600">Xây Dựng Thói Quen Tốt</span>
+                            </label>
+                             <label class="p-4 border rounded-lg cursor-pointer has-[:checked]:bg-red-50 has-[:checked]:border-red-600">
+                                <input type="radio" name="habit-mode" value="break" class="sr-only">
+                                <span class="font-bold text-lg text-red-600">Phá Bỏ Thói Quen Xấu</span>
+                            </label>
+                        </div>
+                        <input type="text" id="habit-input" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-teal-500 focus:border-teal-500" placeholder="Nhập thói quen bạn muốn thay đổi...">
+                        <button id="analyze-habit-btn" class="w-full bg-brand text-white px-8 py-3 rounded-lg font-bold text-lg cta-button hover:bg-teal-800">Tạo Kế Hoạch</button>
+                    </div>
+                    <div id="habit-lab-result" class="mt-8 pt-6 border-t border-slate-200 hidden">
+                        <div id="habit-lab-loader" class="flex justify-center my-4 hidden"><div class="loader"></div></div>
+                        <div id="habit-lab-content" class="space-y-4"></div>
+                    </div>
                 </div>
-            </div>
+            </section>
 
-            <div class="bg-white p-8 rounded-lg shadow-lg">
-                <h3 class="text-2xl font-bold text-center mb-8">So Sánh Các Phương Pháp AI</h3>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phương pháp</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ưu điểm</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hạn chế</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap font-medium">Phân tích Nội dung (NLP)</td>
-                                <td class="px-6 py-4">Xử lý nhanh khối lượng lớn văn bản, phát hiện các mẫu ngôn ngữ phức tạp.</td>
-                                <td class="px-6 py-4">Khó khăn với châm biếm, ẩn ý. Dễ bị qua mặt bởi tin giả được viết tốt.</td>
-                            </tr>
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap font-medium">Phân tích Mạng lưới (GNNs)</td>
-                                <td class="px-6 py-4">Phát hiện hành vi lan truyền bất thường, hiệu quả với các chiến dịch có tổ chức.</td>
-                                <td class="px-6 py-4">Phức tạp, yêu cầu dữ liệu mạng lưới chi tiết và mô hình hóa theo thời gian.</td>
-                            </tr>
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap font-medium">Phát hiện Deepfake</td>
-                                <td class="px-6 py-4">Nhận diện các dấu hiệu giả mạo kỹ thuật trong hình ảnh, video, âm thanh.</td>
-                                <td class="px-6 py-4">Cuộc chạy đua vũ trang: dễ bị qua mặt bởi các công nghệ deepfake mới.</td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <!-- About Tab -->
+            <section id="about-tab" class="tab-panel hidden">
+                <div class="max-w-5xl mx-auto bg-white p-8 md:p-12 rounded-xl shadow-lg border border-slate-200/80">
+                    <!-- Process Section -->
+                    <div id="process" class="mb-16">
+                        <div class="text-center mb-12">
+                            <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Lộ Trình Coaching</h2>
+                            <p class="mt-4 text-slate-600 max-w-2xl mx-auto">
+                                Một lộ trình được thiết kế để thấu hiểu sâu sắc và mang lại kết quả thực tế cho bạn.
+                            </p>
+                        </div>
+                        <div class="grid md:grid-cols-3 gap-8 text-center">
+                           <div class="relative">
+                                <div class="bg-brand-light rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6">
+                                   <span class="text-2xl font-bold text-brand">1</span>
+                                </div>
+                                <h3 class="text-2xl font-bold text-slate-800 mb-4">Phân Tích & Khám Phá</h3>
+                                <p class="text-slate-600">
+                                    Bắt đầu bằng việc sử dụng công cụ phân tích để hiểu rõ những động lực và rào cản vô thức đằng sau mục tiêu của bạn.
+                                </p>
+                            </div>
+                            <div class="relative">
+                                <div class="bg-brand-light rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6">
+                                   <span class="text-2xl font-bold text-brand">2</span>
+                                </div>
+                                <h3 class="text-2xl font-bold text-slate-800 mb-4">Buổi Trò Chuyện Sâu</h3>
+                                <p class="text-slate-600">
+                                   Đặt một buổi trò chuyện miễn phí để cùng nhau thảo luận về kết quả phân tích và xây dựng một lộ trình coaching dành riêng cho bạn.
+                                </p>
+                            </div>
+                            <div class="relative">
+                                <div class="bg-brand-light rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6">
+                                   <span class="text-2xl font-bold text-brand">3</span>
+                                </div>
+                                <h3 class="text-2xl font-bold text-slate-800 mb-4">Hành Trình Chuyển Hóa</h3>
+                                <p class="text-slate-600">
+                                    Chúng ta sẽ bắt đầu các buổi coaching 1:1, bám sát lộ trình đã được cá nhân hóa để tạo ra những thay đổi bền vững.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <hr class="my-16 border-slate-200">
+                    <!-- About Section -->
+                    <div id="about">
+                        <div class="flex flex-col md:flex-row items-center gap-16">
+                            <div class="md:w-1/2">
+                                <img src="https://images.unsplash.com/photo-1557862921-37829c790f19?q=80&w=2071&auto=format&fit=crop" alt="Chân dung Coach" class="rounded-xl shadow-2xl w-full aspect-square object-cover">
+                            </div>
+                            <div class="md:w-1/2">
+                                <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Tôi Là [Tên Của Bạn]</h2>
+                                <p class="mt-6 text-slate-600 leading-relaxed">
+                                    Với kinh nghiệm là một [Chuyên môn của bạn], tôi đã nhận ra rằng thành công không chỉ đến từ kiến thức, mà còn từ sự rõ ràng, sự tự tin và một kế hoạch hành động đúng đắn. Đó là lý do Momentum ra đời.
+                                </p>
+                                <p class="mt-4 text-slate-600 leading-relaxed">
+                                    Triết lý coaching của tôi tập trung vào việc tạo ra "đà phát triển" - những thay đổi nhỏ, bền vững mang lại kết quả lớn. Tôi ở đây để lắng nghe, thử thách và đồng hành cùng bạn trên hành trình chinh phục những mục tiêu quan trọng nhất.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <hr class="my-16 border-slate-200">
+                    <!-- CTA Section -->
+                    <div id="contact" class="text-center">
+                         <h2 class="text-3xl md:text-4xl font-bold text-slate-800">
+                            Sẵn Sàng Tạo Ra Đà Phát Triển Của Riêng Bạn?
+                        </h2>
+                        <p class="mt-4 text-slate-600 max-w-2xl mx-auto">
+                            Một cuộc trò chuyện 15 phút có thể là bước khởi đầu cho sự thay đổi lớn nhất của bạn. Buổi tư vấn đầu tiên hoàn toàn miễn phí và không có bất kỳ ràng buộc nào.
+                        </p>
+                        <div class="mt-10">
+                            <a href="#" class="bg-brand text-white px-8 py-4 rounded-full font-bold text-lg cta-button hover:bg-teal-800 inline-block">
+                                Đặt Lịch Tư Vấn Miễn Phí
+                            </a>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </section>
-
-        <section id="challenges" class="mb-24 scroll-mt-20">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-3xl font-bold">Thách Thức và Rủi Ro</h2>
-                <button id="listen-challenges" class="text-cyan-700 hover:text-cyan-900 transition flex items-center space-x-1 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
-                    <span class="text-xl">🔊</span>
-                    <span class="hidden md:inline-block">Nghe bài viết</span>
-                </button>
-            </div>
-            <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">
-                Cuộc chiến chống tin giả không chỉ là vấn đề công nghệ. Nó còn đặt ra những câu hỏi phức tạp về đạo đức, chính sách và tác động xã hội, đòi hỏi sự cân bằng tinh tế giữa các giá trị.
-            </p>
-            <div class="grid md:grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="challenge-card bg-white p-6 rounded-lg shadow-lg">
-                    <h3 class="text-xl font-bold mb-2">Tự do Ngôn luận vs. Kiểm duyệt</h3>
-                    <p class="text-gray-600">Việc kiểm duyệt nội dung, dù cần thiết, luôn tạo ra sự căng thẳng với quyền tự do ngôn luận. Trao quá nhiều quyền cho thuật toán có thể dẫn đến việc bóp nghẹt các ý kiến hợp pháp một cách vô ý.</p>
-                </div>
-                <div class="challenge-card bg-white p-6 rounded-lg shadow-lg">
-                    <h3 class="text-xl font-bold mb-2">Thiên vị Thuật toán (Bias)</h3>
-                    <p class="text-gray-600">AI học từ dữ liệu do con người tạo ra, vì vậy chúng có thể học và khuếch đại các định kiến xã hội sẵn có, dẫn đến việc kiểm duyệt không công bằng đối với một số nhóm cộng đồng nhất định.</p>
-                </div>
-                <div class="challenge-card bg-white p-6 rounded-lg shadow-lg">
-                    <h3 class="text-xl font-bold mb-2">Hiệu ứng "Phòng Vang"</h3>
-                    <p class="text-gray-600">Các thuật toán đề xuất nội dung có thể vô tình tạo ra các "phòng vang", nơi người dùng chỉ thấy những quan điểm củng cố niềm tin của họ, làm gia tăng sự phân cực và khiến tin giả dễ lan truyền hơn.</p>
-                </div>
-            </div>
-        </section>
-
-        <section id="solutions" class="scroll-mt-20">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-3xl font-bold">Hành Động Của Chúng Ta</h2>
-                <button id="listen-solutions" class="text-cyan-700 hover:text-cyan-900 transition flex items-center space-x-1 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
-                    <span class="text-xl">🔊</span>
-                    <span class="hidden md:inline-block">Nghe bài viết</span>
-                </button>
-            </div>
-            <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">
-                Chống lại tin giả đòi hỏi một chiến lược toàn diện từ mọi phía. Dưới đây là các khuyến nghị hành động cho từng nhóm liên quan để cùng nhau xây dựng một không gian mạng an toàn và đáng tin cậy hơn.
-            </p>
-            <div class="max-w-4xl mx-auto space-y-4" id="accordion-container">
-                
-            </div>
-        </section>
-
+            </section>
+        </div>
     </main>
 
-    <footer class="bg-gray-800 text-white mt-24">
-        <div class="container mx-auto px-6 py-8 text-center">
-            <p>Một sản phẩm phân tích tương tác dựa trên báo cáo "Phân Tích Cơ Chế Phát Hiện và Đánh Giá Độ Tin Cậy Nội Dung trên Mạng Xã Hội Facebook".</p>
-            <p class="text-sm text-gray-400 mt-2">Được thiết kế để mục đích thông tin và giáo dục.</p>
+    <!-- Footer -->
+    <footer class="bg-slate-800 text-white py-12 mt-16">
+        <div class="container mx-auto px-6 text-center">
+             <a href="#" class="flex items-center justify-center gap-2 text-2xl font-bold text-white">
+                <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 18L8 10L12 14L16 6L20 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Momentum</span>
+            </a>
+            <p class="mt-2 text-slate-400">Kiến tạo đà phát triển của bạn</p>
         </div>
     </footer>
+    
+    <!-- Cosmos Animation Modal -->
+    <div id="cosmos-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 hidden">
+        <div id="cosmos-modal-content" class="relative text-center p-8 rounded-xl w-full max-w-md h-64 flex flex-col justify-center">
+            <div id="stardust-container" class="absolute inset-0"></div>
+            <p id="dissolving-text" class="text-white text-xl transition-opacity duration-1000"></p>
+            <p id="cosmos-status" class="text-slate-300 mt-8 transition-opacity duration-500 opacity-0"></p>
+        </div>
+    </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
 
-            const contentData = {
-                misinformation: {
-                    title: 'Misinformation (Thông tin sai lệch)',
-                    icon: ' M',
-                    color: 'cyan',
-                    description: 'Là thông tin sai hoặc không chính xác, nhưng được lan truyền mà <strong>không có chủ ý gây hại</strong>. Người chia sẻ có thể không nhận ra thông tin đó là sai.',
-                    characteristics: [
-                        'Lan truyền do nhầm lẫn hoặc thiếu kiểm chứng.',
-                        'Thường liên quan đến tin đồn, hiểu lầm.',
-                        'Mục đích không phải là để lừa gạt.'
-                    ]
-                },
-                disinformation: {
-                    title: 'Disinformation (Thông tin giả mạo)',
-                    icon: ' D',
-                    color: 'red',
-                    description: 'Là thông tin sai được tạo ra và lan truyền một cách <strong>cố ý, có chủ đích</strong> để lừa gạt, thao túng hoặc gây hại.',
-                    characteristics: [
-                        'Có mục đích rõ ràng: chính trị, tài chính, hoặc gây tổn hại danh dự.',
-                        'Thường là một phần của các chiến dịch có tổ chức.',
-                        'Đây là "tin giả" (fake news) theo đúng nghĩa đen.'
-                    ]
-                },
-                malinformation: {
-                    title: 'Malinformation (Thông tin có hại)',
-                    icon: ' M',
-                    color: 'amber',
-                    description: 'Là thông tin <strong>dựa trên sự thật</strong>, nhưng được sử dụng ngoài ngữ cảnh để gây hại cho một cá nhân, tổ chức hoặc quốc gia.',
-                    characteristics: [
-                        'Sử dụng thông tin thật nhưng với mục đích xấu.',
-                        'Ví dụ: tiết lộ thông tin cá nhân, phát tán hình ảnh riêng tư.',
-                        'Rất tinh vi vì bản chất thông tin là đúng.'
-                    ]
-                }
-            };
-
-            const infoDisplay = document.getElementById('info-display');
-            const infoBtns = document.querySelectorAll('.info-btn');
-
-            function updateInfoDisplay(type) {
-                const data = contentData[type];
-                if (!data) return;
-
-                infoDisplay.innerHTML = `
-                    <div class="content-card bg-white p-8 rounded-lg shadow-lg border-l-8 border-${data.color}-500">
-                        <h3 class="text-2xl font-bold mb-4 text-${data.color}-700">${data.title}</h3>
-                        <p class="text-gray-700 mb-6">${data.description}</p>
-                        <h4 class="font-semibold mb-2">Đặc điểm chính:</h4>
-                        <ul class="list-disc list-inside space-y-2 text-gray-600">
-                            ${data.characteristics.map(item => `<li>${item}</li>`).join('')}
-                        </ul>
-                    </div>
-                `;
-
-                infoBtns.forEach(btn => {
-                    if (btn.dataset.type === type) {
-                        btn.classList.remove('bg-gray-200', 'text-gray-800');
-                        btn.classList.add(`bg-${data.color}-600`, 'text-white');
-                    } else {
-                        btn.classList.remove('bg-cyan-600', 'bg-red-600', 'bg-amber-600', 'text-white');
-                        btn.classList.add('bg-gray-200', 'text-gray-800');
-                    }
-                });
-            }
-
-            infoBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    updateInfoDisplay(btn.dataset.type);
-                });
-            });
-
-            updateInfoDisplay('misinformation');
-
-            const speedChartCtx = document.getElementById('speedChart').getContext('2d');
-            new Chart(speedChartCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['Tin Thật', 'Tin Giả'],
-                    datasets: [{
-                        label: 'Tốc độ lan truyền tương đối',
-                        data: [100, 600],
-                        backgroundColor: [
-                            'rgba(14, 116, 144, 0.6)',
-                            'rgba(220, 38, 38, 0.6)'
-                        ],
-                        borderColor: [
-                            'rgba(14, 116, 144, 1)',
-                            'rgba(220, 38, 38, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    indexAxis: 'y',
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Chỉ số lan truyền (tương đối)'
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) {
-                                        label += ': ';
-                                    }
-                                    if (context.parsed.x !== null) {
-                                        if (context.label === 'Tin Giả') {
-                                            label += `Nhanh hơn khoảng 6 lần`;
-                                        } else {
-                                             label += `Tốc độ cơ sở`;
-                                        }
-                                    }
-                                    return label;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-
-            const accordionData = [
-                {
-                    title: 'Đối với Người Dùng',
-                    content: [
-                        '<strong>Nâng cao tư duy phản biện:</strong> Luôn đặt câu hỏi về nguồn gốc và tính xác thực của thông tin.',
-                        '<strong>Kiểm tra trước khi chia sẻ:</strong> Dành vài giây để tìm kiếm ngược hình ảnh hoặc kiểm tra nguồn tin.',
-                        '<strong>Hạn chế chia sẻ theo cảm tính:</strong> Tin tức giật gân, gây cảm xúc mạnh thường là dấu hiệu của tin giả.'
-                    ]
-                },
-                {
-                    title: 'Đối với Nền Tảng Công Nghệ',
-                    content: [
-                        '<strong>Cải tiến thuật toán:</strong> Liên tục đầu tư R&D để đối phó với các dạng tin giả mới, đặc biệt là deepfake.',
-                        '<strong>Tăng cường tính minh bạch:</strong> Công khai hóa cơ chế hoạt động của thuật toán kiểm duyệt để xây dựng lòng tin.',
-                        '<strong>Mở rộng hợp tác:</strong> Duy trì và phát triển mạng lưới đối tác kiểm chứng độc lập trên toàn cầu.'
-                    ]
-                },
-                {
-                    title: 'Đối với Cơ Quan Quản Lý',
-                    content: [
-                        '<strong>Xây dựng khung pháp lý linh hoạt:</strong> Các quy định cần theo kịp tốc độ phát triển của công nghệ.',
-                        '<strong>Thúc đẩy giáo dục truyền thông số:</strong> Đưa kỹ năng nhận diện tin giả vào chương trình giáo dục phổ thông.',
-                        '<strong>Hợp tác quốc tế:</strong> Tin giả là vấn đề xuyên biên giới, đòi hỏi sự phối hợp giữa các quốc gia.'
-                    ]
-                }
-            ];
-
-            const accordionContainer = document.getElementById('accordion-container');
-            accordionData.forEach((item, index) => {
-                const accordionItem = document.createElement('div');
-                accordionItem.className = 'bg-white rounded-lg shadow-md';
-                accordionItem.innerHTML = `
-                    <button class="accordion-header w-full flex justify-between items-center p-5 text-left font-semibold">
-                        <span>${item.title}</span>
-                        <span class="accordion-icon text-2xl text-cyan-600 transform transition-transform">+</span>
-                    </button>
-                    <div class="accordion-content">
-                        <div class="p-5 pt-0">
-                           <ul class="space-y-2 text-gray-600">
-                                ${item.content.map(c => `<li>${c}</li>`).join('')}
-                           </ul>
-                        </div>
-                    </div>
-                `;
-                accordionContainer.appendChild(accordionItem);
-            });
-
-            const accordionHeaders = document.querySelectorAll('.accordion-header');
-            accordionHeaders.forEach(header => {
-                header.addEventListener('click', () => {
-                    const content = header.nextElementSibling;
-                    const icon = header.querySelector('.accordion-icon');
-                    
-                    const isOpen = content.style.maxHeight && content.style.maxHeight !== '0px';
-
-                    accordionHeaders.forEach(h => {
-                        h.nextElementSibling.style.maxHeight = '0px';
-                        h.querySelector('.accordion-icon').textContent = '+';
-                        h.querySelector('.accordion-icon').classList.remove('rotate-45');
-                    });
-                    
-                    if (!isOpen) {
-                        content.style.maxHeight = content.scrollHeight + 'px';
-                        icon.textContent = '+';
-                        icon.classList.add('rotate-45');
-                    }
-                });
-            });
-
-            const navLinks = document.querySelectorAll('.nav-link');
-            const sections = document.querySelectorAll('section[id]');
-            
-            window.addEventListener('scroll', () => {
-                let current = '';
-                sections.forEach(section => {
-                    const sectionTop = section.offsetTop;
-                    if (pageYOffset >= sectionTop - 100) {
-                        current = section.getAttribute('id');
-                    }
-                });
-
-                navLinks.forEach(link => {
-                    link.classList.remove('active');
-                    if (link.getAttribute('href').substring(1) === current) {
-                        link.classList.add('active');
-                    }
-                });
-            });
-
-            // Facebook SDK and Login Logic
-            window.fbAsyncInit = function() {
-                FB.init({
-                    appId      : 'YOUR_APP_ID',
-                    cookie     : true,
-                    xfbml      : true,
-                    version    : 'v17.0'
-                });
-                FB.getLoginStatus(function(response) {
-                    statusChangeCallback(response);
-                });
-            };
-
-            function statusChangeCallback(response) {
-                const loginStatusDiv = document.getElementById('login-status');
-                if (response.status === 'connected') {
-                    // Logged into your app and Facebook.
-                    FB.api('/me', {fields: 'name,picture'}, function(userResponse) {
-                        const userProfileHtml = `
-                            <div class="flex items-center space-x-2">
-                                <img src="${userResponse.picture.data.url}" alt="${userResponse.name}" class="w-8 h-8 rounded-full border-2 border-cyan-500">
-                                <span class="text-gray-800 font-semibold hidden lg:block">${userResponse.name}</span>
-                                <button id="fb-logout-btn" class="bg-red-500 text-white px-3 py-1 text-sm rounded-full font-semibold hover:bg-red-600 transition">Đăng xuất</button>
-                            </div>
-                        `;
-                        loginStatusDiv.innerHTML = userProfileHtml;
-
-                        document.getElementById('fb-logout-btn').addEventListener('click', () => {
-                            FB.logout(function(response) {
-                                statusChangeCallback(response);
-                            });
-                        });
-                    });
-                } else {
-                    // Not logged in or not authorized.
-                    const loginBtnHtml = `
-                        <button id="fb-login-btn" class="bg-blue-600 text-white px-4 py-2 rounded-full font-semibold hover:bg-blue-700 transition">Đăng nhập với Facebook</button>
-                    `;
-                    loginStatusDiv.innerHTML = loginBtnHtml;
-                    
-                    document.getElementById('fb-login-btn').addEventListener('click', () => {
-                        FB.login(function(response) {
-                            statusChangeCallback(response);
-                        }, {scope: 'public_profile,email'});
-                    });
-                }
-            }
-
-            // Gemini API Fact-Checking Feature
-            const textInput = document.getElementById('text-input');
-            const imageUpload = document.getElementById('image-upload');
-            const previewImage = document.getElementById('preview-image');
-            const imagePreviewDiv = document.getElementById('image-preview');
-            const analyzeBtn = document.getElementById('analyze-btn');
-            const resultDisplay = document.getElementById('result-display');
-            const resultEmoji = document.getElementById('result-emoji');
-            const resultText = document.getElementById('result-text');
-            const resultExplanation = document.getElementById('result-explanation');
-
-            let uploadedImageBase64 = null;
-
-            imageUpload.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                        uploadedImageBase64 = reader.result.split(',')[1];
-                        previewImage.src = reader.result;
-                        imagePreviewDiv.classList.remove('hidden');
-                    };
-                    reader.readAsDataURL(file);
-                } else {
-                    uploadedImageBase64 = null;
-                    previewImage.src = '';
-                    imagePreviewDiv.classList.add('hidden');
-                }
-            });
-
-            analyzeBtn.addEventListener('click', async () => {
-                const prompt = textInput.value;
-                if (!prompt && !uploadedImageBase64) {
-                    resultDisplay.classList.remove('hidden');
-                    resultDisplay.style.backgroundColor = '#FEF2F2';
-                    resultDisplay.style.borderColor = '#FCA5A5';
-                    resultEmoji.textContent = '❌';
-                    resultText.textContent = `Vui lòng nhập văn bản hoặc tải lên hình ảnh để phân tích.`;
-                    resultExplanation.classList.add('hidden');
-                    return;
-                }
-
-                resultDisplay.classList.remove('hidden');
-                resultDisplay.style.backgroundColor = '#F0F9FF';
-                resultDisplay.style.borderColor = '#BAE6FD';
-                resultEmoji.textContent = '🤔';
-                resultText.textContent = `Đang phân tích...`;
-                resultExplanation.classList.add('hidden');
-                analyzeBtn.disabled = true;
-                
-                try {
-                    let parts = [];
-                    // Add text to the request
-                    if (prompt) {
-                        parts.push({ text: `Phân tích nội dung sau và đưa ra đánh giá về độ tin cậy. Dựa trên các tiêu chí: nguồn gốc, tính xác thực của thông tin, và các dấu hiệu của tin giả (như ngôn ngữ giật gân, thiếu tham chiếu). Đưa ra câu trả lời ngắn gọn, trực tiếp, chỉ bao gồm 2 phần: đánh giá về độ tin cậy ("Đánh giá: [nhãn]") và một đoạn giải thích ngắn gọn ("Giải thích: [đoạn văn]"). Sử dụng các nhãn: "Tin thật", "Có thể là tin giả", "Tin giả", "Không đủ thông tin".
-
-Nội dung: ${prompt}` });
-                    }
-                    // Add image to the request
-                    if (uploadedImageBase64) {
-                        parts.push({
-                            inlineData: {
-                                mimeType: 'image/jpeg',
-                                data: uploadedImageBase64
-                            }
-                        });
-                    }
-
-                    const payload = {
-                        contents: [{ role: "user", parts: parts }]
-                    };
-
-                    const apiKey = "";
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-                    
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (result.candidates && result.candidates.length > 0 &&
-                        result.candidates[0].content && result.candidates[0].content.parts &&
-                        result.candidates[0].content.parts.length > 0) {
-                        
-                        const text = result.candidates[0].content.parts[0].text;
-                        const [assessment, explanation] = text.split('\n').map(s => s.trim().split(':').slice(1).join(':').trim());
-                        
-                        let emoji, color, borderColor;
-                        if (assessment.includes("Tin thật")) {
-                            emoji = '✅';
-                            color = '#ECFDF5';
-                            borderColor = '#A7F3D0';
-                        } else if (assessment.includes("Có thể là tin giả")) {
-                            emoji = '⚠️';
-                            color = '#FFFBEB';
-                            borderColor = '#FDE68A';
-                        } else if (assessment.includes("Tin giả")) {
-                             emoji = '🚫';
-                            color = '#FEF2F2';
-                            borderColor = '#FCA5A5';
-                        } else {
-                            emoji = '❓';
-                            color = '#F3F4F6';
-                            borderColor = '#E5E7EB';
-                        }
-                        
-                        resultDisplay.style.backgroundColor = color;
-                        resultDisplay.style.borderColor = borderColor;
-                        resultEmoji.textContent = emoji;
-                        resultText.textContent = assessment;
-                        resultExplanation.textContent = explanation;
-                        resultExplanation.classList.remove('hidden');
-
-                    } else {
-                        resultDisplay.style.backgroundColor = '#FEF2F2';
-                        resultDisplay.style.borderColor = '#FCA5A5';
-                        resultEmoji.textContent = '❌';
-                        resultText.textContent = `Đã xảy ra lỗi khi phân tích. Vui lòng thử lại.`;
-                        resultExplanation.classList.add('hidden');
-                    }
-                } catch (error) {
-                    console.error('Lỗi khi gọi API Gemini:', error);
-                    resultDisplay.style.backgroundColor = '#FEF2F2';
-                    resultDisplay.style.borderColor = '#FCA5A5';
-                    resultEmoji.textContent = '❌';
-                    resultText.textContent = `Đã xảy ra lỗi: ${error.message}. Vui lòng thử lại sau.`;
-                    resultExplanation.classList.add('hidden');
-                } finally {
-                    analyzeBtn.disabled = false;
-                }
-            });
-            
-            // Gemini API Brainstorming Feature
-            const topicInput = document.getElementById('topic-input');
-            const brainstormBtn = document.getElementById('brainstorm-btn');
-            const brainstormResult = document.getElementById('brainstorm-result');
-            const ideaList = document.getElementById('idea-list');
-
-            brainstormBtn.addEventListener('click', async () => {
-                const topic = topicInput.value;
-                if (!topic) {
-                    ideaList.innerHTML = `<li class="italic text-gray-600">Vui lòng nhập một chủ đề hoặc ngữ cảnh để nhận ý tưởng.</li>`;
-                    brainstormResult.classList.remove('hidden');
-                    return;
-                }
-
-                ideaList.innerHTML = `<li class="italic text-gray-600 text-center">Đang tạo ý tưởng...</li>`;
-                brainstormResult.classList.remove('hidden');
-                brainstormBtn.disabled = true;
-
-                try {
-                    let chatHistory = [];
-                    chatHistory.push({ role: "user", parts: [{ text: `Tạo một danh sách gạch đầu dòng các chiến lược, hành động cụ thể và sáng tạo để chống lại tin giả trong ngữ cảnh sau: "${topic}". Trả lời chỉ bằng một danh sách. Mỗi mục là một câu ngắn gọn, trực tiếp, và bắt đầu bằng "-". Tránh sử dụng bất kỳ lời giới thiệu hoặc kết luận nào.` }] });
-
-                    const payload = {
-                        contents: chatHistory
-                    };
-                    const apiKey = "";
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    const result = await response.json();
-                    
-                    if (result.candidates && result.candidates.length > 0 &&
-                        result.candidates[0].content && result.candidates[0].content.parts &&
-                        result.candidates[0].content.parts.length > 0) {
-                        
-                        const text = result.candidates[0].content.parts[0].text;
-                        const ideas = text.split('\n').filter(line => line.trim().startsWith('-')).map(line => line.substring(1).trim());
-                        
-                        let html = '';
-                        if (ideas.length > 0) {
-                            html = ideas.map(idea => `<li>${idea}</li>`).join('');
-                        } else {
-                            html = `<li class="italic text-gray-600 text-center">Không thể tạo ý tưởng. Vui lòng thử lại với chủ đề khác.</li>`;
-                        }
-                        ideaList.innerHTML = html;
-                    } else {
-                        ideaList.innerHTML = `<li class="italic text-gray-600 text-center">Đã xảy ra lỗi. Vui lòng thử lại.</li>`;
-                    }
-                } catch (error) {
-                    console.error('Lỗi khi gọi API Gemini:', error);
-                    ideaList.innerHTML = `<li class="italic text-gray-600 text-center">Đã xảy ra lỗi: ${error.message}. Vui lòng thử lại sau.</li>`;
-                } finally {
-                    brainstormBtn.disabled = false;
-                }
-            });
-            
-            // Tab switching logic
+            // --- Tab Navigation Logic ---
             const tabButtons = document.querySelectorAll('.tab-btn');
-            const tabContents = document.querySelectorAll('.tab-content');
-
+            const tabPanels = document.querySelectorAll('.tab-panel');
+            
             tabButtons.forEach(button => {
                 button.addEventListener('click', () => {
-                    tabButtons.forEach(btn => {
-                        btn.classList.remove('border-cyan-500');
-                        btn.classList.remove('active');
-                    });
-                    button.classList.add('border-cyan-500');
-                    button.classList.add('active');
+                    tabButtons.forEach(btn => btn.classList.remove('active', 'border-brand', 'text-brand', 'bg-teal-50'));
+                    tabPanels.forEach(panel => panel.classList.add('hidden'));
 
-                    tabContents.forEach(content => content.classList.add('hidden'));
-                    const targetTab = document.getElementById(button.dataset.tab + '-tab');
-                    targetTab.classList.remove('hidden');
+                    button.classList.add('active', 'border-brand', 'text-brand', 'bg-teal-50');
+                    const tabId = button.dataset.tab;
+                    const targetPanel = document.getElementById(`${tabId}-tab`);
+                    if (targetPanel) {
+                        targetPanel.classList.remove('hidden');
+                    }
                 });
             });
 
-            // Dark/Light Mode Toggle
-            const darkModeToggle = document.getElementById('dark-mode-toggle');
-            const darkModeIcon = document.getElementById('dark-mode-icon');
-            const htmlTag = document.querySelector('html');
+            // --- Analysis Tab Logic ---
+            const generatePlanBtn = document.getElementById('generate-plan-btn');
+            const goalInput = document.getElementById('goal-input');
+            const goalCategory = document.getElementById('goal-category');
+            const aiResultContainer = document.getElementById('ai-result');
+            const planContent = document.getElementById('plan-content');
+            const loader = document.getElementById('loader');
+            const memoryGameSection = document.getElementById('memory-game');
 
-            function loadTheme() {
-                const savedTheme = localStorage.getItem('theme') || 'light';
-                if (savedTheme === 'dark') {
-                    htmlTag.classList.add('dark');
-                    darkModeIcon.textContent = '☀️';
-                } else {
-                    htmlTag.classList.remove('dark');
-                    darkModeIcon.textContent = '🌙';
-                }
+            if (generatePlanBtn) {
+                generatePlanBtn.addEventListener('click', async () => {
+                    const goal = goalInput.value.trim();
+                    if (!goal) {
+                        alert('Vui lòng nhập mục tiêu của bạn.');
+                        return;
+                    }
+
+                    aiResultContainer.style.display = 'block';
+                    memoryGameSection.classList.add('hidden');
+                    planContent.innerHTML = '';
+                    loader.style.display = 'flex';
+                    generatePlanBtn.disabled = true;
+                    generatePlanBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+                    try {
+                        const rawResponse = await callGeminiAPI(goal, goalCategory.value);
+                        const { analysis, commands, symbol, symbolEmoji } = parseAIResponse(rawResponse);
+                        
+                        let html = `<h4 class="text-lg font-bold text-slate-800">Phân Tích Vô Thức:</h4><p>${analysis}</p>`;
+                        html += `<h4 class="text-lg font-bold text-slate-800 mt-4">Mệnh Lệnh Cần Tuân Thủ:</h4><ul class="list-disc list-inside space-y-2">${commands.map(item => `<li>${item}</li>`).join('')}</ul>`;
+                        html += `<h4 class="text-lg font-bold text-slate-800 mt-4">Biểu Tượng Của Bạn:</h4><p>Biểu tượng cho hành trình này của bạn là **${symbol}** ${symbolEmoji}. Nó đại diện cho sức mạnh bạn cần để thực thi mệnh lệnh.</p>`;
+                        
+                        planContent.innerHTML = html;
+                        setupMemoryGame(symbolEmoji);
+                        memoryGameSection.classList.remove('hidden');
+
+                    } catch (error) {
+                        console.error('Error calling Gemini API:', error);
+                        planContent.innerHTML = '<p class="text-red-500">Đã có lỗi xảy ra. Vui lòng thử lại sau.</p>';
+                    } finally {
+                        loader.style.display = 'none';
+                        generatePlanBtn.disabled = false;
+                        generatePlanBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    }
+                });
             }
 
-            loadTheme();
+            // --- Temple Tab Logic ---
+            const beliefInput = document.getElementById('belief-input');
+            const submitBeliefBtn = document.getElementById('submit-belief-btn');
+            const beliefsContainer = document.getElementById('beliefs-container');
+            const cosmosModal = document.getElementById('cosmos-modal');
+            const dissolvingText = document.getElementById('dissolving-text');
+            const cosmosStatus = document.getElementById('cosmos-status');
+            const stardustContainer = document.getElementById('stardust-container');
 
-            darkModeToggle.addEventListener('click', () => {
-                if (htmlTag.classList.contains('dark')) {
-                    htmlTag.classList.remove('dark');
-                    localStorage.setItem('theme', 'light');
-                    darkModeIcon.textContent = '🌙';
+            const MAX_LIGHTS = 5;
+
+            const initialBeliefs = [
+                { text: "Tôi sợ thất bại và không dám bắt đầu.", lights: 5 },
+                { text: "Tôi cảm thấy mình không xứng đáng với thành công.", lights: 3 },
+                { text: "Tôi luôn trì hoãn những việc quan trọng.", lights: 5 }
+            ];
+
+            const createBeliefCard = (beliefData) => {
+                const card = document.createElement('div');
+                card.className = 'belief-stone p-4 rounded-lg shadow-md flex flex-col justify-between aspect-square';
+                card.dataset.lights = beliefData.lights;
+
+                const beliefText = document.createElement('p');
+                beliefText.className = 'text-center m-auto transition-colors duration-500';
+                beliefText.textContent = `"${beliefData.text}"`;
+                
+                const footer = document.createElement('div');
+                footer.className = 'relative flex items-center justify-center h-12 w-12 mx-auto';
+                
+                const lightBtn = document.createElement('button');
+                lightBtn.className = 'light-btn absolute inset-0 flex items-center justify-center';
+                lightBtn.innerHTML = `<i data-lucide="sun" class="light-icon w-6 h-6 text-slate-400 hover:text-amber-400 transition-colors"></i>`;
+                
+                const healedIcon = document.createElement('div');
+                healedIcon.className = 'healed-icon hidden absolute inset-0 items-center justify-center';
+                healedIcon.innerHTML = `<i data-lucide="gem" class="w-8 h-8 text-emerald-400"></i>`;
+                
+                const svgNS = "http://www.w3.org/2000/svg";
+                const svg = document.createElementNS(svgNS, "svg");
+                svg.setAttribute("class", "absolute inset-0");
+                svg.setAttribute("viewBox", "0 0 36 36");
+                const meterBg = document.createElementNS(svgNS, "circle");
+                meterBg.setAttribute("class", "energy-meter-bg");
+                meterBg.setAttribute("cx", "18");
+                meterBg.setAttribute("cy", "18");
+                meterBg.setAttribute("r", "16");
+                meterBg.setAttribute("fill", "none");
+                meterBg.setAttribute("stroke-width", "3");
+                const meterFg = document.createElementNS(svgNS, "circle");
+                meterFg.setAttribute("class", "energy-meter-fg");
+                meterFg.setAttribute("cx", "18");
+                meterFg.setAttribute("cy", "18");
+                meterFg.setAttribute("r", "16");
+                meterFg.setAttribute("fill", "none");
+                meterFg.setAttribute("stroke-width", "3");
+                meterFg.setAttribute("stroke-dasharray", "100");
+                svg.appendChild(meterBg);
+                svg.appendChild(meterFg);
+
+                const updateCardState = () => {
+                    const currentLights = parseInt(card.dataset.lights);
+                    const progress = Math.min(currentLights / MAX_LIGHTS, 1);
+                    const dashoffset = 100 - (progress * 100);
+                    meterFg.style.strokeDashoffset = dashoffset;
+
+                    if (currentLights >= MAX_LIGHTS) {
+                        card.classList.add('healed');
+                        beliefText.classList.add('text-slate-800');
+                        beliefText.classList.remove('text-slate-300');
+                        lightBtn.classList.add('hidden');
+                        healedIcon.classList.remove('hidden');
+                        healedIcon.classList.add('flex');
+                    } else {
+                        card.classList.remove('healed');
+                        beliefText.classList.add('text-slate-300');
+                        beliefText.classList.remove('text-slate-800');
+                    }
+                };
+                
+                lightBtn.addEventListener('click', () => {
+                    if (!lightBtn.classList.contains('sent')) {
+                        let currentCount = parseInt(card.dataset.lights);
+                        currentCount++;
+                        card.dataset.lights = currentCount;
+                        lightBtn.classList.add('sent');
+                        lightBtn.disabled = true;
+                        updateCardState();
+                    }
+                });
+
+                footer.appendChild(svg);
+                footer.appendChild(lightBtn);
+                footer.appendChild(healedIcon);
+                card.appendChild(beliefText);
+                card.appendChild(footer);
+                
+                beliefsContainer.prepend(card);
+                lucide.createIcons();
+                updateCardState();
+            };
+
+            initialBeliefs.forEach(createBeliefCard);
+
+            submitBeliefBtn.addEventListener('click', () => {
+                const beliefText = beliefInput.value.trim();
+                if (beliefText) {
+                    cosmosModal.classList.remove('hidden');
+                    dissolvingText.textContent = `"${beliefText}"`;
+                    dissolvingText.classList.remove('opacity-0');
+                    cosmosStatus.classList.add('opacity-0');
+                    stardustContainer.innerHTML = '';
+
+                    setTimeout(() => {
+                        dissolvingText.classList.add('opacity-0');
+                        for (let i = 0; i < 50; i++) {
+                            const dust = document.createElement('div');
+                            dust.className = 'stardust';
+                            const size = Math.random() * 3 + 1;
+                            dust.style.width = `${size}px`;
+                            dust.style.height = `${size}px`;
+                            dust.style.left = `${Math.random() * 100}%`;
+                            dust.style.top = `${Math.random() * 60 + 20}%`;
+                            dust.style.animationDelay = `${Math.random() * 0.5}s`;
+                            stardustContainer.appendChild(dust);
+                        }
+                    }, 1000);
+
+                    setTimeout(() => {
+                        cosmosStatus.textContent = "Đang gửi đi...";
+                        cosmosStatus.classList.remove('opacity-0');
+                    }, 2000);
+
+                    setTimeout(() => {
+                        cosmosStatus.textContent = "Đã được vũ trụ đón nhận.";
+                    }, 3500);
+
+                    setTimeout(() => {
+                        cosmosModal.classList.add('hidden');
+                        createBeliefCard({ text: beliefText, lights: 0 });
+                        beliefInput.value = '';
+                    }, 5000);
+                }
+            });
+
+            // --- Shadow Journey Logic ---
+            const shadowInput = document.getElementById('shadow-input');
+            const analyzeShadowBtn = document.getElementById('analyze-shadow-btn');
+            const shadowStep1 = document.getElementById('shadow-step-1');
+            const shadowStep2 = document.getElementById('shadow-step-2');
+            const shadowStep3 = document.getElementById('shadow-step-3');
+            const shadowLoader = document.getElementById('shadow-loader');
+            const shadowAnalysisContent = document.getElementById('shadow-analysis-content');
+            const shadowChoices = document.getElementById('shadow-choices');
+            const shadowConclusionLoader = document.getElementById('shadow-conclusion-loader');
+            const shadowConclusionContent = document.getElementById('shadow-conclusion-content');
+
+            let userShadowTrait = '';
+
+            analyzeShadowBtn.addEventListener('click', async () => {
+                userShadowTrait = shadowInput.value.trim();
+                if (!userShadowTrait) {
+                    alert('Vui lòng mô tả một đặc điểm.');
+                    return;
+                }
+
+                shadowStep1.classList.add('hidden');
+                shadowStep2.classList.remove('hidden');
+                shadowLoader.classList.remove('hidden');
+                shadowAnalysisContent.innerHTML = '';
+                shadowChoices.innerHTML = '';
+
+                try {
+                    const rawResponse = await callShadowAPI(userShadowTrait, 'initial');
+                    const { analysis, story, choices } = parseShadowResponse(rawResponse);
+                    
+                    shadowAnalysisContent.innerHTML = `<p>${analysis}</p><p class="mt-4 font-semibold">${story}</p>`;
+                    choices.forEach(choice => {
+                        const choiceBtn = document.createElement('button');
+                        choiceBtn.className = 'w-full bg-slate-700 text-white px-4 py-3 rounded-lg hover:bg-slate-600 transition-colors';
+                        choiceBtn.textContent = choice.text;
+                        choiceBtn.dataset.choice = choice.key;
+                        choiceBtn.addEventListener('click', handleShadowChoice);
+                        shadowChoices.appendChild(choiceBtn);
+                    });
+
+                } catch (error) {
+                    console.error('Error in Shadow Journey:', error);
+                    shadowAnalysisContent.innerHTML = '<p class="text-red-400">Đã có lỗi xảy ra. Vui lòng thử lại.</p>';
+                } finally {
+                    shadowLoader.classList.add('hidden');
+                }
+            });
+
+            const handleShadowChoice = async (e) => {
+                const choice = e.target.dataset.choice;
+                shadowStep2.classList.add('hidden');
+                shadowStep3.classList.remove('hidden');
+                shadowConclusionLoader.classList.remove('hidden');
+                shadowConclusionContent.innerHTML = '';
+
+                 try {
+                    const conclusion = await callShadowAPI(userShadowTrait, choice);
+                    shadowConclusionContent.innerHTML = `<p>${conclusion.replace(/\n/g, '<br>')}</p>`;
+                 } catch(error) {
+                    console.error('Error in Shadow Conclusion:', error);
+                    shadowConclusionContent.innerHTML = '<p class="text-red-400">Đã có lỗi xảy ra. Vui lòng thử lại.</p>';
+                 } finally {
+                    shadowConclusionLoader.classList.add('hidden');
+                 }
+            };
+
+            // --- Gratitude Garden Logic ---
+            const gratitudeInput = document.getElementById('gratitude-input');
+            const addGratitudeBtn = document.getElementById('add-gratitude-btn');
+            const gardenContainer = document.getElementById('garden-container');
+            const flowerTypes = ['🌸', '🌻', '🌹', '🌷', '🌼', '🌺'];
+            let gratitudes = ["Một ngày nắng đẹp.", "Cuộc trò chuyện với người bạn thân.", "Một bữa ăn ngon."];
+
+            const renderGarden = () => {
+                gardenContainer.innerHTML = '';
+                gratitudes.forEach(text => {
+                    const flowerDiv = document.createElement('div');
+                    flowerDiv.className = 'flower';
+                    flowerDiv.textContent = flowerTypes[Math.floor(Math.random() * flowerTypes.length)];
+                    flowerDiv.title = text; // Show gratitude on hover
+                    gardenContainer.appendChild(flowerDiv);
+                });
+            };
+
+            addGratitudeBtn.addEventListener('click', () => {
+                const text = gratitudeInput.value.trim();
+                if (text) {
+                    gratitudes.push(text);
+                    gratitudeInput.value = '';
+                    renderGarden();
+                }
+            });
+
+            renderGarden(); // Initial render
+
+            // --- Values Compass Logic (REDESIGNED) ---
+            const valuesGrid = document.getElementById('values-grid');
+            const analyzeValuesBtn = document.getElementById('analyze-values-btn');
+            const valuesCounter = document.getElementById('values-counter');
+            const valuesResult = document.getElementById('values-result');
+            const valuesLoader = document.getElementById('values-loader');
+            const valuesContent = document.getElementById('values-content');
+            const allValues = ['Sáng tạo', 'Gia đình', 'Tự do', 'An toàn', 'Phiêu lưu', 'Cống hiến', 'Học hỏi', 'Sức khỏe', 'Trung thực', 'Vui vẻ', 'Quyền lực', 'Trật tự'];
+            
+            allValues.forEach(value => {
+                const valueEl = document.createElement('button');
+                valueEl.className = 'value-card bg-white p-4 rounded-lg border-2 border-slate-200 text-center font-semibold';
+                valueEl.textContent = value;
+                valueEl.dataset.value = value;
+                valuesGrid.appendChild(valueEl);
+            });
+
+            valuesGrid.addEventListener('click', (e) => {
+                const card = e.target.closest('.value-card');
+                if (!card) return;
+
+                const selectedCount = document.querySelectorAll('.value-card.selected').length;
+
+                if (card.classList.contains('selected')) {
+                    card.classList.remove('selected');
                 } else {
-                    htmlTag.classList.add('dark');
-                    localStorage.setItem('theme', 'dark');
-                    darkModeIcon.textContent = '☀️';
+                    if (selectedCount < 5) {
+                        card.classList.add('selected');
+                    } else {
+                        alert('Bạn chỉ có thể chọn tối đa 5 giá trị.');
+                    }
+                }
+                
+                const newSelectedCount = document.querySelectorAll('.value-card.selected').length;
+                valuesCounter.textContent = newSelectedCount;
+                analyzeValuesBtn.disabled = newSelectedCount !== 5;
+            });
+
+            analyzeValuesBtn.addEventListener('click', async () => {
+                const coreValues = Array.from(document.querySelectorAll('.value-card.selected')).map(el => el.dataset.value);
+                
+                valuesResult.classList.remove('hidden');
+                valuesLoader.classList.remove('hidden');
+                valuesContent.innerHTML = '';
+                try {
+                    const analysis = await callValuesCompassAPI(coreValues);
+                    valuesContent.innerHTML = analysis.replace(/\n/g, '<br>');
+                } catch (e) {
+                    valuesContent.textContent = 'Đã có lỗi xảy ra.';
+                } finally {
+                    valuesLoader.classList.add('hidden');
+                }
+            });
+            
+            // --- Narrative Reframer Logic (REDESIGNED) ---
+            const reframeStoryBtn = document.getElementById('reframe-story-btn');
+            const problemStoryInput = document.getElementById('problem-story-input');
+            const narrativeResult = document.getElementById('narrative-result');
+            const narrativeContent = document.getElementById('narrative-content');
+            const narrativeLoader = document.getElementById('narrative-loader');
+
+            reframeStoryBtn.addEventListener('click', async () => {
+                const story = problemStoryInput.value.trim();
+                if (!story) {
+                    alert('Vui lòng viết câu chuyện của bạn.');
+                    return;
+                }
+                narrativeResult.classList.remove('hidden');
+                narrativeLoader.classList.remove('hidden');
+                narrativeContent.innerHTML = '';
+                try {
+                    const newStory = await callNarrativeReframerAPI(story);
+                    narrativeContent.innerHTML = `<p class="font-semibold">Câu chuyện mới của bạn:</p><p>${newStory}</p>`;
+                } catch(e) {
+                    narrativeContent.textContent = 'Đã có lỗi xảy ra.';
+                } finally {
+                    narrativeLoader.classList.add('hidden');
+                }
+            });
+            
+            // --- Habit Lab Logic (REDESIGNED) ---
+            const habitModeRadios = document.querySelectorAll('input[name="habit-mode"]');
+            const habitInput = document.getElementById('habit-input');
+            const analyzeHabitBtn = document.getElementById('analyze-habit-btn');
+            const habitLabResult = document.getElementById('habit-lab-result');
+            const habitLabLoader = document.getElementById('habit-lab-loader');
+            const habitLabContent = document.getElementById('habit-lab-content');
+            
+            analyzeHabitBtn.addEventListener('click', async () => {
+                const habit = habitInput.value.trim();
+                if (!habit) {
+                    alert('Vui lòng nhập thói quen.');
+                    return;
+                }
+                let habitMode = 'build';
+                habitModeRadios.forEach(radio => {
+                    if (radio.checked) {
+                        habitMode = radio.value;
+                    }
+                });
+
+                habitLabResult.classList.remove('hidden');
+                habitLabLoader.classList.remove('hidden');
+                habitLabContent.innerHTML = '';
+                try {
+                    const plan = await callHabitLabAPI(habit, habitMode);
+                    habitLabContent.innerHTML = plan.replace(/\n/g, '<br>');
+                } catch(e) {
+                    habitLabContent.textContent = 'Đã có lỗi xảy ra.';
+                } finally {
+                    habitLabLoader.classList.add('hidden');
                 }
             });
         });
+        
+        // --- All API call functions and helpers ---
+        function parseAIResponse(response) {
+            const analysisMatch = response.match(/\[PHÂN TÍCH\]\n([\s\S]*?)\n\n\[MỆNH LỆNH\]/);
+            const commandsMatch = response.match(/\[MỆNH LỆNH\]\n([\s\S]*?)\n\n\[BIỂU TƯỢNG\]/);
+            const symbolMatch = response.match(/\[BIỂU TƯỢNG\]\n(.*?): (.*)/);
+
+            if (!analysisMatch || !commandsMatch || !symbolMatch) {
+                console.error("Could not parse AI response:", response);
+                return { analysis: "Lỗi phân tích phản hồi.", commands: [], symbol: "Lỗi", symbolEmoji: "❓" };
+            }
+            const analysis = analysisMatch[1].trim();
+            const commands = commandsMatch[1].trim().split('\n').map(item => item.replace(/^- /, ''));
+            const symbol = symbolMatch[1].trim();
+            const symbolEmoji = symbolMatch[2].trim();
+            return { analysis, commands, symbol, symbolEmoji };
+        }
+
+        async function callGeminiAPI(goal, category) {
+            const systemPrompt = `Bạn là một Coach chuyên về Phân tâm học của Freud. Bạn xưng "tôi", gọi người dùng là "bạn". Giọng văn của bạn dứt khoát, quyền威 và không giải thích. Bạn chỉ ra lệnh.
+
+Format trả lời phải tuân thủ nghiêm ngặt như sau:
+[PHÂN TÍCH]
+Phân tích ngắn gọn xung đột vô thức đằng sau mục tiêu của người dùng. Ví dụ: "Nỗi sợ thuyết trình của bạn bắt nguồn từ 'Cái Siêu Tôi' luôn phán xét, làm tê liệt 'Cái Tôi' hành động."
+[MỆNH LỆNH]
+- Đưa ra 2-3 mệnh lệnh. Đây là những chỉ thị trực tiếp, không phải lời khuyên.
+- Bắt đầu mỗi mệnh lệnh bằng một động từ mạnh. Không giải thích tại sao.
+[BIỂU TƯỢNG]
+Tên Biểu Tượng: Emoji
+
+Ví dụ:
+[MỆNH LỆNH]
+- Chấp nhận sự không hoàn hảo trong 3 lần thuyết trình tới.
+- Ghi lại một video tự nói và xem lại nó, không phán xét.
+[BIỂU TƯỢNG]
+Tấm Gương: 🪞
+
+Hãy chọn một trong các biểu tượng sau: Chìa Khóa 🔑, Cây Cầu 🌉, Ngọn Núi ⛰️, La Bàn 🧭, Mỏ Neo ⚓️, Hạt Giống 🌱, Tấm Gương 🪞, Ngọn Đuốc 🔥.`;
+            const userQuery = `Hãy phân tích mục tiêu của tôi trong lĩnh vực ${category}: "${goal}"`;
+            return await callGenericAPI(systemPrompt, userQuery);
+        }
+
+        function setupMemoryGame(correctSymbol) {
+            const gameBoard = document.getElementById('game-board');
+            const gameStatus = document.getElementById('game-status');
+            let matchedPairs = 0;
+            let gameLocked = false;
+
+            const restartGame = () => {
+                gameBoard.innerHTML = '';
+                gameStatus.textContent = 'Hãy tìm tất cả các biểu tượng ' + correctSymbol;
+                matchedPairs = 0;
+                gameLocked = false;
+
+                const allSymbols = ['🔑', '🌉', '⛰️', '🧭', '⚓️', '🌱', '🪞', '🔥'];
+                const trapSymbol = '💀';
+                const distractors = allSymbols.filter(s => s !== correctSymbol).sort(() => 0.5 - Math.random()).slice(0, 3);
+                
+                let cards = [correctSymbol, correctSymbol, correctSymbol, correctSymbol, ...distractors, trapSymbol];
+                cards.sort(() => 0.5 - Math.random());
+
+                cards.forEach(symbol => {
+                    const cardElement = document.createElement('div');
+                    cardElement.classList.add('game-card');
+                    cardElement.dataset.symbol = symbol;
+
+                    cardElement.innerHTML = `
+                        <div class="card-inner">
+                            <div class="card-face card-front">
+                                <i data-lucide="sparkles" class="text-brand"></i>
+                            </div>
+                            <div class="card-face card-back">
+                                <span class="text-4xl">${symbol}</span>
+                            </div>
+                        </div>
+                    `;
+                    gameBoard.appendChild(cardElement);
+                });
+                lucide.createIcons();
+            };
+
+            restartGame();
+
+            gameBoard.addEventListener('click', function(e) {
+                if (gameLocked) return;
+                const clickedCard = e.target.closest('.game-card');
+                if (!clickedCard || clickedCard.classList.contains('is-flipped')) return;
+
+                clickedCard.classList.add('is-flipped');
+                const currentSymbol = clickedCard.dataset.symbol;
+                
+                if (currentSymbol === '💀') {
+                    gameLocked = true;
+                    gameStatus.textContent = 'Cạm bẫy! Phải cẩn thận hơn. Bắt đầu lại!';
+                    gameBoard.classList.add('shake');
+                    setTimeout(() => {
+                        gameBoard.classList.remove('shake');
+                        restartGame();
+                    }, 1500);
+                } else if (currentSymbol !== correctSymbol) {
+                    gameLocked = true;
+                    gameStatus.textContent = 'Sai rồi, đó không phải biểu tượng của bạn.';
+                    setTimeout(() => {
+                        clickedCard.classList.remove('is-flipped');
+                        gameStatus.textContent = 'Hãy tìm tất cả các biểu tượng ' + correctSymbol;
+                        gameLocked = false;
+                    }, 1000);
+                } else {
+                    matchedPairs++;
+                    gameStatus.textContent = `Chính xác! Tìm thấy ${matchedPairs}/4.`;
+                    if (matchedPairs === 4) {
+                        gameStatus.textContent = 'Tuyệt vời! Bạn đã ghi nhớ được biểu tượng của mình.';
+                        gameLocked = true;
+                    }
+                }
+            });
+        }
+        
+        function parseShadowResponse(response) {
+            const analysisMatch = response.match(/\[ANALYSIS\]([\s\S]*?)\[STORY\]/);
+            const storyMatch = response.match(/\[STORY\]([\s\S]*?)\[CHOICES\]/);
+            const choicesMatch = response.match(/\[CHOICES\]([\s\S]*)/);
+            if (!analysisMatch || !storyMatch || !choicesMatch) {
+                return { analysis: "Lỗi phân tích.", story: "", choices: [] };
+            }
+            const choices = choicesMatch[1].trim().split('|').map(c => {
+                const parts = c.split('. ');
+                return { key: parts[0], text: parts[1] };
+            });
+            return {
+                analysis: analysisMatch[1].trim(),
+                story: storyMatch[1].trim(),
+                choices: choices
+            };
+        }
+
+        async function callShadowAPI(trait, step) {
+            let systemPrompt = '';
+            let userQuery = '';
+
+            if (step === 'initial') {
+                systemPrompt = `Bạn là một Coach chuyên về tâm lý học chiều sâu của Carl Jung. Nhiệm vụ của bạn là giúp người dùng nhận diện "Cái Bóng" (The Shadow) của họ.
+1. **Phân tích:** Giải thích ngắn gọn rằng đặc điểm họ ghét ở người khác có thể là một phần bị chối bỏ trong chính họ (một sự phóng chiếu).
+2. **Kể chuyện:** Dẫn dắt họ vào một câu chuyện tương tác ngắn gọn, nơi họ phải đối mặt với một biểu tượng của "Cái Bóng" đó.
+3. **Đưa ra lựa chọn:** Cung cấp 3 lựa chọn hành động rõ ràng.
+Format trả lời phải tuân thủ nghiêm ngặt:
+[ANALYSIS]Phần phân tích của bạn.[STORY]Phần câu chuyện của bạn.[CHOICES]A. Lựa chọn 1|B. Lựa chọn 2|C. Lựa chọn 3`;
+                userQuery = `Đặc điểm tôi ghét ở người khác là: "${trait}"`;
+            } else {
+                systemPrompt = `Bạn là một Coach chuyên về tâm lý học chiều sâu của Carl Jung. Người dùng vừa đưa ra một lựa chọn về cách họ đối mặt với "Cái Bóng" của mình, thứ được biểu hiện qua đặc điểm "${trait}".
+- Lựa chọn A (Tấn công/Phá hủy) thể hiện sự chối bỏ.
+- Lựa chọn B (Né tránh/Cất giấu) thể hiện sự đè nén.
+- Lựa chọn C (Thấu hiểu/Tìm cách mở) thể hiện sự tích hợp.
+Hãy giải thích ý nghĩa tâm lý của lựa chọn của họ một cách sâu sắc và gợi ý một bước đi nhỏ để họ bắt đầu quá trình tích hợp "Cái Bóng" vào con người toàn diện của mình.`;
+                userQuery = `Tôi đã chọn: "${step}"`;
+            }
+            return await callGenericAPI(systemPrompt, userQuery);
+        }
+
+        async function callTimeMachineAPI(description) {
+            const systemPrompt = `Bạn là một Solution-Focused coach. Người dùng vừa mô tả "ngày phép màu" của họ. Nhiệm vụ của bạn là phân tích mô tả này và rút ra 2-3 bước đi nhỏ nhất, cụ thể nhất, và khả thi nhất mà họ có thể thực hiện ngay hôm nay hoặc ngày mai để tiến gần hơn đến tương lai đó. Hãy trình bày dưới dạng gạch đầu dòng, tập trung vào hành động.`;
+            const userQuery = `Đây là "ngày phép màu" của tôi: "${description}". Các bước đi đầu tiên của tôi là gì?`;
+            return await callGenericAPI(systemPrompt, userQuery);
+        }
+
+        async function callInfluenceCircleAPI(influenceItems, concernItems) {
+            const systemPrompt = `Bạn là một coach chuyên về mô hình của Stephen Covey. Người dùng đã phân loại các lo lắng của họ. Nhiệm vụ của bạn là:
+1. Với các mục trong "Vòng Tròn Quan Tâm", hãy công nhận chúng và gợi ý một tư duy chấp nhận.
+2. Với các mục trong "Vòng Tròn Ảnh Hưởng", hãy đưa ra một gợi ý hành động mạnh mẽ, chủ động cho MỖI mục.
+Hãy trả lời ngắn gọn, có cấu trúc rõ ràng.`;
+            const userQuery = `Vòng Tròn Ảnh Hưởng của tôi: ${influenceItems.join(', ')}. Vòng Tròn Quan Tâm của tôi: ${concernItems.join(', ')}. Hãy cho tôi lời khuyên.`;
+            return await callGenericAPI(systemPrompt, userQuery);
+        }
+
+        async function callVoicesTheaterAPI(situation, voices) {
+            const systemPrompt = `Bạn là một nhà trị liệu theo mô hình Internal Family Systems (IFS). Người dùng đang gặp một tình huống và đã xác định các "phần" nội tâm của họ. Nhiệm vụ của bạn là tạo ra một đoạn đối thoại ngắn giữa các "phần" này. Hãy cho thấy mỗi phần, kể cả những phần tiêu cực, đều có một ý định tốt (thường là để bảo vệ). Kết thúc bằng một lời khuyên cho "Cái Tôi Tỉnh Thức" (người dùng) để lắng nghe tất cả các phần.`;
+            const userQuery = `Tình huống: "${situation}". Các giọng nói bên trong tôi là: ${voices}. Hãy tạo một vở kịch.`;
+            return await callGenericAPI(systemPrompt, userQuery);
+        }
+        
+        async function callValuesCompassAPI(coreValues) {
+            const systemPrompt = `Bạn là một coach chuyên về Liệu pháp Chấp nhận và Cam kết (ACT). Người dùng đã xác định các giá trị cốt lõi của họ. Nhiệm vụ của bạn là:
+1. Công nhận và khẳng định tầm quan trọng của những giá trị này.
+2. Đặt một câu hỏi phản tư sâu sắc, buộc họ phải đối chiếu cuộc sống hiện tại với những giá trị đã chọn.
+3. Kêu gọi họ cam kết một hành động nhỏ, cụ thể trong tuần tới để sống đúng với một trong những giá trị đó.`;
+            const userQuery = `Đây là những giá trị cốt lõi của tôi: ${coreValues.join(', ')}. Hãy giúp tôi phản tư.`;
+            return await callGenericAPI(systemPrompt, userQuery);
+        }
+
+        async function callNarrativeReframerAPI(story) {
+            const systemPrompt = `Bạn là một coach chuyên về Liệu pháp Tường thuật. Người dùng đã chia sẻ "câu chuyện có vấn đề" của họ. Nhiệm vụ của bạn là:
+1. Đọc kỹ câu chuyện và tìm ra một "khoảnh khắc lấp lánh" (sparkling moment) - một ngoại lệ, dù nhỏ, cho câu chuyện đó.
+2. Dựa trên khoảnh khắc đó, hãy viết lại một "câu chuyện được tái tạo" mới, đầy sức mạnh hơn. Câu chuyện mới cần thừa nhận khó khăn nhưng nhấn mạnh vào sức mạnh và khả năng được thể hiện trong khoảnh khắc lấp lánh. Trả lời trực tiếp bằng câu chuyện mới, không cần giải thích thêm.`;
+            const userQuery = `Câu chuyện của tôi là: "${story}". Hãy tái tạo nó.`;
+            return await callGenericAPI(systemPrompt, userQuery);
+        }
+
+        async function callHabitLabAPI(habit, mode) {
+            const systemPrompt = `Bạn là một coach về thói quen, dựa trên sách "Atomic Habits". Người dùng muốn ${mode === 'build' ? 'xây dựng' : 'phá bỏ'} một thói quen. Nhiệm vụ của bạn là cung cấp một kế hoạch cụ thể dựa trên 4 Quy luật Thay đổi Hành vi.
+- Nếu là **xây dựng**, hãy giải thích cách làm cho nó **Rõ ràng, Hấp dẫn, Dễ dàng, Thỏa mãn**.
+- Nếu là **phá bỏ**, hãy giải thích cách làm cho nó **Vô hình, Không hấp dẫn, Khó khăn, Không thỏa mãn**.
+Hãy đưa ra các ví dụ rất cụ thể liên quan trực tiếp đến thói quen của người dùng.`;
+            const userQuery = `Tôi muốn ${mode === 'build' ? 'xây dựng thói quen' : 'phá bỏ thói quen'}: "${habit}".`;
+            return await callGenericAPI(systemPrompt, userQuery);
+        }
+
+        async function callGenericAPI(systemPrompt, userQuery) {
+            const apiKey = ""; 
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+            };
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) throw new Error(`API request failed`);
+            const result = await response.json();
+            if (result.candidates && result.candidates[0] && result.candidates[0].content.parts[0].text) {
+                return result.candidates[0].content.parts[0].text;
+            } else {
+                throw new Error("Invalid API response.");
+            }
+        }
     </script>
 </body>
 </html>
