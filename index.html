@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="vi" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phân Tích Tương Tác: AI và Cuộc Chiến Chống Tin Giả trên Facebook</title>
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/vi_VN/sdk.js#xfbml=1&version=v17.0&appId=YOUR_APP_ID&autoLogAppEvents=1" nonce="aK8lW2bX"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: Ứng dụng được cấu trúc theo 5 chủ đề chính, không theo thứ tự của báo cáo gốc, nhằm tạo ra một luồng khám phá tự nhiên cho người dùng. Bắt đầu từ việc định nghĩa vấn đề ("Hiểu Về Tin Giả"), sau đó giới thiệu các bên liên quan ("Cuộc Chiến Đa Mặt"), phân tích công nghệ cốt lõi ("Sức Mạnh AI"), thảo luận về các hệ quả ("Thách Thức & Rủi Ro"), và cuối cùng là đưa ra giải pháp ("Hành Động Của Chúng Ta"). Cấu trúc này sử dụng các thẻ tương tác, sơ đồ trực quan và biểu đồ để tăng tính tương tác và khả năng tiếp thu thông tin, giúp người dùng chủ động khám phá thay vì đọc thụ động. -->
+    <!-- Visualization & Content Choices: 1. Các loại tin giả (Mục tiêu: Tổ chức) -> Dùng các nút bấm tương tác để hiển thị định nghĩa, giúp cô đọng thông tin. 2. Các tác nhân (Mục tiêu: Tổ chức) -> Dùng layout dạng sơ đồ (HTML/CSS) để trực quan hóa mối quan hệ giữa các bên. 3. Tốc độ lan truyền (Mục tiêu: So sánh) -> Dùng biểu đồ cột (Chart.js) để làm nổi bật sự chênh lệch giữa tin giả và tin thật. 4. So sánh phương pháp AI (Mục tiêu: So sánh) -> Dùng bảng HTML để trình bày thông tin một cách có cấu trúc. 5. Các thách thức (Mục tiêu: Thông báo) -> Dùng layout thẻ (card) để trình bày các vấn đề phức tạp một cách rõ ràng. 6. Khuyến nghị (Mục tiêu: Thông báo -> Dùng accordion để nhóm các khuyến nghị cho từng đối tượng, giúp giao diện gọn gàng. Tất cả đều tuân thủ nguyên tắc không dùng SVG/Mermaid. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F5F5F4; /* warm-neutral-100 */
+            color: #1C1917; /* warm-neutral-900 */
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #0E7490; /* cyan-600 */
+            border-bottom-color: #0E7490;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .content-card, .actor-card, .challenge-card {
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .content-card:hover, .actor-card:hover, .challenge-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="text-xl font-bold text-cyan-700">AI Chống Tin Giả</div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#problem" class="nav-link border-b-2 border-transparent pb-1">Vấn Đề</a>
+                    <a href="#actors" class="nav-link border-b-2 border-transparent pb-1">Các Tác Nhân</a>
+                    <a href="#technology" class="nav-link border-b-2 border-transparent pb-1">Công Nghệ</a>
+                    <a href="#interactive" class="nav-link border-b-2 border-transparent pb-1">Công Cụ AI</a>
+                    <a href="#challenges" class="nav-link border-b-2 border-transparent pb-1">Thách Thức</a>
+                    <a href="#solutions" class="nav-link border-b-2 border-transparent pb-1">Giải Pháp</a>
+                    <div id="login-status" class="flex items-center space-x-2">
+                        <button id="fb-login-btn" class="bg-blue-600 text-white px-4 py-2 rounded-full font-semibold hover:bg-blue-700 transition">Đăng nhập với Facebook</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+        
+        <section id="hero" class="text-center mb-24">
+            <h1 class="text-4xl md:text-5xl font-bold text-cyan-800 mb-4">Cuộc Chiến Chống Tin Giả</h1>
+            <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+                Một phân tích tương tác về cách Trí Tuệ Nhân Tạo (AI) được sử dụng để phát hiện và kiểm soát thông tin sai lệch trên nền tảng Facebook.
+            </p>
+        </section>
+
+        <section id="problem" class="mb-24 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-4">Hiểu Về "Rối Loạn Thông Tin"</h2>
+            <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">
+                "Tin giả" chỉ là một phần của một vấn đề lớn hơn. Để chống lại nó, trước tiên chúng ta cần hiểu rõ các loại thông tin sai lệch khác nhau. Hãy nhấp vào từng thuật ngữ để khám phá định nghĩa và đặc điểm của chúng.
+            </p>
+            <div class="flex flex-wrap justify-center gap-4 mb-8">
+                <button data-type="misinformation" class="info-btn bg-cyan-600 text-white px-6 py-2 rounded-full font-semibold shadow-md hover:bg-cyan-700 transition">Misinformation</button>
+                <button data-type="disinformation" class="info-btn bg-gray-200 text-gray-800 px-6 py-2 rounded-full font-semibold hover:bg-gray-300 transition">Disinformation</button>
+                <button data-type="malinformation" class="info-btn bg-gray-200 text-gray-800 px-6 py-2 rounded-full font-semibold hover:bg-gray-300 transition">Malinformation</button>
+            </div>
+            <div id="info-display" class="max-w-4xl mx-auto">
+            </div>
+        </section>
+
+        <section id="actors" class="mb-24 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-4">Cuộc Chiến Đa Mặt</h2>
+            <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">
+                Chống tin giả là một nỗ lực tập thể. Nhiều tác nhân, từ nền tảng công nghệ đến chính phủ và chính người dùng, đều đóng một vai trò quan trọng trong hệ sinh thái phức tạp này.
+            </p>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="actor-card bg-white p-6 rounded-lg shadow-lg border-t-4 border-cyan-500">
+                    <h3 class="text-xl font-bold mb-2">Nền tảng Meta (Facebook)</h3>
+                    <p class="text-gray-600">Sử dụng mô hình lai "AI + Con người" với chiến lược 3 trụ cột: Gỡ bỏ, Giảm bớt, và Thông báo. AI quét nội dung, sau đó chuyển cho các đối tác kiểm chứng độc lập.</p>
+                </div>
+                <div class="actor-card bg-white p-6 rounded-lg shadow-lg border-t-4 border-teal-500">
+                    <h3 class="text-xl font-bold mb-2">Đối Tác Kiểm Chứng (IFCN)</h3>
+                    <p class="text-gray-600">Các tổ chức độc lập, được Mạng lưới Kiểm chứng Thông tin Quốc tế (IFCN) chứng nhận, chịu trách nhiệm xem xét và dán nhãn độ tin cậy cho nội dung.</p>
+                </div>
+                <div class="actor-card bg-white p-6 rounded-lg shadow-lg border-t-4 border-amber-500">
+                    <h3 class="text-xl font-bold mb-2">Cộng Đồng Người Dùng</h3>
+                    <p class="text-gray-600">Đóng vai trò là tuyến phòng thủ đầu tiên bằng cách báo cáo các nội dung nghi ngờ. Tín hiệu từ người dùng là một nguồn dữ liệu quan trọng cho hệ thống AI.</p>
+                </div>
+                <div class="actor-card bg-white p-6 rounded-lg shadow-lg border-t-4 border-red-500">
+                    <h3 class="text-xl font-bold mb-2">Cơ Quan Nhà Nước (VAFC)</h3>
+                    <p class="text-gray-600">Tại Việt Nam, Trung tâm Xử lý Tin giả (VAFC) tiếp nhận, thẩm định và công bố tin giả, theo triết lý "con người là trung tâm" trong việc xác thực thông tin.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="technology" class="mb-24 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-4">Sức Mạnh Của AI</h2>
+            <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">
+                Trí tuệ nhân tạo là công cụ cốt lõi trong việc phát hiện tin giả ở quy mô lớn. Các thuật toán không chỉ phân tích nội dung mà còn cả cách thức thông tin lan truyền trên mạng xã hội để tìm ra những dấu hiệu bất thường.
+            </p>
+            <div class="bg-white p-8 rounded-lg shadow-lg mb-12">
+                <h3 class="text-2xl font-bold text-center mb-4">Tin Giả Lan Nhanh Hơn Tin Thật</h3>
+                <p class="text-center text-gray-600 mb-8">Nghiên cứu cho thấy thông tin sai lệch có xu hướng lan truyền nhanh và rộng hơn đáng kể so với tin tức xác thực. Biểu đồ dưới đây minh họa tốc độ lan truyền tương đối.</p>
+                <div class="chart-container">
+                    <canvas id="speedChart"></canvas>
+                </div>
+            </div>
+
+            <div class="bg-white p-8 rounded-lg shadow-lg">
+                <h3 class="text-2xl font-bold text-center mb-8">So Sánh Các Phương Pháp AI</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phương pháp</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ưu điểm</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hạn chế</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap font-medium">Phân tích Nội dung (NLP)</td>
+                                <td class="px-6 py-4">Xử lý nhanh khối lượng lớn văn bản, phát hiện các mẫu ngôn ngữ phức tạp.</td>
+                                <td class="px-6 py-4">Khó khăn với châm biếm, ẩn ý. Dễ bị qua mặt bởi tin giả được viết tốt.</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap font-medium">Phân tích Mạng lưới (GNNs)</td>
+                                <td class="px-6 py-4">Phát hiện hành vi lan truyền bất thường, hiệu quả với các chiến dịch có tổ chức.</td>
+                                <td class="px-6 py-4">Phức tạp, yêu cầu dữ liệu mạng lưới chi tiết và mô hình hóa theo thời gian.</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap font-medium">Phát hiện Deepfake</td>
+                                <td class="px-6 py-4">Nhận diện các dấu hiệu giả mạo kỹ thuật trong hình ảnh, video, âm thanh.</td>
+                                <td class="px-6 py-4">Cuộc chạy đua vũ trang: dễ bị qua mặt bởi các công nghệ deepfake mới.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="interactive" class="mb-24 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-4">Bộ Công Cụ AI Chống Tin Giả ✨</h2>
+            <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">
+                Sử dụng các công cụ AI được cung cấp dưới đây để kiểm tra thông tin hoặc tìm ý tưởng chiến lược.
+            </p>
+
+            <div class="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+                <div class="flex border-b border-gray-200">
+                    <button data-tab="fact-check" class="tab-btn active px-4 py-2 font-semibold border-b-2 border-transparent hover:border-cyan-500 focus:outline-none transition">
+                        Kiểm Tra Thông Tin
+                    </button>
+                    <button data-tab="brainstorm" class="tab-btn px-4 py-2 font-semibold border-b-2 border-transparent hover:border-cyan-500 focus:outline-none transition">
+                        Gợi Ý Chiến Lược
+                    </button>
+                </div>
+                
+                <div id="fact-check-tab" class="tab-content mt-8">
+                    <textarea id="text-input" rows="6" class="w-full p-4 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500 mb-4" placeholder="Nhập văn bản cần kiểm chứng hoặc dán đường dẫn (URL) tại đây..."></textarea>
+                    <div class="flex justify-center">
+                        <button id="analyze-btn" class="bg-blue-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-blue-700 transition flex items-center justify-center space-x-2">
+                            <span>Phân tích</span> ✨
+                        </button>
+                    </div>
+                    <div id="result-display" class="mt-8 p-4 border rounded-lg text-center hidden">
+                        <p id="result-emoji" class="text-5xl mb-2">🤔</p>
+                        <p id="result-text" class="text-lg font-semibold text-gray-800">Đang phân tích...</p>
+                        <p id="result-explanation" class="text-gray-600 mt-2 italic hidden"></p>
+                    </div>
+                </div>
+
+                <div id="brainstorm-tab" class="tab-content hidden mt-8">
+                    <input type="text" id="topic-input" class="w-full p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 mb-4" placeholder="Ví dụ: trong cộng đồng, cho thanh thiếu niên,...">
+                    <div class="flex justify-center">
+                        <button id="brainstorm-btn" class="bg-emerald-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-emerald-700 transition flex items-center justify-center space-x-2">
+                            <span>Gợi ý ý tưởng</span> ✨
+                        </button>
+                    </div>
+                    <div id="brainstorm-result" class="mt-8 hidden">
+                        <h3 class="font-bold text-xl mb-4">Những Ý Tưởng Dành Cho Bạn:</h3>
+                        <ul id="idea-list" class="list-disc list-inside space-y-2 text-gray-700">
+                            <li class="italic text-center text-gray-600">Đang tạo ý tưởng...</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="challenges" class="mb-24 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-4">Thách Thức và Rủi Ro</h2>
+            <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">
+                Cuộc chiến chống tin giả không chỉ là vấn đề công nghệ. Nó còn đặt ra những câu hỏi phức tạp về đạo đức, chính sách và tác động xã hội, đòi hỏi sự cân bằng tinh tế giữa các giá trị.
+            </p>
+            <div class="grid md:grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="challenge-card bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-bold mb-2">Tự do Ngôn luận vs. Kiểm duyệt</h3>
+                    <p class="text-gray-600">Việc kiểm duyệt nội dung, dù cần thiết, luôn tạo ra sự căng thẳng với quyền tự do ngôn luận. Trao quá nhiều quyền cho thuật toán có thể dẫn đến việc bóp nghẹt các ý kiến hợp pháp một cách vô ý.</p>
+                </div>
+                <div class="challenge-card bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-bold mb-2">Thiên vị Thuật toán (Bias)</h3>
+                    <p class="text-gray-600">AI học từ dữ liệu do con người tạo ra, vì vậy chúng có thể học và khuếch đại các định kiến xã hội sẵn có, dẫn đến việc kiểm duyệt không công bằng đối với một số nhóm cộng đồng nhất định.</p>
+                </div>
+                <div class="challenge-card bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-bold mb-2">Hiệu ứng "Phòng Vang"</h3>
+                    <p class="text-gray-600">Các thuật toán đề xuất nội dung có thể vô tình tạo ra các "phòng vang", nơi người dùng chỉ thấy những quan điểm củng cố niềm tin của họ, làm gia tăng sự phân cực và khiến tin giả dễ lan truyền hơn.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="solutions" class="scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-4">Hành Động Của Chúng Ta</h2>
+            <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">
+                Chống lại tin giả đòi hỏi một chiến lược toàn diện từ mọi phía. Dưới đây là các khuyến nghị hành động cho từng nhóm liên quan để cùng nhau xây dựng một không gian mạng an toàn và đáng tin cậy hơn.
+            </p>
+            <div class="max-w-4xl mx-auto space-y-4" id="accordion-container">
+                
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-24">
+        <div class="container mx-auto px-6 py-8 text-center">
+            <p>Một sản phẩm phân tích tương tác dựa trên báo cáo "Phân Tích Cơ Chế Phát Hiện và Đánh Giá Độ Tin Cậy Nội Dung trên Mạng Xã Hội Facebook".</p>
+            <p class="text-sm text-gray-400 mt-2">Được thiết kế để mục đích thông tin và giáo dục.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const contentData = {
+                misinformation: {
+                    title: 'Misinformation (Thông tin sai lệch)',
+                    icon: ' M',
+                    color: 'cyan',
+                    description: 'Là thông tin sai hoặc không chính xác, nhưng được lan truyền mà <strong>không có chủ ý gây hại</strong>. Người chia sẻ có thể không nhận ra thông tin đó là sai.',
+                    characteristics: [
+                        'Lan truyền do nhầm lẫn hoặc thiếu kiểm chứng.',
+                        'Thường liên quan đến tin đồn, hiểu lầm.',
+                        'Mục đích không phải là để lừa gạt.'
+                    ]
+                },
+                disinformation: {
+                    title: 'Disinformation (Thông tin giả mạo)',
+                    icon: ' D',
+                    color: 'red',
+                    description: 'Là thông tin sai được tạo ra và lan truyền một cách <strong>cố ý, có chủ đích</strong> để lừa gạt, thao túng hoặc gây hại.',
+                    characteristics: [
+                        'Có mục đích rõ ràng: chính trị, tài chính, hoặc gây tổn hại danh dự.',
+                        'Thường là một phần của các chiến dịch có tổ chức.',
+                        'Đây là "tin giả" (fake news) theo đúng nghĩa đen.'
+                    ]
+                },
+                malinformation: {
+                    title: 'Malinformation (Thông tin có hại)',
+                    icon: ' M',
+                    color: 'amber',
+                    description: 'Là thông tin <strong>dựa trên sự thật</strong>, nhưng được sử dụng ngoài ngữ cảnh để gây hại cho một cá nhân, tổ chức hoặc quốc gia.',
+                    characteristics: [
+                        'Sử dụng thông tin thật nhưng với mục đích xấu.',
+                        'Ví dụ: tiết lộ thông tin cá nhân, phát tán hình ảnh riêng tư.',
+                        'Rất tinh vi vì bản chất thông tin là đúng.'
+                    ]
+                }
+            };
+
+            const infoDisplay = document.getElementById('info-display');
+            const infoBtns = document.querySelectorAll('.info-btn');
+
+            function updateInfoDisplay(type) {
+                const data = contentData[type];
+                if (!data) return;
+
+                infoDisplay.innerHTML = `
+                    <div class="content-card bg-white p-8 rounded-lg shadow-lg border-l-8 border-${data.color}-500">
+                        <h3 class="text-2xl font-bold mb-4 text-${data.color}-700">${data.title}</h3>
+                        <p class="text-gray-700 mb-6">${data.description}</p>
+                        <h4 class="font-semibold mb-2">Đặc điểm chính:</h4>
+                        <ul class="list-disc list-inside space-y-2 text-gray-600">
+                            ${data.characteristics.map(item => `<li>${item}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+
+                infoBtns.forEach(btn => {
+                    if (btn.dataset.type === type) {
+                        btn.classList.remove('bg-gray-200', 'text-gray-800');
+                        btn.classList.add(`bg-${data.color}-600`, 'text-white');
+                    } else {
+                        btn.classList.remove('bg-cyan-600', 'bg-red-600', 'bg-amber-600', 'text-white');
+                        btn.classList.add('bg-gray-200', 'text-gray-800');
+                    }
+                });
+            }
+
+            infoBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    updateInfoDisplay(btn.dataset.type);
+                });
+            });
+
+            updateInfoDisplay('misinformation');
+
+            const speedChartCtx = document.getElementById('speedChart').getContext('2d');
+            new Chart(speedChartCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Tin Thật', 'Tin Giả'],
+                    datasets: [{
+                        label: 'Tốc độ lan truyền tương đối',
+                        data: [100, 600],
+                        backgroundColor: [
+                            'rgba(14, 116, 144, 0.6)',
+                            'rgba(220, 38, 38, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(14, 116, 144, 1)',
+                            'rgba(220, 38, 38, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Chỉ số lan truyền (tương đối)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.x !== null) {
+                                        if (context.label === 'Tin Giả') {
+                                            label += `Nhanh hơn khoảng 6 lần`;
+                                        } else {
+                                             label += `Tốc độ cơ sở`;
+                                        }
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const accordionData = [
+                {
+                    title: 'Đối với Người Dùng',
+                    content: [
+                        '<strong>Nâng cao tư duy phản biện:</strong> Luôn đặt câu hỏi về nguồn gốc và tính xác thực của thông tin.',
+                        '<strong>Kiểm tra trước khi chia sẻ:</strong> Dành vài giây để tìm kiếm ngược hình ảnh hoặc kiểm tra nguồn tin.',
+                        '<strong>Hạn chế chia sẻ theo cảm tính:</strong> Tin tức giật gân, gây cảm xúc mạnh thường là dấu hiệu của tin giả.'
+                    ]
+                },
+                {
+                    title: 'Đối với Nền Tảng Công Nghệ',
+                    content: [
+                        '<strong>Cải tiến thuật toán:</strong> Liên tục đầu tư R&D để đối phó với các dạng tin giả mới, đặc biệt là deepfake.',
+                        '<strong>Tăng cường tính minh bạch:</strong> Công khai hóa cơ chế hoạt động của thuật toán kiểm duyệt để xây dựng lòng tin.',
+                        '<strong>Mở rộng hợp tác:</strong> Duy trì và phát triển mạng lưới đối tác kiểm chứng độc lập trên toàn cầu.'
+                    ]
+                },
+                {
+                    title: 'Đối với Cơ Quan Quản Lý',
+                    content: [
+                        '<strong>Xây dựng khung pháp lý linh hoạt:</strong> Các quy định cần theo kịp tốc độ phát triển của công nghệ.',
+                        '<strong>Thúc đẩy giáo dục truyền thông số:</strong> Đưa kỹ năng nhận diện tin giả vào chương trình giáo dục phổ thông.',
+                        '<strong>Hợp tác quốc tế:</strong> Tin giả là vấn đề xuyên biên giới, đòi hỏi sự phối hợp giữa các quốc gia.'
+                    ]
+                }
+            ];
+
+            const accordionContainer = document.getElementById('accordion-container');
+            accordionData.forEach((item, index) => {
+                const accordionItem = document.createElement('div');
+                accordionItem.className = 'bg-white rounded-lg shadow-md';
+                accordionItem.innerHTML = `
+                    <button class="accordion-header w-full flex justify-between items-center p-5 text-left font-semibold">
+                        <span>${item.title}</span>
+                        <span class="accordion-icon text-2xl text-cyan-600 transform transition-transform">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <div class="p-5 pt-0">
+                           <ul class="space-y-2 text-gray-600">
+                                ${item.content.map(c => `<li>${c}</li>`).join('')}
+                           </ul>
+                        </div>
+                    </div>
+                `;
+                accordionContainer.appendChild(accordionItem);
+            });
+
+            const accordionHeaders = document.querySelectorAll('.accordion-header');
+            accordionHeaders.forEach(header => {
+                header.addEventListener('click', () => {
+                    const content = header.nextElementSibling;
+                    const icon = header.querySelector('.accordion-icon');
+                    
+                    const isOpen = content.style.maxHeight && content.style.maxHeight !== '0px';
+
+                    accordionHeaders.forEach(h => {
+                        h.nextElementSibling.style.maxHeight = '0px';
+                        h.querySelector('.accordion-icon').textContent = '+';
+                        h.querySelector('.accordion-icon').classList.remove('rotate-45');
+                    });
+                    
+                    if (!isOpen) {
+                        content.style.maxHeight = content.scrollHeight + 'px';
+                        icon.textContent = '+';
+                        icon.classList.add('rotate-45');
+                    }
+                });
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('section[id]');
+            
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 100) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').substring(1) === current) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+
+            // Facebook SDK and Login Logic
+            window.fbAsyncInit = function() {
+                FB.init({
+                    appId      : 'YOUR_APP_ID',
+                    cookie     : true,
+                    xfbml      : true,
+                    version    : 'v17.0'
+                });
+                FB.getLoginStatus(function(response) {
+                    statusChangeCallback(response);
+                });
+            };
+
+            function statusChangeCallback(response) {
+                const loginStatusDiv = document.getElementById('login-status');
+                if (response.status === 'connected') {
+                    // Logged into your app and Facebook.
+                    FB.api('/me', {fields: 'name,picture'}, function(userResponse) {
+                        const userProfileHtml = `
+                            <div class="flex items-center space-x-2">
+                                <img src="${userResponse.picture.data.url}" alt="${userResponse.name}" class="w-8 h-8 rounded-full border-2 border-cyan-500">
+                                <span class="text-gray-800 font-semibold hidden lg:block">${userResponse.name}</span>
+                                <button id="fb-logout-btn" class="bg-red-500 text-white px-3 py-1 text-sm rounded-full font-semibold hover:bg-red-600 transition">Đăng xuất</button>
+                            </div>
+                        `;
+                        loginStatusDiv.innerHTML = userProfileHtml;
+
+                        document.getElementById('fb-logout-btn').addEventListener('click', () => {
+                            FB.logout(function(response) {
+                                statusChangeCallback(response);
+                            });
+                        });
+                    });
+                } else {
+                    // Not logged in or not authorized.
+                    const loginBtnHtml = `
+                        <button id="fb-login-btn" class="bg-blue-600 text-white px-4 py-2 rounded-full font-semibold hover:bg-blue-700 transition">Đăng nhập với Facebook</button>
+                    `;
+                    loginStatusDiv.innerHTML = loginBtnHtml;
+                    
+                    document.getElementById('fb-login-btn').addEventListener('click', () => {
+                        FB.login(function(response) {
+                            statusChangeCallback(response);
+                        }, {scope: 'public_profile,email'});
+                    });
+                }
+            }
+
+            // Gemini API Fact-Checking Feature
+            const textInput = document.getElementById('text-input');
+            const analyzeBtn = document.getElementById('analyze-btn');
+            const resultDisplay = document.getElementById('result-display');
+            const resultEmoji = document.getElementById('result-emoji');
+            const resultText = document.getElementById('result-text');
+            const resultExplanation = document.getElementById('result-explanation');
+
+            analyzeBtn.addEventListener('click', async () => {
+                const prompt = textInput.value;
+                if (!prompt) {
+                    resultDisplay.classList.remove('hidden');
+                    resultDisplay.style.backgroundColor = '#FEF2F2';
+                    resultDisplay.style.borderColor = '#FCA5A5';
+                    resultEmoji.textContent = '❌';
+                    resultText.textContent = `Vui lòng nhập văn bản hoặc dán đường dẫn để phân tích.`;
+                    resultExplanation.classList.add('hidden');
+                    return;
+                }
+
+                resultDisplay.classList.remove('hidden');
+                resultDisplay.style.backgroundColor = '#F0F9FF';
+                resultDisplay.style.borderColor = '#BAE6FD';
+                resultEmoji.textContent = '🤔';
+                resultText.textContent = `Đang phân tích...`;
+                resultExplanation.classList.add('hidden');
+                analyzeBtn.disabled = true;
+                
+                try {
+                    let contentToAnalyze = prompt;
+
+                    // Check if the input is a URL
+                    const urlPattern = new RegExp('^(https?:\\/\\/)?' + // protocol
+                        '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
+                        '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
+                        '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
+                        '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
+                        '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator
+                    if (urlPattern.test(prompt)) {
+                        try {
+                            const response = await fetch('/api/fetch-url', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ url: prompt })
+                            });
+                            const data = await response.json();
+                            if (data.content) {
+                                contentToAnalyze = data.content;
+                            } else {
+                                throw new Error(data.error || "Không thể lấy nội dung từ đường dẫn.");
+                            }
+                        } catch (err) {
+                            resultDisplay.style.backgroundColor = '#FEF2F2';
+                            resultDisplay.style.borderColor = '#FCA5A5';
+                            resultEmoji.textContent = '❌';
+                            resultText.textContent = `Lỗi: Không thể lấy nội dung từ đường dẫn này. Vui lòng nhập văn bản.`;
+                            resultExplanation.classList.add('hidden');
+                            analyzeBtn.disabled = false;
+                            return;
+                        }
+                    }
+
+                    let chatHistory = [];
+                    chatHistory.push({ role: "user", parts: [{ text: `Phân tích nội dung sau và đưa ra đánh giá về độ tin cậy. Dựa trên các tiêu chí: nguồn gốc, tính xác thực của thông tin, và các dấu hiệu của tin giả (như ngôn ngữ giật gân, thiếu tham chiếu). Đưa ra câu trả lời ngắn gọn, trực tiếp, chỉ bao gồm 2 phần: đánh giá về độ tin cậy ("Đánh giá: [nhãn]") và một đoạn giải thích ngắn gọn ("Giải thích: [đoạn văn]"). Sử dụng các nhãn: "Tin thật", "Có thể là tin giả", "Tin giả", "Không đủ thông tin".
+
+Nội dung: ${contentToAnalyze}` }] });
+                    
+                    const payload = {
+                        contents: chatHistory
+                    };
+
+                    const apiKey = "";
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                    
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        
+                        const text = result.candidates[0].content.parts[0].text;
+                        const [assessment, explanation] = text.split('\n').map(s => s.trim().split(':').slice(1).join(':').trim());
+                        
+                        let emoji, color, borderColor;
+                        if (assessment.includes("Tin thật")) {
+                            emoji = '✅';
+                            color = '#ECFDF5';
+                            borderColor = '#A7F3D0';
+                        } else if (assessment.includes("Có thể là tin giả")) {
+                            emoji = '⚠️';
+                            color = '#FFFBEB';
+                            borderColor = '#FDE68A';
+                        } else if (assessment.includes("Tin giả")) {
+                             emoji = '🚫';
+                            color = '#FEF2F2';
+                            borderColor = '#FCA5A5';
+                        } else {
+                            emoji = '❓';
+                            color = '#F3F4F6';
+                            borderColor = '#E5E7EB';
+                        }
+                        
+                        resultDisplay.style.backgroundColor = color;
+                        resultDisplay.style.borderColor = borderColor;
+                        resultEmoji.textContent = emoji;
+                        resultText.textContent = assessment;
+                        resultExplanation.textContent = explanation;
+                        resultExplanation.classList.remove('hidden');
+
+                    } else {
+                        resultDisplay.style.backgroundColor = '#FEF2F2';
+                        resultDisplay.style.borderColor = '#FCA5A5';
+                        resultEmoji.textContent = '❌';
+                        resultText.textContent = `Đã xảy ra lỗi khi phân tích. Vui lòng thử lại.`;
+                        resultExplanation.classList.add('hidden');
+                    }
+                } catch (error) {
+                    console.error('Lỗi khi gọi API Gemini:', error);
+                    resultDisplay.style.backgroundColor = '#FEF2F2';
+                    resultDisplay.style.borderColor = '#FCA5A5';
+                    resultEmoji.textContent = '❌';
+                    resultText.textContent = `Đã xảy ra lỗi: ${error.message}. Vui lòng thử lại sau.`;
+                    resultExplanation.classList.add('hidden');
+                } finally {
+                    analyzeBtn.disabled = false;
+                }
+            });
+            
+            // Gemini API Brainstorming Feature
+            const topicInput = document.getElementById('topic-input');
+            const brainstormBtn = document.getElementById('brainstorm-btn');
+            const brainstormResult = document.getElementById('brainstorm-result');
+            const ideaList = document.getElementById('idea-list');
+
+            brainstormBtn.addEventListener('click', async () => {
+                const topic = topicInput.value;
+                if (!topic) {
+                    ideaList.innerHTML = `<li class="italic text-gray-600">Vui lòng nhập một chủ đề hoặc ngữ cảnh để nhận ý tưởng.</li>`;
+                    brainstormResult.classList.remove('hidden');
+                    return;
+                }
+
+                ideaList.innerHTML = `<li class="italic text-gray-600 text-center">Đang tạo ý tưởng...</li>`;
+                brainstormResult.classList.remove('hidden');
+                brainstormBtn.disabled = true;
+
+                try {
+                    let chatHistory = [];
+                    chatHistory.push({ role: "user", parts: [{ text: `Tạo một danh sách gạch đầu dòng các chiến lược, hành động cụ thể và sáng tạo để chống lại tin giả trong ngữ cảnh sau: "${topic}". Trả lời chỉ bằng một danh sách. Mỗi mục là một câu ngắn gọn, trực tiếp, và bắt đầu bằng "-". Tránh sử dụng bất kỳ lời giới thiệu hoặc kết luận nào.` }] });
+
+                    const payload = {
+                        contents: chatHistory
+                    };
+                    const apiKey = "";
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        
+                        const text = result.candidates[0].content.parts[0].text;
+                        const ideas = text.split('\n').filter(line => line.trim().startsWith('-')).map(line => line.substring(1).trim());
+                        
+                        let html = '';
+                        if (ideas.length > 0) {
+                            html = ideas.map(idea => `<li>${idea}</li>`).join('');
+                        } else {
+                            html = `<li class="italic text-gray-600 text-center">Không thể tạo ý tưởng. Vui lòng thử lại với chủ đề khác.</li>`;
+                        }
+                        ideaList.innerHTML = html;
+                    } else {
+                        ideaList.innerHTML = `<li class="italic text-gray-600 text-center">Đã xảy ra lỗi. Vui lòng thử lại.</li>`;
+                    }
+                } catch (error) {
+                    console.error('Lỗi khi gọi API Gemini:', error);
+                    ideaList.innerHTML = `<li class="italic text-gray-600 text-center">Đã xảy ra lỗi: ${error.message}. Vui lòng thử lại sau.</li>`;
+                } finally {
+                    brainstormBtn.disabled = false;
+                }
+            });
+            
+            // Tab switching logic
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => btn.classList.remove('border-cyan-500'));
+                    button.classList.add('border-cyan-500');
+
+                    tabContents.forEach(content => content.classList.add('hidden'));
+                    const targetTab = document.getElementById(button.dataset.tab + '-tab');
+                    targetTab.classList.remove('hidden');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
