@@ -10,15 +10,13 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: Warm Neutrals -->
-    <!-- Application Structure Plan: Ứng dụng được cấu trúc theo 5 chủ đề chính, không theo thứ tự của báo cáo gốc, nhằm tạo ra một luồng khám phá tự nhiên cho người dùng. Bắt đầu từ việc định nghĩa vấn đề ("Hiểu Về Tin Giả"), sau đó giới thiệu các bên liên quan ("Cuộc Chiến Đa Mặt"), phân tích công nghệ cốt lõi ("Sức Mạnh AI"), thảo luận về các hệ quả ("Thách Thức & Rủi Ro"), và cuối cùng là đưa ra giải pháp ("Hành Động Của Chúng Ta"). Cấu trúc này sử dụng các thẻ tương tác, sơ đồ trực quan và biểu đồ để tăng tính tương tác và khả năng tiếp thu thông tin, giúp người dùng chủ động khám phá thay vì đọc thụ động. -->
+    <!-- Chosen Palette: Nature-Inspired Greens -->
+    <!-- Application Structure Plan: Ứng dụng được cấu trúc lại để phần Công cụ AI lên đầu, giúp người dùng tương tác ngay lập tức. Sau đó là các phần lý thuyết để người dùng tìm hiểu sâu hơn. Cấu trúc mới là: Giới thiệu -> Công cụ AI -> Các chủ đề chính (Hiểu về Tin giả, Các tác nhân, Công nghệ, Thách thức, Giải pháp). Cấu trúc này sử dụng các thẻ tab, sơ đồ trực quan và biểu đồ để tăng tính tương tác và khả năng tiếp thu thông tin. -->
     <!-- Visualization & Content Choices: 1. Các loại tin giả (Mục tiêu: Tổ chức) -> Dùng các nút bấm tương tác để hiển thị định nghĩa, giúp cô đọng thông tin. 2. Các tác nhân (Mục tiêu: Tổ chức) -> Dùng layout dạng sơ đồ (HTML/CSS) để trực quan hóa mối quan hệ giữa các bên. 3. Tốc độ lan truyền (Mục tiêu: So sánh) -> Dùng biểu đồ cột (Chart.js) để làm nổi bật sự chênh lệch giữa tin giả và tin thật. 4. So sánh phương pháp AI (Mục tiêu: So sánh) -> Dùng bảng HTML để trình bày thông tin một cách có cấu trúc. 5. Các thách thức (Mục tiêu: Thông báo) -> Dùng layout thẻ (card) để trình bày các vấn đề phức tạp một cách rõ ràng. 6. Khuyến nghị (Mục tiêu: Thông báo -> Dùng accordion để nhóm các khuyến nghị cho từng đối tượng, giúp giao diện gọn gàng. Tất cả đều tuân thủ nguyên tắc không dùng SVG/Mermaid. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #F5F5F4; /* warm-neutral-100 */
-            color: #1C1917; /* warm-neutral-900 */
         }
         .nav-link {
             transition: color 0.3s, border-bottom-color 0.3s;
@@ -53,6 +51,41 @@
             overflow: hidden;
             transition: max-height 0.5s ease-in-out;
         }
+
+        /* Light Mode Styles */
+        body {
+            background-color: #F5F5F4;
+            color: #1C1917;
+        }
+        .bg-white { background-color: #ffffff; }
+        .bg-gray-200 { background-color: #E5E7EB; }
+        .text-gray-800 { color: #1F2937; }
+        .text-gray-600 { color: #4B5563; }
+        .text-gray-500 { color: #6B7280; }
+        .text-cyan-700 { color: #0E7490; }
+        .text-cyan-800 { color: #064E6C; }
+        .text-blue-600 { color: #2563EB; }
+        .text-emerald-600 { color: #059669; }
+        .text-red-500 { color: #EF4444; }
+        .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+
+        /* Dark Mode Styles */
+        body.dark {
+            background-color: #121212;
+            color: #E0E0E0;
+        }
+        .dark .bg-white { background-color: #1E1E1E; }
+        .dark .bg-gray-200 { background-color: #333333; }
+        .dark .bg-gray-800 { background-color: #1E1E1E; }
+        .dark .text-gray-800 { color: #E0E0E0; }
+        .dark .text-gray-600 { color: #A0A0A0; }
+        .dark .text-gray-500 { color: #888888; }
+        .dark .text-cyan-700 { color: #40c0f0; }
+        .dark .text-cyan-800 { color: #67E8F9; }
+        .dark .text-blue-600 { color: #63b1ff; }
+        .dark .text-emerald-600 { color: #2dd4bf; }
+        .dark .text-red-500 { color: #ef6461; }
+        .dark .shadow-lg { box-shadow: 0 10px 15px -3px rgba(255, 255, 255, 0.05), 0 4px 6px -2px rgba(255, 255, 255, 0.05); }
     </style>
 </head>
 <body class="antialiased">
@@ -68,6 +101,11 @@
                     <a href="#interactive" class="nav-link border-b-2 border-transparent pb-1">Công Cụ AI</a>
                     <a href="#challenges" class="nav-link border-b-2 border-transparent pb-1">Thách Thức</a>
                     <a href="#solutions" class="nav-link border-b-2 border-transparent pb-1">Giải Pháp</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="dark-mode-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                        <span id="dark-mode-icon" class="text-xl">🌙</span>
+                    </button>
                     <div id="login-status" class="flex items-center space-x-2">
                         <button id="fb-login-btn" class="bg-blue-600 text-white px-4 py-2 rounded-full font-semibold hover:bg-blue-700 transition">Đăng nhập với Facebook</button>
                     </div>
@@ -85,8 +123,74 @@
             </p>
         </section>
 
+        <section id="interactive" class="mb-24 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-4">Bộ Công Cụ AI Chống Tin Giả ✨</h2>
+            <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">
+                Sử dụng các công cụ AI được cung cấp dưới đây để kiểm tra thông tin hoặc tìm ý tưởng chiến lược.
+            </p>
+
+            <div class="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+                <div class="flex border-b border-gray-200">
+                    <button data-tab="fact-check" class="tab-btn active px-4 py-2 font-semibold border-b-2 border-cyan-500 hover:border-cyan-500 focus:outline-none transition">
+                        Kiểm Tra Thông Tin
+                    </button>
+                    <button data-tab="brainstorm" class="tab-btn px-4 py-2 font-semibold border-b-2 border-transparent hover:border-cyan-500 focus:outline-none transition">
+                        Gợi Ý Chiến Lược
+                    </button>
+                </div>
+                
+                <div id="fact-check-tab" class="tab-content mt-8">
+                    <textarea id="text-input" rows="6" class="w-full p-4 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500 mb-4" placeholder="Nhập văn bản cần kiểm chứng hoặc dán đường dẫn (URL) tại đây..."></textarea>
+                    
+                    <div class="flex flex-col md:flex-row justify-center items-center gap-4 mb-4">
+                        <label class="bg-gray-200 text-gray-800 px-6 py-2 rounded-full font-semibold cursor-pointer hover:bg-gray-300 transition flex items-center space-x-2">
+                            <span class="text-xl">🖼️</span>
+                            <span>Tải hình ảnh lên</span>
+                            <input type="file" id="image-upload" class="hidden" accept="image/*">
+                        </label>
+                        <div id="image-preview" class="hidden w-20 h-20 rounded-lg overflow-hidden border-2 border-gray-300">
+                            <img id="preview-image" src="" alt="Image preview" class="w-full h-full object-cover">
+                        </div>
+                    </div>
+
+                    <div class="flex justify-center">
+                        <button id="analyze-btn" class="bg-blue-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-blue-700 transition flex items-center justify-center space-x-2">
+                            <span>Phân tích</span> ✨
+                        </button>
+                    </div>
+
+                    <div id="result-display" class="mt-8 p-4 border rounded-lg text-center hidden">
+                        <p id="result-emoji" class="text-5xl mb-2">🤔</p>
+                        <p id="result-text" class="text-lg font-semibold text-gray-800">Đang phân tích...</p>
+                        <p id="result-explanation" class="text-gray-600 mt-2 italic hidden"></p>
+                    </div>
+                </div>
+
+                <div id="brainstorm-tab" class="tab-content hidden mt-8">
+                    <input type="text" id="topic-input" class="w-full p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 mb-4" placeholder="Ví dụ: trong cộng đồng, cho thanh thiếu niên,...">
+                    <div class="flex justify-center">
+                        <button id="brainstorm-btn" class="bg-emerald-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-emerald-700 transition flex items-center justify-center space-x-2">
+                            <span>Gợi ý ý tưởng</span> ✨
+                        </button>
+                    </div>
+                    <div id="brainstorm-result" class="mt-8 hidden">
+                        <h3 class="font-bold text-xl mb-4">Những Ý Tưởng Dành Cho Bạn:</h3>
+                        <ul id="idea-list" class="list-disc list-inside space-y-2 text-gray-700">
+                            <li class="italic text-center text-gray-600">Đang tạo ý tưởng...</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section id="problem" class="mb-24 scroll-mt-20">
-            <h2 class="text-3xl font-bold text-center mb-4">Hiểu Về "Rối Loạn Thông Tin"</h2>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-3xl font-bold">Hiểu Về "Rối Loạn Thông Tin"</h2>
+                <button id="listen-problem" class="text-cyan-700 hover:text-cyan-900 transition flex items-center space-x-1 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                    <span class="text-xl">🔊</span>
+                    <span class="hidden md:inline-block">Nghe bài viết</span>
+                </button>
+            </div>
             <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">
                 "Tin giả" chỉ là một phần của một vấn đề lớn hơn. Để chống lại nó, trước tiên chúng ta cần hiểu rõ các loại thông tin sai lệch khác nhau. Hãy nhấp vào từng thuật ngữ để khám phá định nghĩa và đặc điểm của chúng.
             </p>
@@ -100,7 +204,13 @@
         </section>
 
         <section id="actors" class="mb-24 scroll-mt-20">
-            <h2 class="text-3xl font-bold text-center mb-4">Cuộc Chiến Đa Mặt</h2>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-3xl font-bold">Cuộc Chiến Đa Mặt</h2>
+                <button id="listen-actors" class="text-cyan-700 hover:text-cyan-900 transition flex items-center space-x-1 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                    <span class="text-xl">🔊</span>
+                    <span class="hidden md:inline-block">Nghe bài viết</span>
+                </button>
+            </div>
             <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">
                 Chống tin giả là một nỗ lực tập thể. Nhiều tác nhân, từ nền tảng công nghệ đến chính phủ và chính người dùng, đều đóng một vai trò quan trọng trong hệ sinh thái phức tạp này.
             </p>
@@ -125,7 +235,13 @@
         </section>
 
         <section id="technology" class="mb-24 scroll-mt-20">
-            <h2 class="text-3xl font-bold text-center mb-4">Sức Mạnh Của AI</h2>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-3xl font-bold">Sức Mạnh Của AI</h2>
+                <button id="listen-technology" class="text-cyan-700 hover:text-cyan-900 transition flex items-center space-x-1 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                    <span class="text-xl">🔊</span>
+                    <span class="hidden md:inline-block">Nghe bài viết</span>
+                </button>
+            </div>
             <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">
                 Trí tuệ nhân tạo là công cụ cốt lõi trong việc phát hiện tin giả ở quy mô lớn. Các thuật toán không chỉ phân tích nội dung mà còn cả cách thức thông tin lan truyền trên mạng xã hội để tìm ra những dấu hiệu bất thường.
             </p>
@@ -170,55 +286,14 @@
             </div>
         </section>
 
-        <section id="interactive" class="mb-24 scroll-mt-20">
-            <h2 class="text-3xl font-bold text-center mb-4">Bộ Công Cụ AI Chống Tin Giả ✨</h2>
-            <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">
-                Sử dụng các công cụ AI được cung cấp dưới đây để kiểm tra thông tin hoặc tìm ý tưởng chiến lược.
-            </p>
-
-            <div class="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-lg">
-                <div class="flex border-b border-gray-200">
-                    <button data-tab="fact-check" class="tab-btn active px-4 py-2 font-semibold border-b-2 border-cyan-500 hover:border-cyan-500 focus:outline-none transition">
-                        Kiểm Tra Thông Tin
-                    </button>
-                    <button data-tab="brainstorm" class="tab-btn px-4 py-2 font-semibold border-b-2 border-transparent hover:border-cyan-500 focus:outline-none transition">
-                        Gợi Ý Chiến Lược
-                    </button>
-                </div>
-                
-                <div id="fact-check-tab" class="tab-content mt-8">
-                    <textarea id="text-input" rows="6" class="w-full p-4 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500 mb-4" placeholder="Nhập văn bản cần kiểm chứng hoặc dán đường dẫn (URL) tại đây..."></textarea>
-                    <div class="flex justify-center">
-                        <button id="analyze-btn" class="bg-blue-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-blue-700 transition flex items-center justify-center space-x-2">
-                            <span>Phân tích</span> ✨
-                        </button>
-                    </div>
-                    <div id="result-display" class="mt-8 p-4 border rounded-lg text-center hidden">
-                        <p id="result-emoji" class="text-5xl mb-2">🤔</p>
-                        <p id="result-text" class="text-lg font-semibold text-gray-800">Đang phân tích...</p>
-                        <p id="result-explanation" class="text-gray-600 mt-2 italic hidden"></p>
-                    </div>
-                </div>
-
-                <div id="brainstorm-tab" class="tab-content hidden mt-8">
-                    <input type="text" id="topic-input" class="w-full p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 mb-4" placeholder="Ví dụ: trong cộng đồng, cho thanh thiếu niên,...">
-                    <div class="flex justify-center">
-                        <button id="brainstorm-btn" class="bg-emerald-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-emerald-700 transition flex items-center justify-center space-x-2">
-                            <span>Gợi ý ý tưởng</span> ✨
-                        </button>
-                    </div>
-                    <div id="brainstorm-result" class="mt-8 hidden">
-                        <h3 class="font-bold text-xl mb-4">Những Ý Tưởng Dành Cho Bạn:</h3>
-                        <ul id="idea-list" class="list-disc list-inside space-y-2 text-gray-700">
-                            <li class="italic text-center text-gray-600">Đang tạo ý tưởng...</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </section>
-
         <section id="challenges" class="mb-24 scroll-mt-20">
-            <h2 class="text-3xl font-bold text-center mb-4">Thách Thức và Rủi Ro</h2>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-3xl font-bold">Thách Thức và Rủi Ro</h2>
+                <button id="listen-challenges" class="text-cyan-700 hover:text-cyan-900 transition flex items-center space-x-1 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                    <span class="text-xl">🔊</span>
+                    <span class="hidden md:inline-block">Nghe bài viết</span>
+                </button>
+            </div>
             <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">
                 Cuộc chiến chống tin giả không chỉ là vấn đề công nghệ. Nó còn đặt ra những câu hỏi phức tạp về đạo đức, chính sách và tác động xã hội, đòi hỏi sự cân bằng tinh tế giữa các giá trị.
             </p>
@@ -239,7 +314,13 @@
         </section>
 
         <section id="solutions" class="scroll-mt-20">
-            <h2 class="text-3xl font-bold text-center mb-4">Hành Động Của Chúng Ta</h2>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-3xl font-bold">Hành Động Của Chúng Ta</h2>
+                <button id="listen-solutions" class="text-cyan-700 hover:text-cyan-900 transition flex items-center space-x-1 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                    <span class="text-xl">🔊</span>
+                    <span class="hidden md:inline-block">Nghe bài viết</span>
+                </button>
+            </div>
             <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">
                 Chống lại tin giả đòi hỏi một chiến lược toàn diện từ mọi phía. Dưới đây là các khuyến nghị hành động cho từng nhóm liên quan để cùng nhau xây dựng một không gian mạng an toàn và đáng tin cậy hơn.
             </p>
@@ -530,20 +611,42 @@
 
             // Gemini API Fact-Checking Feature
             const textInput = document.getElementById('text-input');
+            const imageUpload = document.getElementById('image-upload');
+            const previewImage = document.getElementById('preview-image');
+            const imagePreviewDiv = document.getElementById('image-preview');
             const analyzeBtn = document.getElementById('analyze-btn');
             const resultDisplay = document.getElementById('result-display');
             const resultEmoji = document.getElementById('result-emoji');
             const resultText = document.getElementById('result-text');
             const resultExplanation = document.getElementById('result-explanation');
 
+            let uploadedImageBase64 = null;
+
+            imageUpload.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        uploadedImageBase64 = reader.result.split(',')[1];
+                        previewImage.src = reader.result;
+                        imagePreviewDiv.classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    uploadedImageBase64 = null;
+                    previewImage.src = '';
+                    imagePreviewDiv.classList.add('hidden');
+                }
+            });
+
             analyzeBtn.addEventListener('click', async () => {
                 const prompt = textInput.value;
-                if (!prompt) {
+                if (!prompt && !uploadedImageBase64) {
                     resultDisplay.classList.remove('hidden');
                     resultDisplay.style.backgroundColor = '#FEF2F2';
                     resultDisplay.style.borderColor = '#FCA5A5';
                     resultEmoji.textContent = '❌';
-                    resultText.textContent = `Vui lòng nhập văn bản hoặc dán đường dẫn để phân tích.`;
+                    resultText.textContent = `Vui lòng nhập văn bản hoặc tải lên hình ảnh để phân tích.`;
                     resultExplanation.classList.add('hidden');
                     return;
                 }
@@ -557,46 +660,23 @@
                 analyzeBtn.disabled = true;
                 
                 try {
-                    let contentToAnalyze = prompt;
+                    let parts = [];
+                    if (prompt) {
+                        parts.push({ text: `Phân tích nội dung sau và đưa ra đánh giá về độ tin cậy. Dựa trên các tiêu chí: nguồn gốc, tính xác thực của thông tin, và các dấu hiệu của tin giả (như ngôn ngữ giật gân, thiếu tham chiếu). Đưa ra câu trả lời ngắn gọn, trực tiếp, chỉ bao gồm 2 phần: đánh giá về độ tin cậy ("Đánh giá: [nhãn]") và một đoạn giải thích ngắn gọn ("Giải thích: [đoạn văn]"). Sử dụng các nhãn: "Tin thật", "Có thể là tin giả", "Tin giả", "Không đủ thông tin".
 
-                    // Check if the input is a URL
-                    const urlPattern = new RegExp('^(https?:\\/\\/)?' + // protocol
-                        '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
-                        '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
-                        '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
-                        '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
-                        '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator
-                    if (urlPattern.test(prompt)) {
-                        try {
-                            const response = await fetch('/api/fetch-url', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ url: prompt })
-                            });
-                            const data = await response.json();
-                            if (data.content) {
-                                contentToAnalyze = data.content;
-                            } else {
-                                throw new Error(data.error || "Không thể lấy nội dung từ đường dẫn.");
+Nội dung: ${prompt}` });
+                    }
+                    if (uploadedImageBase64) {
+                        parts.push({
+                            inlineData: {
+                                mimeType: 'image/jpeg',
+                                data: uploadedImageBase64
                             }
-                        } catch (err) {
-                            resultDisplay.style.backgroundColor = '#FEF2F2';
-                            resultDisplay.style.borderColor = '#FCA5A5';
-                            resultEmoji.textContent = '❌';
-                            resultText.textContent = `Lỗi: Không thể lấy nội dung từ đường dẫn này. Vui lòng nhập văn bản.`;
-                            resultExplanation.classList.add('hidden');
-                            analyzeBtn.disabled = false;
-                            return;
-                        }
+                        });
                     }
 
-                    let chatHistory = [];
-                    chatHistory.push({ role: "user", parts: [{ text: `Phân tích nội dung sau và đưa ra đánh giá về độ tin cậy. Dựa trên các tiêu chí: nguồn gốc, tính xác thực của thông tin, và các dấu hiệu của tin giả (như ngôn ngữ giật gân, thiếu tham chiếu). Đưa ra câu trả lời ngắn gọn, trực tiếp, chỉ bao gồm 2 phần: đánh giá về độ tin cậy ("Đánh giá: [nhãn]") và một đoạn giải thích ngắn gọn ("Giải thích: [đoạn văn]"). Sử dụng các nhãn: "Tin thật", "Có thể là tin giả", "Tin giả", "Không đủ thông tin".
-
-Nội dung: ${contentToAnalyze}` }] });
-                    
                     const payload = {
-                        contents: chatHistory
+                        contents: [{ role: "user", parts: parts }]
                     };
 
                     const apiKey = "";
@@ -729,13 +809,47 @@ Nội dung: ${contentToAnalyze}` }] });
 
             tabButtons.forEach(button => {
                 button.addEventListener('click', () => {
-                    tabButtons.forEach(btn => btn.classList.remove('border-cyan-500'));
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('border-cyan-500');
+                        btn.classList.remove('active');
+                    });
                     button.classList.add('border-cyan-500');
+                    button.classList.add('active');
 
                     tabContents.forEach(content => content.classList.add('hidden'));
                     const targetTab = document.getElementById(button.dataset.tab + '-tab');
                     targetTab.classList.remove('hidden');
                 });
+            });
+
+            // Dark/Light Mode Toggle
+            const darkModeToggle = document.getElementById('dark-mode-toggle');
+            const darkModeIcon = document.getElementById('dark-mode-icon');
+            const htmlTag = document.querySelector('html');
+
+            function loadTheme() {
+                const savedTheme = localStorage.getItem('theme') || 'light';
+                if (savedTheme === 'dark') {
+                    htmlTag.classList.add('dark');
+                    darkModeIcon.textContent = '☀️';
+                } else {
+                    htmlTag.classList.remove('dark');
+                    darkModeIcon.textContent = '🌙';
+                }
+            }
+
+            loadTheme();
+
+            darkModeToggle.addEventListener('click', () => {
+                if (htmlTag.classList.contains('dark')) {
+                    htmlTag.classList.remove('dark');
+                    localStorage.setItem('theme', 'light');
+                    darkModeIcon.textContent = '🌙';
+                } else {
+                    htmlTag.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                    darkModeIcon.textContent = '☀️';
+                }
             });
         });
     </script>
