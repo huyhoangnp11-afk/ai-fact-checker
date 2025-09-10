@@ -99,7 +99,7 @@
             let state = {
                 botInterval: null, apiKey: '', apiSecret: '', ws: null, pingInterval: null, lastPrice: 0, isBotRunning: false,
                 instrumentInfo: new Map(), cooldownUntil: 0, activeSymbolWs: null, position: { hasPosition: false, symbol: null, entryTime: 0, coin: null },
-                risk: { consecutiveLosses: 0 }, realtimeData: new Map(), timeOffset: 0, timeSyncInterval: null,
+                risk: { consecutiveLosses: 0 }, realtimeData: new Map(), timeOffset: 0, timeSyncInterval: null, isTimeSynced: false,
             };
 
             // --- WebSocket for Real-time Data ---
@@ -160,23 +160,29 @@
             // --- API Communication & Time Sync ---
             async function syncTime() {
                  try {
-                    const serverTimeRes = await fetch('https://api.bybit.com/v5/market/time', { cache: 'no-cache' });
+                    const serverTimeRes = await fetch('https://api.bybit.com/v5/market/time?_=' + new Date().getTime(), { cache: 'no-cache' });
                     const serverTimeData = await serverTimeRes.json();
                     if (serverTimeData.retCode === 0) {
                         const serverTime = parseInt(serverTimeData.result.timeNano) / 1000000;
                         const oldOffset = state.timeOffset;
                         state.timeOffset = serverTime - Date.now();
+                        state.isTimeSynced = true;
                         addLog(`Đồng bộ thời gian thành công. Lệch: ${state.timeOffset.toFixed(0)}ms (thay đổi: ${(state.timeOffset - oldOffset).toFixed(0)}ms).`, 'info');
+                        return true;
                     } else {
                        throw new Error(serverTimeData.retMsg);
                     }
                 } catch (e) {
+                    state.isTimeSynced = false;
                     addLog(`Lỗi đồng bộ thời gian: ${e.message}. API có thể không hoạt động.`, 'error');
+                    return false;
                 }
             }
 
             async function bybitRequest(endpoint, method, params) {
                 if (!state.apiKey || !state.apiSecret) { addLog('Lỗi: Vui lòng lưu API Key và Secret trước.', 'error'); return null; }
+                if (!state.isTimeSynced) { addLog('Lỗi: Thời gian chưa được đồng bộ. Vui lòng lưu lại API.', 'error'); return null; }
+
                 const API_BASE = 'https://api.bybit.com';
                 const timestamp = (Date.now() + state.timeOffset).toString();
                 const recvWindow = '10000';
@@ -420,7 +426,11 @@
                     localStorage.setItem('bybitApiKey', state.apiKey);
                     localStorage.setItem('bybitApiSecret', state.apiSecret);
                     
-                    await syncTime();
+                    const syncSuccess = await syncTime();
+                    if (!syncSuccess) {
+                        addLog('Không thể khởi tạo bot do lỗi đồng bộ thời gian. Vui lòng thử lại.', 'error');
+                        return;
+                    }
 
                     addLog('Đã lưu khóa API thành công.', 'success');
                     await updatePositionStatus();
@@ -434,7 +444,9 @@
             });
             elements.startBotButton.addEventListener('click', () => {
                 if (!state.apiKey || !state.apiSecret) return addLog('Lỗi: Vui lòng lưu API trước khi bắt đầu.', 'error');
+                if (!state.isTimeSynced) return addLog('Lỗi: Đồng bộ thời gian thất bại. Vui lòng lưu lại API để thử lại.', 'error');
                 if (state.instrumentInfo.size === 0) return addLog('Lỗi: Chưa có thông tin cặp giao dịch. Vui lòng lưu lại API.', 'error');
+
                 addLog('Bot đã bắt đầu quét...', 'success');
                 setBotStatusUI('running');
                 // Start periodic time sync
