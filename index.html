@@ -99,7 +99,7 @@
             let state = {
                 botInterval: null, apiKey: '', apiSecret: '', ws: null, pingInterval: null, lastPrice: 0, isBotRunning: false,
                 instrumentInfo: new Map(), cooldownUntil: 0, activeSymbolWs: null, position: { hasPosition: false, symbol: null, entryTime: 0, coin: null },
-                risk: { consecutiveLosses: 0 }, realtimeData: new Map(), timeOffset: 0,
+                risk: { consecutiveLosses: 0 }, realtimeData: new Map(), timeOffset: 0, timeSyncInterval: null,
             };
 
             // --- WebSocket for Real-time Data ---
@@ -132,22 +132,14 @@
                         elements.currentPriceEl.classList.toggle('price-down', newPrice < state.lastPrice);
                         elements.currentPriceEl.textContent = newPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
                         state.lastPrice = newPrice;
-                        // Update CVD
                         const volume = parseFloat(trade.v);
                         if (trade.S === 'Buy') symbolData.cvd += volume; else symbolData.cvd -= volume;
-                        // Simplified Iceberg check
                         if(symbolData.orderbook?.b.length > 0 && newPrice === parseFloat(symbolData.orderbook.b[0][0])) {
-                            if(symbolData.iceberg.price === newPrice) {
-                                symbolData.iceberg.traded += volume;
-                            } else {
-                                symbolData.iceberg.price = newPrice;
-                                symbolData.iceberg.displayed = parseFloat(symbolData.orderbook.b[0][1]);
-                                symbolData.iceberg.traded = volume;
-                            }
+                            if(symbolData.iceberg.price === newPrice) { symbolData.iceberg.traded += volume; } 
+                            else { symbolData.iceberg.price = newPrice; symbolData.iceberg.displayed = parseFloat(symbolData.orderbook.b[0][1]); symbolData.iceberg.traded = volume; }
                         }
                     } else if (data.topic?.startsWith('orderbook')) {
                         symbolData.orderbook = data.data;
-                        // Update Microprice Tilt
                         if (symbolData.orderbook.b.length > 0 && symbolData.orderbook.a.length > 0) {
                             const [pBid, qBid] = [parseFloat(symbolData.orderbook.b[0][0]), parseFloat(symbolData.orderbook.b[0][1])];
                             const [pAsk, qAsk] = [parseFloat(symbolData.orderbook.a[0][0]), parseFloat(symbolData.orderbook.a[0][1])];
@@ -165,7 +157,24 @@
                 state.ws.onerror = (error) => addLog(`Lỗi WebSocket: ${error.message || 'Unknown error'}`, 'error');
             }
             
-            // --- API Communication ---
+            // --- API Communication & Time Sync ---
+            async function syncTime() {
+                 try {
+                    const serverTimeRes = await fetch('https://api.bybit.com/v5/market/time', { cache: 'no-cache' });
+                    const serverTimeData = await serverTimeRes.json();
+                    if (serverTimeData.retCode === 0) {
+                        const serverTime = parseInt(serverTimeData.result.timeNano) / 1000000;
+                        const oldOffset = state.timeOffset;
+                        state.timeOffset = serverTime - Date.now();
+                        addLog(`Đồng bộ thời gian thành công. Lệch: ${state.timeOffset.toFixed(0)}ms (thay đổi: ${(state.timeOffset - oldOffset).toFixed(0)}ms).`, 'info');
+                    } else {
+                       throw new Error(serverTimeData.retMsg);
+                    }
+                } catch (e) {
+                    addLog(`Lỗi đồng bộ thời gian: ${e.message}. API có thể không hoạt động.`, 'error');
+                }
+            }
+
             async function bybitRequest(endpoint, method, params) {
                 if (!state.apiKey || !state.apiSecret) { addLog('Lỗi: Vui lòng lưu API Key và Secret trước.', 'error'); return null; }
                 const API_BASE = 'https://api.bybit.com';
@@ -178,9 +187,7 @@
 
                 if (method === 'GET') {
                     signaturePayload = Object.entries(params).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${k}=${v}`).join('&');
-                    if (signaturePayload) {
-                        url.search = signaturePayload;
-                    }
+                    if (signaturePayload) { url.search = signaturePayload; }
                 } else { // POST
                     signaturePayload = JSON.stringify(params);
                     body = signaturePayload;
@@ -189,13 +196,7 @@
                 const stringToSign = timestamp + state.apiKey + recvWindow + signaturePayload;
                 const signature = CryptoJS.HmacSHA256(stringToSign, state.apiSecret).toString();
                 
-                const headers = { 
-                    'Content-Type': 'application/json', 
-                    'X-BAPI-API-KEY': state.apiKey, 
-                    'X-BAPI-TIMESTAMP': timestamp, 
-                    'X-BAPI-RECV-WINDOW': recvWindow, 
-                    'X-BAPI-SIGN': signature, 
-                };
+                const headers = { 'Content-Type': 'application/json', 'X-BAPI-API-KEY': state.apiKey, 'X-BAPI-TIMESTAMP': timestamp, 'X-BAPI-RECV-WINDOW': recvWindow, 'X-BAPI-SIGN': signature, };
 
                 try {
                     const response = await fetch(url, { method, headers, body });
@@ -247,11 +248,7 @@
                 addLog('Đang tự động tìm kiếm các cặp giao dịch tiềm năng...');
                 const tickersData = await bybitRequest('/v5/market/tickers', 'GET', { category: 'spot' });
                 if (!tickersData?.list) { addLog('Không thể tải danh sách tickers từ Bybit.', 'error'); return []; }
-                const promisingPairs = tickersData.list
-                    .filter(t => t.symbol.endsWith('USDT'))
-                    .sort((a, b) => parseFloat(b.turnover24h) - parseFloat(a.turnover24h))
-                    .slice(0, 40)
-                    .map(t => t.symbol);
+                const promisingPairs = tickersData.list.filter(t=>t.symbol.endsWith('USDT')).sort((a,b)=>parseFloat(b.turnover24h)-parseFloat(a.turnover24h)).slice(0,40).map(t=>t.symbol);
                 if (promisingPairs.length > 0) addLog(`Đã chọn Top ${promisingPairs.length} cặp theo volume 24h để quét chi tiết.`, 'success');
                 return promisingPairs;
             }
@@ -293,7 +290,6 @@
                 if (!klineData?.list || klineData.list.length < 50 || !realtime?.orderbook) return null;
                 const klines = klineData.list.map(k=>({time:k[0],open:parseFloat(k[1]),high:parseFloat(k[2]),low:parseFloat(k[3]),close:parseFloat(k[4]),volume:parseFloat(k[5])})).reverse();
                 
-                // PUMP SCORE
                 let pumpScore = 0;
                 const currentPrice = klines[klines.length-1].close;
                 const orderBookData = realtime.orderbook;
@@ -305,7 +301,7 @@
                 const bidNotional = orderBookData.b.slice(0,5).reduce((a,[p,s])=>a+(parseFloat(p)*parseFloat(s)),0);
                 const askNotional = orderBookData.a.slice(0,5).reduce((a,[p,s])=>a+(parseFloat(p)*parseFloat(s)),0);
                 if (askNotional > 0 && (bidNotional/askNotional) >= 1.2) pumpScore += 10;
-                if (pumpScore < 30) return null; // Liquidity pre-filter
+                if (pumpScore < 30) return null;
 
                 const closes = klines.map(k => k.close);
                 if (closes[closes.length-1] > closes[closes.length-2]) pumpScore += 10;
@@ -319,15 +315,14 @@
                 const vwap = calculateVWAP(klines, 20);
                 if (currentPrice > vwap) pumpScore += 10;
 
-                // ADVANCED SCORE
                 let advancedScore = 0;
                 if (realtime.micropriceTilts.length >= 3 && realtime.micropriceTilts.slice(-3).every(t => t >= 0.02)) advancedScore += 10;
                 const cumBid = orderBookData.b.slice(0,5).reduce((a,[,s])=>a+parseFloat(s),0);
                 const cumAsk = orderBookData.a.slice(0,5).reduce((a,[,s])=>a+parseFloat(s),0);
                 if (cumBid + cumAsk > 0 && (cumBid - cumAsk) / (cumBid + cumAsk) >= 0.2) advancedScore += 10;
-                const cvdTrend = realtime.cvd > (state.realtimeData.get(symbol)?.trades[0]?.cvd_start || 0); // Simplified check
+                const cvdTrend = realtime.cvd > (state.realtimeData.get(symbol)?.trades[0]?.cvd_start || 0);
                 const priceTrend = currentPrice > klines[klines.length-5].close;
-                if (cvdTrend && !priceTrend) advancedScore += 10; // Divergence
+                if (cvdTrend && !priceTrend) advancedScore += 10;
                 if (realtime.iceberg.traded > realtime.iceberg.displayed * 1.5) advancedScore += 10;
                 
                 return { pumpScore, advancedScore, currentPrice, spread, atrPercent, vwap, ema20, klines };
@@ -361,13 +356,13 @@
                 
                 if (orderResult?.orderId) {
                     addLog(`Đặt lệnh thành công. OrderID: ${orderResult.orderId}`, 'success');
-                    state.position.entryTime = Date.now();
+                    state.position.entryTime = Date.now() + state.timeOffset;
                 }
             }
 
             async function manageOpenPosition() {
                 const timeStopSeconds = parseInt(elements.timeStopInput.value);
-                const elapsedSeconds = (Date.now() - state.position.entryTime) / 1000;
+                const elapsedSeconds = ((Date.now() + state.timeOffset) - state.position.entryTime) / 1000;
                 if (elapsedSeconds > timeStopSeconds) {
                     addLog(`Vị thế đã vượt quá Time-Stop (${timeStopSeconds}s). Đang đóng...`, 'info');
                     await closePosition(state.position.symbol, state.position.coin);
@@ -425,20 +420,7 @@
                     localStorage.setItem('bybitApiKey', state.apiKey);
                     localStorage.setItem('bybitApiSecret', state.apiSecret);
                     
-                    // TIME SYNC FIX
-                    try {
-                        const serverTimeRes = await fetch('https://api.bybit.com/v5/market/time?_=' + new Date().getTime());
-                        const serverTimeData = await serverTimeRes.json();
-                        if (serverTimeData.retCode === 0) {
-                            const serverTime = parseInt(serverTimeData.result.timeNano) / 1000000;
-                            state.timeOffset = serverTime - Date.now();
-                            addLog(`Đồng bộ thời gian thành công. Lệch: ${state.timeOffset.toFixed(0)}ms.`);
-                        } else {
-                           throw new Error(serverTimeData.retMsg);
-                        }
-                    } catch (e) {
-                        addLog(`Lỗi đồng bộ thời gian: ${e.message}. API có thể không hoạt động.`, 'error');
-                    }
+                    await syncTime();
 
                     addLog('Đã lưu khóa API thành công.', 'success');
                     await updatePositionStatus();
@@ -455,12 +437,18 @@
                 if (state.instrumentInfo.size === 0) return addLog('Lỗi: Chưa có thông tin cặp giao dịch. Vui lòng lưu lại API.', 'error');
                 addLog('Bot đã bắt đầu quét...', 'success');
                 setBotStatusUI('running');
+                // Start periodic time sync
+                if (state.timeSyncInterval) clearInterval(state.timeSyncInterval);
+                state.timeSyncInterval = setInterval(syncTime, 15 * 60 * 1000);
+
                 runBotLogic();
                 state.botInterval = setInterval(runBotLogic, 15000);
             });
             elements.stopBotButton.addEventListener('click', () => {
                 if (state.botInterval) clearInterval(state.botInterval);
+                if (state.timeSyncInterval) clearInterval(state.timeSyncInterval);
                 state.botInterval = null;
+                state.timeSyncInterval = null;
                 addLog('Bot đã dừng.', 'info');
                 setBotStatusUI('stopped');
             });
