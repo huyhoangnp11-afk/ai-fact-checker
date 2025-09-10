@@ -178,7 +178,9 @@
 
                 if (method === 'GET') {
                     signaturePayload = Object.entries(params).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${k}=${v}`).join('&');
-                    url.search = signaturePayload;
+                    if (signaturePayload) {
+                        url.search = signaturePayload;
+                    }
                 } else { // POST
                     signaturePayload = JSON.stringify(params);
                     body = signaturePayload;
@@ -202,7 +204,7 @@
                     return data.result;
                 } catch (error) { addLog(`Lỗi mạng: ${error.message}`, 'error'); return null; }
             }
-
+            
             // --- UI & Helper Functions ---
             const addLog = (message, type = 'info') => {
                 const p = document.createElement('p');
@@ -245,8 +247,12 @@
                 addLog('Đang tự động tìm kiếm các cặp giao dịch tiềm năng...');
                 const tickersData = await bybitRequest('/v5/market/tickers', 'GET', { category: 'spot' });
                 if (!tickersData?.list) { addLog('Không thể tải danh sách tickers từ Bybit.', 'error'); return []; }
-                const promisingPairs = tickersData.list.filter(t=>t.symbol.endsWith('USDT')&&parseFloat(t.turnover24h)>5000000).sort((a,b)=>parseFloat(b.turnover24h)-parseFloat(a.turnover24h)).slice(0,30).map(t=>t.symbol);
-                if (promisingPairs.length > 0) addLog(`Đã tìm thấy ${promisingPairs.length} cặp tiềm năng để quét (volume > 5M$).`, 'success');
+                const promisingPairs = tickersData.list
+                    .filter(t => t.symbol.endsWith('USDT'))
+                    .sort((a, b) => parseFloat(b.turnover24h) - parseFloat(a.turnover24h))
+                    .slice(0, 40)
+                    .map(t => t.symbol);
+                if (promisingPairs.length > 0) addLog(`Đã chọn Top ${promisingPairs.length} cặp theo volume 24h để quét chi tiết.`, 'success');
                 return promisingPairs;
             }
 
@@ -418,6 +424,22 @@
                 if (state.apiKey && state.apiSecret) {
                     localStorage.setItem('bybitApiKey', state.apiKey);
                     localStorage.setItem('bybitApiSecret', state.apiSecret);
+                    
+                    // TIME SYNC FIX
+                    try {
+                        const serverTimeRes = await fetch('https://api.bybit.com/v5/market/time?_=' + new Date().getTime());
+                        const serverTimeData = await serverTimeRes.json();
+                        if (serverTimeData.retCode === 0) {
+                            const serverTime = parseInt(serverTimeData.result.timeNano) / 1000000;
+                            state.timeOffset = serverTime - Date.now();
+                            addLog(`Đồng bộ thời gian thành công. Lệch: ${state.timeOffset.toFixed(0)}ms.`);
+                        } else {
+                           throw new Error(serverTimeData.retMsg);
+                        }
+                    } catch (e) {
+                        addLog(`Lỗi đồng bộ thời gian: ${e.message}. API có thể không hoạt động.`, 'error');
+                    }
+
                     addLog('Đã lưu khóa API thành công.', 'success');
                     await updatePositionStatus();
                     addLog('Đang tải thông tin các cặp giao dịch...');
