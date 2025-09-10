@@ -160,6 +160,7 @@
             // --- API Communication & Time Sync ---
             async function syncTime() {
                  try {
+                    addLog('Bắt đầu đồng bộ thời gian với máy chủ Bybit...', 'info');
                     const serverTimeRes = await fetch('https://api.bybit.com/v5/market/time?_=' + new Date().getTime(), { cache: 'no-cache' });
                     const serverTimeData = await serverTimeRes.json();
                     if (serverTimeData.retCode === 0) {
@@ -167,7 +168,7 @@
                         const oldOffset = state.timeOffset;
                         state.timeOffset = serverTime - Date.now();
                         state.isTimeSynced = true;
-                        addLog(`Đồng bộ thời gian thành công. Lệch: ${state.timeOffset.toFixed(0)}ms (thay đổi: ${(state.timeOffset - oldOffset).toFixed(0)}ms).`, 'info');
+                        addLog(`Đồng bộ thời gian thành công. Lệch: ${state.timeOffset.toFixed(0)}ms (thay đổi: ${(state.timeOffset - oldOffset).toFixed(0)}ms).`, 'success');
                         return true;
                     } else {
                        throw new Error(serverTimeData.retMsg);
@@ -185,7 +186,7 @@
 
                 const API_BASE = 'https://api.bybit.com';
                 const timestamp = (Date.now() + state.timeOffset).toString();
-                const recvWindow = '10000';
+                const recvWindow = '20000'; // Increased to 20s to be more tolerant of network latency
                 
                 let signaturePayload;
                 let body = null;
@@ -442,16 +443,22 @@
                     } else { addLog('Không thể tải thông tin cặp giao dịch.', 'error'); }
                 } else { addLog('Vui lòng nhập cả API Key và Secret.', 'error'); }
             });
-            elements.startBotButton.addEventListener('click', () => {
+            elements.startBotButton.addEventListener('click', async () => {
                 if (!state.apiKey || !state.apiSecret) return addLog('Lỗi: Vui lòng lưu API trước khi bắt đầu.', 'error');
-                if (!state.isTimeSynced) return addLog('Lỗi: Đồng bộ thời gian thất bại. Vui lòng lưu lại API để thử lại.', 'error');
+                
+                addLog('Đang kiểm tra & đồng bộ lại thời gian trước khi bắt đầu...', 'info');
+                const syncSuccess = await syncTime();
+                if (!syncSuccess) {
+                    return addLog('Lỗi: Đồng bộ thời gian thất bại. Không thể bắt đầu bot.', 'error');
+                }
+
                 if (state.instrumentInfo.size === 0) return addLog('Lỗi: Chưa có thông tin cặp giao dịch. Vui lòng lưu lại API.', 'error');
 
                 addLog('Bot đã bắt đầu quét...', 'success');
                 setBotStatusUI('running');
-                // Start periodic time sync
+                
                 if (state.timeSyncInterval) clearInterval(state.timeSyncInterval);
-                state.timeSyncInterval = setInterval(syncTime, 15 * 60 * 1000);
+                state.timeSyncInterval = setInterval(syncTime, 3 * 60 * 1000); // Resync every 3 minutes
 
                 runBotLogic();
                 state.botInterval = setInterval(runBotLogic, 15000);
