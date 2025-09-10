@@ -189,7 +189,8 @@
                 }
 
                 const API_BASE = 'https://api.bybit.com';
-                const timestamp = (Date.now() + state.timeOffset).toString();
+                const fudgeMs = 200; // Subtract 200ms as a safety margin
+                const timestamp = (Date.now() + state.timeOffset - fudgeMs).toString();
                 const recvWindow = '20000';
                 
                 let signaturePayload;
@@ -207,14 +208,24 @@
                 const stringToSign = timestamp + state.apiKey + recvWindow + signaturePayload;
                 const signature = CryptoJS.HmacSHA256(stringToSign, state.apiSecret).toString();
                 
-                const headers = { 'Content-Type': 'application/json', 'X-BAPI-API-KEY': state.apiKey, 'X-BAPI-TIMESTAMP': timestamp, 'X-BAPI-RECV-WINDOW': recvWindow, 'X-BAPI-SIGN': signature, };
+                const headers = { 
+                    'Content-Type': 'application/json', 
+                    'X-BAPI-API-KEY': state.apiKey, 
+                    'X-BAPI-TIMESTAMP': timestamp, 
+                    'X-BAPI-RECV-WINDOW': recvWindow, 
+                    'X-BAPI-SIGN': signature,
+                    'X-BAPI-SIGN-TYPE': '2',
+                };
 
                 try {
                     const response = await fetch(url, { method, headers, body });
                     const data = await response.json();
 
-                    if (data.retCode === 10001 && data.retMsg.includes('timestamp') && !isRetry) {
-                        addLog(`Phát hiện lỗi timestamp (10001). Tự động đồng bộ lại thời gian và thử lại...`, 'info');
+                    const msg = String(data.retMsg || "");
+                    const isTimestampError = data.retCode === 10002 || (data.retCode === 10001 && /timestamp|req_timestamp/i.test(msg));
+
+                    if (isTimestampError && !isRetry) {
+                        addLog(`Phát hiện lỗi timestamp (Code: ${data.retCode}). Tự động đồng bộ lại thời gian và thử lại...`, 'info');
                         const syncSuccess = await syncTime();
                         if (syncSuccess) {
                             return await bybitRequest(endpoint, method, params, true); // Retry once
@@ -385,6 +396,9 @@
                 if (orderResult?.orderId) {
                     addLog(`Đặt lệnh thành công. OrderID: ${orderResult.orderId}`, 'success');
                     state.position.entryTime = Date.now() + state.timeOffset;
+                    state.position.coin = info.baseCoin;
+                    state.position.symbol = symbol;
+                    state.position.hasPosition = true;
                 }
             }
 
@@ -400,22 +414,30 @@
             }
             
             async function updatePositionStatus() {
-                 const portfolio = await bybitRequest('/v5/asset/transfer/query-account-coins-balance', 'GET', { accountType: "UNIFIED" });
-                 if (!portfolio) return;
-                 const usdtBalance = portfolio.balance.find(c => c.coin === 'USDT');
-                 if (usdtBalance) elements.usdtBalance.textContent = parseFloat(usdtBalance.walletBalance).toFixed(2);
-                 const openPositions = portfolio.balance.filter(c => c.coin !== 'USDT' && parseFloat(c.walletBalance) > 1e-6);
-                 if (openPositions.length > 0) {
-                     if (!state.position.hasPosition) { state.risk.consecutiveLosses = 0; addLog('Phát hiện vị thế mới.', 'success'); }
-                     state.position.hasPosition = true;
-                     const pos = openPositions[0];
-                     state.position.symbol = pos.coin + 'USDT';
-                     state.position.coin = pos.coin;
-                     elements.currentPosition.textContent = `${pos.coin}: ${parseFloat(pos.walletBalance)}`;
+                 const usdtPortfolio = await bybitRequest('/v5/asset/transfer/query-account-coins-balance', 'GET', { accountType: "UNIFIED", coin: "USDT" });
+                 if (usdtPortfolio?.balance) {
+                    const usdtBalance = usdtPortfolio.balance.find(c => c.coin === 'USDT');
+                    if (usdtBalance) elements.usdtBalance.textContent = parseFloat(usdtBalance.walletBalance).toFixed(2);
+                 }
+                 
+                 if (state.position.coin) {
+                    const coinPortfolio = await bybitRequest('/v5/asset/transfer/query-account-coins-balance', 'GET', { accountType: "UNIFIED", coin: state.position.coin });
+                    const coinBalance = coinPortfolio?.balance.find(c => c.coin === state.position.coin);
+                    
+                    if (coinBalance && parseFloat(coinBalance.walletBalance) > 1e-6) {
+                        if (!state.position.hasPosition) { addLog('Phát hiện vị thế mới.', 'success'); }
+                        state.position.hasPosition = true;
+                        elements.currentPosition.textContent = `${coinBalance.coin}: ${parseFloat(coinBalance.walletBalance)}`;
+                    } else {
+                        if (state.position.hasPosition) { addLog(`Vị thế ${state.position.coin} đã được đóng.`, 'info'); }
+                        state.position.hasPosition = false;
+                        state.position.coin = null;
+                        state.position.symbol = null;
+                        elements.currentPosition.textContent = 'Không có';
+                    }
                  } else {
-                     if (state.position.hasPosition) { addLog('Vị thế đã được đóng.', 'info'); }
-                     state.position.hasPosition = false;
-                     elements.currentPosition.textContent = 'Không có';
+                    state.position.hasPosition = false;
+                    elements.currentPosition.textContent = 'Không có';
                  }
             }
 
@@ -433,6 +455,8 @@
                     }
                 }
                 state.position.hasPosition = false;
+                state.position.coin = null;
+                state.position.symbol = null;
                 if(state.risk.consecutiveLosses >= 2) {
                     addLog('2 lệnh thua liên tiếp, tạm nghỉ 30 phút.', 'error');
                     state.cooldownUntil = Date.now() + 30 * 60 * 1000;
