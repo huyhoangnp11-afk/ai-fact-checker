@@ -99,7 +99,7 @@
             let state = {
                 botInterval: null, apiKey: '', apiSecret: '', ws: null, pingInterval: null, lastPrice: 0, isBotRunning: false,
                 instrumentInfo: new Map(), cooldownUntil: 0, activeSymbolWs: null, position: { hasPosition: false, symbol: null, entryTime: 0, coin: null },
-                risk: { consecutiveLosses: 0 }, realtimeData: new Map(),
+                risk: { consecutiveLosses: 0 }, realtimeData: new Map(), timeOffset: 0,
             };
 
             // --- WebSocket for Real-time Data ---
@@ -167,16 +167,34 @@
             
             // --- API Communication ---
             async function bybitRequest(endpoint, method, params) {
-                 if (!state.apiKey || !state.apiSecret) { addLog('Lỗi: Vui lòng lưu API Key và Secret trước.', 'error'); return null; }
+                if (!state.apiKey || !state.apiSecret) { addLog('Lỗi: Vui lòng lưu API Key và Secret trước.', 'error'); return null; }
                 const API_BASE = 'https://api.bybit.com';
-                const timestamp = Date.now().toString();
+                const timestamp = (Date.now() + state.timeOffset).toString();
                 const recvWindow = '10000';
-                const paramString = Object.entries(params).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${k}=${v}`).join('&');
-                const signature = CryptoJS.HmacSHA256(timestamp + state.apiKey + recvWindow + paramString, state.apiSecret).toString();
-                const headers = { 'Content-Type': 'application/json', 'X-BAPI-API-KEY': state.apiKey, 'X-BAPI-TIMESTAMP': timestamp, 'X-BAPI-RECV-WINDOW': recvWindow, 'X-BAPI-SIGN': signature, };
-                let url = new URL(API_BASE + endpoint);
+                
+                let signaturePayload;
                 let body = null;
-                if (method === 'GET') { url.search = paramString; } else { body = JSON.stringify(params); }
+                let url = new URL(API_BASE + endpoint);
+
+                if (method === 'GET') {
+                    signaturePayload = Object.entries(params).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${k}=${v}`).join('&');
+                    url.search = signaturePayload;
+                } else { // POST
+                    signaturePayload = JSON.stringify(params);
+                    body = signaturePayload;
+                }
+
+                const stringToSign = timestamp + state.apiKey + recvWindow + signaturePayload;
+                const signature = CryptoJS.HmacSHA256(stringToSign, state.apiSecret).toString();
+                
+                const headers = { 
+                    'Content-Type': 'application/json', 
+                    'X-BAPI-API-KEY': state.apiKey, 
+                    'X-BAPI-TIMESTAMP': timestamp, 
+                    'X-BAPI-RECV-WINDOW': recvWindow, 
+                    'X-BAPI-SIGN': signature, 
+                };
+
                 try {
                     const response = await fetch(url, { method, headers, body });
                     const data = await response.json();
