@@ -8,8 +8,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script>
+        // On page load or when changing themes, best to add inline in `head` to avoid FOUC
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
     <style>
         body {
             font-family: 'Manrope', sans-serif;
@@ -19,8 +25,8 @@
         .price-up { color: #22c55e; } /* green-500 */
         .price-down { color: #ef4444; } /* red-500 */
         .loader {
-            border: 4px solid #374151; /* gray-700 */
-            border-top: 4px solid #818cf8; /* indigo-400 */
+            border: 4px solid #475569; /* slate-600 */
+            border-top: 4px solid #22d3ee; /* cyan-400 */
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -31,19 +37,13 @@
             100% { transform: rotate(360deg); }
         }
         /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #030712; /* gray-950 */
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #374151; /* gray-700 */
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #4b5563; /* gray-600 */
-        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #e2e8f0; }
+        .dark ::-webkit-scrollbar-track { background: #020617; } /* slate-950 */
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        .dark ::-webkit-scrollbar-thumb:hover { background: #475569; }
         .status-dot {
             width: 10px;
             height: 10px;
@@ -67,140 +67,225 @@
             animation: fadeIn 0.5s ease-out forwards;
             opacity: 0;
         }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        .dark .glass-card {
+            background: rgba(15, 23, 42, 0.6); /* slate-900 */
+            border: 1px solid rgba(51, 65, 85, 0.5); /* slate-700 */
+            box-shadow: 0 0 30px rgba(0,0,0,0.2);
+        }
+        .ad-banner {
+            animation: ad-pulse 2s infinite;
+        }
+        @keyframes ad-pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.7); }
+            70% { transform: scale(1.02); box-shadow: 0 0 10px 15px rgba(20, 184, 166, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(20, 184, 166, 0); }
+        }
+        .sortable {
+            cursor: pointer;
+            position: relative;
+            padding-right: 1.5rem !important;
+        }
+        .sort-icon {
+            position: absolute;
+            right: 0.25rem;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.3;
+            transition: opacity 0.2s;
+        }
+        .sortable.sorted .sort-icon {
+            opacity: 1;
+        }
+        .progress-bar {
+            background-color: #374151; /* gray-700 */
+        }
+        .progress-bar div {
+            transition: width 0.5s ease-in-out;
+        }
     </style>
 </head>
-<body class="bg-gray-950 text-gray-300">
+<body class="bg-slate-50 dark:bg-black text-gray-800 dark:text-gray-300 transition-colors duration-300">
 
-    <div class="container mx-auto p-4 md:p-6">
-        <!-- Header -->
-        <header class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center">
-            <div>
-                <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-500">Bảng Điều Khiển Fintech</h1>
-                <p class="text-gray-400 mt-1">Dữ liệu được cập nhật và phân tích theo thời gian thực.</p>
-            </div>
-            <div class="flex flex-col items-start md:items-end mt-4 md:mt-0 w-full md:w-auto">
-                 <div id="apiStatus" class="flex items-center text-sm font-semibold mb-2 px-3 py-1 bg-gray-900/70 border border-gray-800 rounded-full">
-                    <span id="statusDot" class="status-dot status-retrying"></span>
-                    <span id="statusText">Đang kết nối...</span>
-                </div>
-                <div class="relative w-full md:w-80">
-                    <input type="text" id="searchInput" placeholder="Tìm kiếm tiền điện tử..." class="w-full bg-gray-900 border border-gray-700/50 rounded-lg py-2.5 px-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300">
-                    <svg class="w-5 h-5 absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                </div>
-            </div>
-        </header>
+    <div class="container mx-auto p-4 md:p-6 lg:p-8">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-        <!-- Main Content -->
-        <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Crypto List -->
-            <div class="lg:col-span-3 bg-gray-900/70 backdrop-blur-sm border border-gray-800/50 p-4 rounded-xl shadow-lg shadow-black/20">
-                <h2 class="text-xl font-bold mb-4 text-white">Sàng lọc & Xếp hạng theo Tiềm năng Tăng trưởng</h2>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead class="border-b-2 border-gray-800 text-sm text-gray-400">
-                            <tr>
-                                <th class="px-6 py-4">#</th>
-                                <th class="px-6 py-4">Tên</th>
-                                <th class="px-6 py-4 text-center" title="Điểm tiềm năng tăng giá ngắn hạn dựa trên Đà tăng trưởng và Dòng tiền.">Điểm Tiềm Năng</th>
-                                <th class="px-6 py-4 text-center">Tín Hiệu</th>
-                                <th class="px-6 py-4 text-right">Giá</th>
-                                <th class="px-6 py-4 text-right">24h %</th>
-                                <th class="px-6 py-4 text-right" title="Sức mạnh tương đối so với Bitcoin. Chỉ số dương cho thấy hiệu suất tốt hơn BTC.">RS (vs BTC)</th>
-                                <th class="px-6 py-4 text-right hidden md:table-cell">Vốn hóa thị trường</th>
-                                <th class="px-6 py-4 text-right hidden lg:table-cell" title="Giá vào lệnh đề xuất, tính toán dựa trên cấu trúc giá 7 ngày.">Giá Entry</th>
-                                <th class="px-6 py-4 text-right hidden lg:table-cell" title="Giá dừng lỗ đề xuất, đặt dưới mức hỗ trợ 7 ngày.">Stop Loss</th>
-                                <th class="px-6 py-4 text-right hidden lg:table-cell" title="Giá chốt lời đề xuất, đặt tại vùng kháng cự 7 ngày.">Giá Chốt Lời</th>
-                                <th class="px-6 py-4 text-right hidden lg:table-cell">Chu kỳ 7 ngày</th>
-                            </tr>
-                        </thead>
-                        <tbody id="cryptoTableBody">
-                            <tr>
-                                <td colspan="12" class="text-center p-10">
-                                    <div class="loader mx-auto"></div>
-                                    <p class="mt-2 text-gray-400">Đang sàng lọc và xếp hạng...</p>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Bot Analysis & Tools -->
-            <div class="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Bot Analysis -->
-                <div class="bg-gray-900/70 backdrop-blur-sm border border-gray-800/50 p-6 rounded-xl shadow-lg shadow-black/20">
-                     <h2 class="text-xl font-bold mb-4 text-white flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3 text-indigo-400" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 00-1-1v-.5a1.5 1.5 0 01-3 0V16a1 1 0 00-1-1H4a1 1 0 01-1-1v-3a1 1 0 011-1h.5a1.5 1.5 0 000-3H4a1 1 0 01-1-1V5a1 1 0 011-1h3a1 1 0 001-1v-.5z" /></svg>
-                        Phân Tích Tổng Hợp Từ Bot
-                    </h2>
-                    <div id="botAnalysisSection" class="text-gray-300 space-y-4">
-                        <p class="italic text-gray-500">Bot đang phân tích... Vui lòng chờ cập nhật dữ liệu.</p>
+            <!-- Sidebar -->
+            <aside class="lg:col-span-3 space-y-6">
+                <!-- Header -->
+                <div class="space-y-4">
+                    <div id="secret-button" class="cursor-pointer">
+                        <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-teal-500 dark:from-cyan-400 dark:to-teal-400">HHFW</h1>
+                        <p class="text-gray-500 dark:text-gray-400 text-sm">Bảng điều khiển Fintech</p>
+                    </div>
+                    <div id="apiStatus" class="flex items-center text-xs font-semibold px-3 py-1 bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700/50 rounded-full w-fit">
+                        <span id="statusDot" class="status-dot status-retrying"></span>
+                        <span id="statusText">Đang kết nối...</span>
                     </div>
                 </div>
 
                 <!-- Tools -->
-                <div class="bg-gray-900/70 backdrop-blur-sm border border-gray-800/50 p-6 rounded-xl shadow-lg shadow-black/20 h-fit">
-                    <h2 class="text-xl font-bold mb-4 text-white">Công Cụ Phụ Trợ</h2>
+                <div class="bg-white dark:bg-slate-900/60 dark:backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 p-5 rounded-xl shadow-lg shadow-slate-200/60 dark:shadow-black/20">
+                    <h2 class="text-lg font-bold mb-4 text-gray-900 dark:text-white">Công Cụ</h2>
                     <!-- Converter -->
                     <div class="mb-6">
-                        <h3 class="text-lg font-semibold mb-3 text-gray-200">Công cụ chuyển đổi</h3>
+                        <h3 class="text-base font-semibold mb-3 text-gray-800 dark:text-gray-200">Công cụ chuyển đổi</h3>
                         <div class="space-y-3">
                             <div>
-                                <label for="fromCoin" class="text-sm text-gray-400">Từ</label>
+                                <label for="fromCoin" class="text-xs text-gray-500 dark:text-gray-400">Từ</label>
                                 <div class="flex items-center">
-                                    <input type="number" id="fromAmount" value="1" class="w-1/3 bg-gray-800 border border-gray-700 rounded-l-md p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                    <select id="fromCoin" class="w-2/3 bg-gray-800 border-t border-b border-r border-gray-700 rounded-r-md p-2 focus:outline-none"></select>
+                                    <input type="number" id="fromAmount" value="1" class="w-1/3 bg-gray-100 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-l-md p-2 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                                    <select id="fromCoin" class="w-2/3 bg-gray-100 dark:bg-slate-700 border-t border-b border-r border-gray-300 dark:border-slate-600 rounded-r-md p-2 focus:outline-none"></select>
                                 </div>
                             </div>
                             <div>
-                                 <label for="toCoin" class="text-sm text-gray-400">Đến</label>
+                                 <label for="toCoin" class="text-xs text-gray-500 dark:text-gray-400">Đến</label>
                                 <div class="flex items-center">
-                                    <input type="text" id="toAmount" readonly class="w-1/3 bg-gray-950 border border-gray-700 rounded-l-md p-2">
-                                    <select id="toCoin" class="w-2/3 bg-gray-800 border-t border-b border-r border-gray-700 rounded-r-md p-2 focus:outline-none"></select>
+                                    <input type="text" id="toAmount" readonly class="w-1/3 bg-gray-200 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-l-md p-2">
+                                    <select id="toCoin" class="w-2/3 bg-gray-100 dark:bg-slate-700 border-t border-b border-r border-gray-300 dark:border-slate-600 rounded-r-md p-2 focus:outline-none"></select>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <!-- Trending Coins -->
                     <div>
-                        <h3 class="text-lg font-semibold mb-3 text-gray-200">Xu Hướng Thị Trường</h3>
-                        <div id="trendingList" class="space-y-3">
-                            <div class="text-center p-4 text-gray-400">Đang tải...</div>
+                        <h3 class="text-base font-semibold mb-3 text-gray-800 dark:text-gray-200">Xu Hướng Thị Trường</h3>
+                        <div id="trendingList" class="space-y-2">
+                            <div class="text-center p-4 text-gray-500 dark:text-gray-400">Đang tải...</div>
                         </div>
                     </div>
+                     <!-- Ad Banner -->
+                    <div id="ad-banner" class="mt-6 p-4 bg-gradient-to-r from-cyan-500 to-teal-600 rounded-lg text-white text-center cursor-pointer ad-banner">
+                        <p class="font-bold text-lg">BÍ MẬT CÁ VOI!</p>
+                        <p class="text-sm">Tăng tài sản X100 chỉ trong 30 ngày!</p>
+                    </div>
                 </div>
-            </div>
-        </main>
-        
+            </aside>
+
+            <!-- Main Content -->
+            <main class="lg:col-span-9 space-y-6">
+                <!-- Header Controls -->
+                <div class="flex justify-between items-center">
+                    <div class="relative w-full max-w-md">
+                         <input type="text" id="searchInput" placeholder="Tìm kiếm tiền điện tử..." class="w-full bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700/50 rounded-lg py-2.5 px-4 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all duration-300">
+                        <svg class="w-5 h-5 absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    </div>
+                    <button id="theme-toggle" type="button" class="p-2.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-colors duration-200">
+                        <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                        <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 12.122l.707-.707a1 1 0 011.414 1.414l-.707.707a1 1 0 01-1.414-1.414zM17 13a1 1 0 100 2h-1a1 1 0 100-2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                    </button>
+                </div>
+                 <!-- Bot Analysis -->
+                <div class="bg-white dark:bg-slate-900/60 dark:backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 p-6 rounded-xl shadow-lg shadow-slate-200/60 dark:shadow-black/20">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-bold text-gray-900 dark:text-white flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3 text-cyan-500 dark:text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                            </svg>
+                            Phân tích top 3 đồng coin điểm pump
+                        </h2>
+                        <button id="openScoreExplanationModal" class="p-2 rounded-full text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" /></svg>
+                        </button>
+                    </div>
+                    <div id="botAnalysisSection" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        <p class="italic text-gray-500 dark:text-gray-500 md:col-span-2 xl:col-span-3">Bot đang phân tích... Vui lòng chờ cập nhật dữ liệu.</p>
+                    </div>
+                </div>
+                <!-- Crypto List -->
+                <div class="bg-white dark:bg-slate-900/60 dark:backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 p-4 rounded-xl shadow-lg shadow-slate-200/60 dark:shadow-black/20">
+                    <h2 class="text-xl font-bold mb-4 text-gray-900 dark:text-white px-2">Sàng lọc & Xếp hạng</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead id="table-header" class="border-b-2 border-gray-200 dark:border-slate-700 text-sm text-gray-500 dark:text-gray-400">
+                                <tr>
+                                    <th class="px-4 py-3 sortable" data-sort-key="market_cap_rank">#</th>
+                                    <th class="px-4 py-3">Tên</th>
+                                    <th class="px-4 py-3 text-center sortable" data-sort-key="pumpScore.score">Điểm Pump</th>
+                                    <th class="px-4 py-3 text-center">Tín Hiệu</th>
+                                    <th class="px-4 py-3 text-right sortable" data-sort-key="current_price">Giá</th>
+                                    <th class="px-4 py-3 text-right sortable" data-sort-key="price_change_percentage_1h_in_currency">1h %</th>
+                                    <th class="px-4 py-3 text-right sortable" data-sort-key="price_change_percentage_24h_in_currency">24h %</th>
+                                    <th class="px-4 py-3 text-right hidden lg:table-cell sortable" data-sort-key="rs_24h_percentage">RS (vs BTC)</th>
+                                    <th class="px-4 py-3 text-right hidden lg:table-cell sortable" data-sort-key="market_cap">Vốn hóa</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cryptoTableBody">
+                                <tr>
+                                    <td colspan="9" class="text-center p-10">
+                                        <div class="loader mx-auto"></div>
+                                        <p class="mt-2 text-gray-500 dark:text-gray-400">Đang sàng lọc và xếp hạng...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
         <footer class="text-center mt-8 text-gray-500 text-sm">
             <p>&copy; 2025 - Bot Fintech bởi Gemini. Nguồn dữ liệu: Hệ thống API dự phòng.</p>
         </footer>
     </div>
     
-    <!-- Detailed Chart Modal -->
-    <div id="chartModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50 transition-opacity duration-300">
-        <div class="bg-gray-900 border border-gray-800/50 rounded-xl shadow-2xl w-full max-w-4xl p-6 relative">
-            <button id="closeModal" class="absolute top-4 right-5 text-gray-400 hover:text-white text-3xl font-bold transition-colors">&times;</button>
-            <div id="modalHeader" class="flex items-center mb-2"></div>
-            <p id="chartStatusText" class="text-sm text-gray-500 mb-2 h-5"></p>
-            <div id="timeRangeSelector" class="mb-4 flex space-x-2">
-                 <button data-days="1" class="time-range-btn bg-gray-800 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-md transition-all duration-200">24h</button>
-                 <button data-days="7" class="time-range-btn bg-indigo-700 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-md transition-all duration-200">7d</button>
-                 <button data-days="30" class="time-range-btn bg-gray-800 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-md transition-all duration-200">30d</button>
-                 <button data-days="365" class="time-range-btn bg-gray-800 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-md transition-all duration-200">1y</button>
-            </div>
-            <div class="h-96 relative">
-                <canvas id="detailedChartCanvas"></canvas>
-                <div id="modalLoader" class="absolute inset-0 bg-gray-900/80 flex items-center justify-center rounded-xl hidden">
-                    <div class="loader"></div>
+    <!-- Modals -->
+    <div id="reportModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50 transition-opacity duration-300">
+        <div class="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700/50 rounded-xl shadow-2xl w-full max-w-lg p-6 relative">
+            <button id="closeReportModal" class="absolute top-4 right-5 text-gray-400 hover:text-gray-800 dark:hover:text-white text-3xl font-bold transition-colors">&times;</button>
+            <div id="reportModalHeader" class="flex items-center mb-4"></div>
+            <div id="reportModalContent" class="space-y-4"></div>
+        </div>
+    </div>
+    
+    <div id="scoreExplanationModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50 transition-opacity duration-300">
+        <div class="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700/50 rounded-xl shadow-2xl w-full max-w-2xl p-6 relative">
+            <button id="closeScoreExplanationModal" class="absolute top-4 right-5 text-gray-400 hover:text-gray-800 dark:hover:text-white text-3xl font-bold transition-colors">&times;</button>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Giải thích "Điểm Pump" (v2)</h3>
+            <div class="text-gray-700 dark:text-gray-300 space-y-4">
+                <p><b>"Điểm Pump"</b> là một chỉ số tổng hợp (từ 0-100) sử dụng thuật toán đa trọng số để sàng lọc các đồng tiền có tín hiệu "bùng nổ" trong ngắn hạn. Thuật toán này không chỉ dựa vào giá mà còn kết hợp nhiều yếu tố động lượng, dòng tiền và tâm lý thị trường.</p>
+                <p>Điểm số được tính dựa trên các thành phần và trọng số sau:</p>
+                <div class="space-y-3 pt-2">
+                    <div class="flex items-start"><span class="text-cyan-500 mr-3 mt-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.428A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" /></svg></span>
+                        <div><h4 class="font-semibold text-gray-900 dark:text-white">1. Phân tích Kỹ thuật & Động lượng (40%)</h4>
+                            <ul class="list-disc list-inside text-sm space-y-1 mt-1">
+                                <li><b>Biến động 1 Giờ (15đ):</b> Ưu tiên các tín hiệu bùng nổ tức thời.</li>
+                                <li><b>Biến động 24 Giờ (15đ):</b> Xác nhận đà tăng trưởng trong ngày.</li>
+                                <li><b>Sức mạnh Tương đối (RS vs BTC) (10đ):</b> Tìm kiếm các đồng tiền "khỏe" hơn thị trường chung.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="flex items-start"><span class="text-green-500 mr-3 mt-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg></span>
+                        <div><h4 class="font-semibold text-gray-900 dark:text-white">2. Phân tích Dòng tiền (40%)</h4><p class="text-sm">"Khối lượng là máu của các đợt bơm". Chỉ số này đo lường tỷ lệ khối lượng giao dịch trên vốn hóa thị trường. Tỷ lệ càng cao, điểm càng cao.</p></div>
+                    </div>
+                    <div class="flex items-start"><span class="text-teal-500 mr-3 mt-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd" /></svg></span>
+                        <div><h4 class="font-semibold text-gray-900 dark:text-white">3. Phân tích Tâm lý Thị trường (20%)</h4><p class="text-sm">Đo lường nguy cơ "short squeeze". Một lượng điểm thưởng sẽ được cộng nếu Funding Rate đang âm (nhiều người short) trong khi giá vẫn đang tăng.</p></div>
+                    </div>
+                     <div class="flex items-start"><span class="text-yellow-500 mr-3 mt-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5.02.997.997 0 001 6v5a1 1 0 001.252.974l.366-.082a1 1 0 011.022.24l2.138 2.553A1 1 0 006.83 15.5H13.17a1 1 0 00.752-.364l2.138-2.553a1 1 0 011.022-.24l.366.082A1 1 0 0019 11V6a.997.997 0 00-1.166-.98A11.954 11.954 0 0110 1.944zM8 8a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clip-rule="evenodd" /></svg></span>
+                        <div><h4 class="font-semibold text-gray-900 dark:text-white">4. Yếu tố Điều chỉnh (Thưởng & Phạt)</h4>
+                             <ul class="list-disc list-inside text-sm space-y-1 mt-1">
+                                <li><b>Phạt vì "Quá nóng":</b> Điểm sẽ bị trừ nếu giá đã tăng quá mạnh (&gt;50% trong 24h) để tránh rủi ro "đu đỉnh".</li>
+                                <li><b>Thưởng cho Vốn hóa Nhỏ:</b> Điểm sẽ được cộng thêm một chút cho các đồng tiền có vốn hóa thấp (dưới $500M) vì chúng dễ "pump" hơn.</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
-                <div id="modalError" class="absolute inset-0 bg-gray-900/90 flex-col items-center justify-center rounded-xl hidden p-4 text-center">
-                    <p class="text-red-400 font-semibold text-lg">Lỗi!</p>
-                    <p class="text-gray-300 mt-2">Không thể tải dữ liệu biểu đồ. Vui lòng đóng và thử lại sau.</p>
-                </div>
+                <p class="text-xs text-gray-500 mt-4 pt-4 border-t border-gray-200 dark:border-slate-700"><b>Miễn trừ trách nhiệm:</b> Hệ thống chấm điểm này là một công cụ tham khảo định lượng và không phải là lời khuyên đầu tư tài chính.</p>
             </div>
+        </div>
+    </div>
+    
+    <div id="adModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50 transition-opacity duration-300">
+        <div class="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700/50 rounded-xl shadow-2xl w-full max-w-md p-6 relative text-center">
+            <button id="closeAdModal" class="absolute top-4 right-5 text-gray-400 hover:text-gray-800 dark:hover:text-white text-3xl font-bold transition-colors">&times;</button>
+            <h3 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-2">ĐỪNG BỎ LỠ!</h3>
+            <p class="text-gray-800 dark:text-white font-semibold text-lg">Bí mật X100 tài sản của Cá Voi vừa được hé lộ!</p>
+            <p class="text-gray-600 dark:text-gray-400 mt-2">Tham gia ngay cộng đồng tinh anh để nhận tín hiệu độc quyền trước khi thị trường pump.</p>
+            <button class="mt-6 w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105">TÌM HIỂU NGAY</button>
         </div>
     </div>
 
@@ -214,23 +299,27 @@
         const toAmountInput = document.getElementById('toAmount');
         const trendingList = document.getElementById('trendingList');
         const botAnalysisSection = document.getElementById('botAnalysisSection');
-        const modal = document.getElementById('chartModal');
-        const closeModalBtn = document.getElementById('closeModal');
-        const modalHeader = document.getElementById('modalHeader');
-        const modalLoader = document.getElementById('modalLoader');
-        const modalError = document.getElementById('modalError');
-        const detailedChartCanvas = document.getElementById('detailedChartCanvas');
-        const detailedChartContext = detailedChartCanvas.getContext('2d');
-        const timeRangeSelector = document.getElementById('timeRangeSelector');
+        const reportModal = document.getElementById('reportModal');
+        const closeReportModalBtn = document.getElementById('closeReportModal');
+        const reportModalHeader = document.getElementById('reportModalHeader');
+        const reportModalContent = document.getElementById('reportModalContent');
         const statusDot = document.getElementById('statusDot');
         const statusText = document.getElementById('statusText');
-        const chartStatusText = document.getElementById('chartStatusText');
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+        const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+        const scoreExplanationModal = document.getElementById('scoreExplanationModal');
+        const openScoreExplanationModalBtn = document.getElementById('openScoreExplanationModal');
+        const closeScoreExplanationModalBtn = document.getElementById('closeScoreExplanationModal');
+        const adModal = document.getElementById('adModal');
+        const closeAdModalBtn = document.getElementById('closeAdModal');
+        const adBanner = document.getElementById('ad-banner');
+        const secretButton = document.getElementById('secret-button');
+        const tableHeader = document.getElementById('table-header');
 
         // State
         let allCoinsData = [];
-        let detailedChart;
-        let currentModalCoinId = null;
-        let chartCache = {};
+        let sortState = { key: 'pumpScore.score', direction: 'desc' };
         
         // --- API Failover System ---
         const API_SOURCES = [
@@ -244,11 +333,10 @@
         // API Path getters
         const getApiUrl = (path) => `${API_SOURCES[currentApiSourceIndex]}${path}`;
         const API_PATHS = {
-            markets: '/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=24h',
+            markets: '/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=1h,24h',
             btcPrice: '/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true',
             futures: '/derivatives/futures?include_tickers=unexpired',
-            trending: '/search/trending',
-            historical: (id, days) => `/coins/${id}/market_chart?vs_currency=usd&days=${days}`
+            trending: '/search/trending'
         };
         
         const formatPrice = (num) => {
@@ -267,18 +355,34 @@
             return `${prefix}${num.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         };
 
-        const getPotentialScore = (coin) => {
-            let score = 0;
+        const scaleValue = (value, minInput, maxInput, minOutput, maxOutput) => {
+            const clampedValue = Math.max(minInput, Math.min(value, maxInput));
+            return ((clampedValue - minInput) / (maxInput - minInput)) * (maxOutput - minOutput) + minOutput;
+        };
+        
+        const getPumpScore = (coin) => {
+            let momentumScore = 0, volumeScore = 0, sentimentScore = 0;
+            const change1h = coin.price_change_percentage_1h_in_currency || 0;
             const change24h = coin.price_change_percentage_24h_in_currency || 0;
+            const rs = coin.rs_24h_percentage || 0;
+            momentumScore += scaleValue(change1h, 0, 5, 0, 15);
+            momentumScore += scaleValue(change24h, 0, 20, 0, 15);
+            momentumScore += scaleValue(rs, 0, 10, 0, 10);
             const volRatio = coin.market_cap > 0 ? coin.total_volume / coin.market_cap : 0;
-            if (change24h > 20) score += 50; else if (change24h > 10) score += 40; else if (change24h > 5) score += 30; else if (change24h > 2) score += 20; else if (change24h > 0) score += 10;
-            if (volRatio > 0.5) score += 50; else if (volRatio > 0.3) score += 40; else if (volRatio > 0.2) score += 30; else if (volRatio > 0.1) score += 20; else if (volRatio > 0.05) score += 10;
-            const sparkline = coin.sparkline_in_7d?.price;
-            if (sparkline && sparkline.length > 1 && sparkline[sparkline.length - 1] > sparkline[0]) score += 10;
-            const finalScore = Math.min(100, (score / 110) * 100);
-            let colorClass = 'bg-gray-700';
-            if (finalScore > 75) colorClass = 'bg-green-600/80'; else if (finalScore > 50) colorClass = 'bg-yellow-600/80'; else if (finalScore > 25) colorClass = 'bg-gray-600/80';
-            return { score: finalScore, colorClass };
+            volumeScore = scaleValue(volRatio, 0.05, 0.75, 0, 40);
+            const funding = coin.funding_rate || 0;
+            if (funding < 0 && change24h > 1) {
+                sentimentScore = scaleValue(Math.abs(funding), 0.0001, 0.001, 5, 20);
+            }
+            let finalScore = momentumScore + volumeScore + sentimentScore;
+            if (change24h > 50) finalScore *= 0.8;
+            if (coin.market_cap < 500000000) finalScore *= 1.1;
+            const clampedScore = Math.max(0, Math.min(finalScore, 100));
+            let colorClass = 'bg-gray-500 dark:bg-gray-700';
+            if (clampedScore > 75) colorClass = 'bg-green-600/80';
+            else if (clampedScore > 50) colorClass = 'bg-yellow-600/80';
+            else if (clampedScore > 25) colorClass = 'bg-gray-500/80 dark:bg-gray-600/80';
+            return { score: clampedScore, colorClass };
         };
         
         const calculateTradeSetup = (sparkline, currentPrice) => {
@@ -307,91 +411,85 @@
             } else if (coin.price_change_percentage_24h_in_currency > 2 && volRatio > 0.20) {
                 signals.push(`<svg title="Tiềm năng tăng: Ghi nhận khối lượng giao dịch cao và giá tăng." xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>`);
             }
-            if (coin.funding_rate && Math.abs(coin.funding_rate * 100) > 0.05) {
+            if (coin.funding_rate && Math.abs(coin.funding_rate) > 0.0005) { // 0.05%
                 const color = coin.funding_rate > 0 ? 'text-red-500' : 'text-green-500';
                 const title = coin.funding_rate > 0 ? 'Funding Rate dương cao: Rủi ro đập long.' : 'Funding Rate âm sâu: Rủi ro ép bán.';
                 signals.push(`<svg title="${title}" class="w-5 h-5 ${color}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 01-1.898-.632l4-12a1 1 0 011.265-.633zM5 7a1 1 0 011-1h9a1 1 0 110 2H6a1 1 0 01-1-1zm4 6a1 1 0 011-1h5a1 1 0 110 2h-5a1 1 0 01-1-1z" clip-rule="evenodd" /></svg>`);
             }
             if (signals.length > 0) return `<div class="flex justify-center items-center space-x-2">${signals.join('')}</div>`;
-            return '<span class="text-gray-600">-</span>';
-        };
-
-        const renderSparkline = (canvas, data) => {
-            if (!canvas || !data || data.length === 0) return;
-            const isUp = data[data.length - 1] > data[0];
-            new Chart(canvas.getContext('2d'), {
-                type: 'line', data: { labels: data.map((_, index) => index), datasets: [{ data, borderColor: isUp ? '#22c55e' : '#ef4444', borderWidth: 2.5, pointRadius: 0 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false } } }
-            });
+            return '<span class="text-gray-500 dark:text-gray-600">-</span>';
         };
 
         const renderTable = (coins) => {
             const tableHtml = coins.map((coin, index) => {
-                const priceChangeClass = coin.price_change_percentage_24h_in_currency >= 0 ? 'price-up' : 'price-down';
+                const priceChange1hClass = coin.price_change_percentage_1h_in_currency >= 0 ? 'price-up' : 'price-down';
+                const priceChange24hClass = coin.price_change_percentage_24h_in_currency >= 0 ? 'price-up' : 'price-down';
                 const rsClass = coin.rs_24h_percentage >= 0 ? 'rs-strong' : 'rs-weak';
                 
                 return `
-                    <tr class="border-b border-gray-800 hover:bg-gray-800/60 transition-all duration-300 ease-in-out fade-in-row" style="animation-delay: ${index * 0.03}s" data-id="${coin.id}">
-                        <td class="px-6 py-4 text-gray-400">${index + 1}</td>
-                        <td class="px-6 py-4"><div class="flex items-center"><img src="${coin.image}" alt="${coin.name}" class="w-8 h-8 mr-4 rounded-full"><div><p class="font-semibold text-white">${coin.name}</p><p class="text-sm text-gray-500">${coin.symbol.toUpperCase()}</p></div></div></td>
-                        <td class="px-6 py-4 text-center"><span class="px-3 py-1 text-sm font-bold rounded-full text-white ${coin.potential.colorClass}">${coin.potential.score.toFixed(0)}</span></td>
-                        <td class="px-6 py-4 text-center">${generateSignalHTML(coin)}</td>
-                        <td class="px-6 py-4 text-right font-medium text-white">${formatNumber(coin.current_price)}</td>
-                        <td class="px-6 py-4 text-right font-medium ${priceChangeClass}">${(coin.price_change_percentage_24h_in_currency || 0).toFixed(2)}%</td>
-                        <td class="px-6 py-4 text-right font-medium ${rsClass}">${(coin.rs_24h_percentage || 0).toFixed(2)}%</td>
-                        <td class="px-6 py-4 text-right text-gray-300 hidden md:table-cell">${formatNumber(coin.market_cap, false)}</td>
-                        <td class="px-6 py-4 text-right font-mono text-cyan-400 hidden lg:table-cell">${coin.tradeSetup ? formatPrice(coin.tradeSetup.optimalEntry) : '<span class="text-gray-600">-</span>'}</td>
-                        <td class="px-6 py-4 text-right font-mono text-orange-400 hidden lg:table-cell">${coin.tradeSetup ? formatPrice(coin.tradeSetup.stopLoss) : '<span class="text-gray-600">-</span>'}</td>
-                        <td class="px-6 py-4 text-right font-mono text-green-400 hidden lg:table-cell">${coin.tradeSetup ? formatPrice(coin.tradeSetup.takeProfit) : '<span class="text-gray-600">-</span>'}</td>
-                        <td class="px-6 py-4 text-right hidden lg:table-cell" style="width: 150px; height: 50px;"><canvas id="sparkline-${coin.id}"></canvas></td>
+                    <tr class="border-b border-gray-200 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-700/60 transition-all duration-300 ease-in-out fade-in-row" style="animation-delay: ${index * 0.03}s" data-id="${coin.id}">
+                        <td class="px-4 py-4 text-gray-500 dark:text-gray-400">${coin.market_cap_rank || index + 1}</td>
+                        <td class="px-4 py-4"><div class="flex items-center"><img src="${coin.image}" alt="${coin.name}" class="w-8 h-8 mr-4 rounded-full"><div><p class="font-semibold text-gray-900 dark:text-white">${coin.name}</p><p class="text-sm text-gray-500 dark:text-gray-500">${coin.symbol.toUpperCase()}</p></div></div></td>
+                        <td class="px-4 py-4 text-center"><span class="px-3 py-1 text-sm font-bold rounded-full text-white ${coin.pumpScore.colorClass}">${coin.pumpScore.score.toFixed(0)}</span></td>
+                        <td class="px-4 py-4 text-center">${generateSignalHTML(coin)}</td>
+                        <td class="px-4 py-4 text-right font-semibold text-gray-900 dark:text-white">${formatNumber(coin.current_price)}</td>
+                        <td class="px-4 py-4 text-right font-medium ${priceChange1hClass}">${(coin.price_change_percentage_1h_in_currency || 0).toFixed(2)}%</td>
+                        <td class="px-4 py-4 text-right font-medium ${priceChange24hClass}">${(coin.price_change_percentage_24h_in_currency || 0).toFixed(2)}%</td>
+                        <td class="px-4 py-4 text-right font-medium hidden lg:table-cell ${rsClass}">${(coin.rs_24h_percentage || 0).toFixed(2)}%</td>
+                        <td class="px-4 py-4 text-right text-gray-700 dark:text-gray-300 hidden lg:table-cell">${formatNumber(coin.market_cap, false)}</td>
                     </tr>`;
             }).join('');
             
-            cryptoTableBody.innerHTML = tableHtml || `<tr><td colspan="12" class="text-center p-10 text-gray-400">Không tìm thấy kết quả.</td></tr>`;
-            
-            coins.forEach(coin => {
-                const canvas = document.getElementById(`sparkline-${coin.id}`);
-                if (canvas && coin.sparkline_in_7d) {
-                    renderSparkline(canvas, coin.sparkline_in_7d.price);
-                }
-            });
+            cryptoTableBody.innerHTML = tableHtml || `<tr><td colspan="9" class="text-center p-10 text-gray-500 dark:text-gray-400">Không tìm thấy kết quả.</td></tr>`;
+            updateSortIcons();
         };
         
         const renderTrendingList = (trendingData) => {
             trendingList.innerHTML = '';
-            if (!trendingData.coins || trendingData.coins.length === 0) { trendingList.innerHTML = `<div class="text-center p-4 text-gray-400">Không có dữ liệu.</div>`; return; }
+            if (!trendingData.coins || trendingData.coins.length === 0) { trendingList.innerHTML = `<div class="text-center p-4 text-gray-500 dark:text-gray-400">Không có dữ liệu.</div>`; return; }
             trendingData.coins.forEach(coinData => {
                 const coin = coinData.item;
-                trendingList.innerHTML += `<div class="flex items-center justify-between p-2.5 bg-gray-800/50 rounded-lg transition-colors hover:bg-gray-800"><div class="flex items-center"><img src="${coin.small}" alt="${coin.name}" class="w-7 h-7 mr-3 rounded-full"><div><p class="font-semibold text-white">${coin.name}</p><p class="text-sm text-gray-500">${coin.symbol.toUpperCase()}</p></div></div><div class="text-right"><span class="text-sm text-gray-400">Rank #${coin.market_cap_rank}</span></div></div>`;
+                trendingList.innerHTML += `<div class="flex items-center justify-between p-2.5 bg-gray-100 dark:bg-slate-700/50 rounded-lg transition-colors hover:bg-gray-200 dark:hover:bg-slate-700"><div class="flex items-center"><img src="${coin.small}" alt="${coin.name}" class="w-7 h-7 mr-3 rounded-full"><div><p class="font-semibold text-gray-900 dark:text-white">${coin.name}</p><p class="text-sm text-gray-500 dark:text-gray-500">${coin.symbol.toUpperCase()}</p></div></div><div class="text-right"><span class="text-sm text-gray-500 dark:text-gray-400">Rank #${coin.market_cap_rank}</span></div></div>`;
             });
         };
         
-        const renderBotAnalysis = (coin) => {
-             if (!coin) {
+        const renderBotAnalysis = (topCoins) => {
+             if (!topCoins || topCoins.length === 0) {
                  botAnalysisSection.innerHTML = `<p class="italic text-gray-500">Không có đồng tiền nào đủ tiêu chuẩn để phân tích.</p>`;
                  return;
              }
-             let analysisHTML = `
-                <div class="flex items-center mb-3"><img src="${coin.image}" class="w-8 h-8 mr-3 rounded-full" alt="${coin.name}"><h3 class="text-lg font-bold text-white">Phân tích: ${coin.name} (${coin.symbol.toUpperCase()})</h3></div>
-                <p><b>${coin.name}</b> đang là ứng cử viên sáng giá nhất với <b>Điểm Tiềm Năng ${coin.potential.score.toFixed(0)}/100</b>. Dữ liệu cứng cho thấy:</p>
-                <ul class="list-disc list-inside space-y-2 text-sm pl-2">
-                    <li><b>Đà tăng trưởng mạnh:</b> Giá đã tăng <b>${(coin.price_change_percentage_24h_in_currency || 0).toFixed(2)}%</b> trong 24 giờ qua, vượt trội hơn Bitcoin <b>${(coin.rs_24h_percentage || 0).toFixed(2)}%</b>.</li>
-                    <li><b>Dòng tiền vào tốt:</b> Tỷ lệ Khối lượng/Vốn hóa là <b>${((coin.total_volume / coin.market_cap) * 100).toFixed(2)}%</b>, cho thấy sự quan tâm lớn từ thị trường.</li>
-                </ul>`;
-            const { tradeSetup } = coin;
-            if (tradeSetup) {
-                analysisHTML += `
-                    <div class="mt-4 pt-4 border-t border-gray-700">
-                        <h4 class="font-semibold text-md text-white mb-2">Đề xuất Giao dịch Tối ưu:</h4>
-                        <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                            <span class="text-gray-400">Giá Mua Tốt Nhất (Entry):</span><span class="font-mono text-right text-white">${formatPrice(tradeSetup.optimalEntry)}</span>
-                            <span class="text-gray-400">Dừng Lỗ (SL):</span><span class="font-mono text-right text-red-400">${formatPrice(tradeSetup.stopLoss)}</span>
-                            <span class="text-gray-400">Giá Bán Tốt Nhất (TP):</span><span class="font-mono text-right text-green-400">${formatPrice(tradeSetup.takeProfit)}</span>
-                            <span class="text-gray-400">Tỷ lệ R:R:</span><span class="font-mono text-right font-bold ${tradeSetup.rrRatio >= 2 ? 'text-green-400' : 'text-yellow-400'}">${tradeSetup.rrRatio.toFixed(2)} : 1</span>
+
+            let analysisHTML = topCoins.map((coin, index) => {
+                let coinHTML = `
+                    <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg">
+                        <div class="flex items-center mb-3">
+                            <span class="text-lg font-bold mr-3 text-gray-400 dark:text-gray-500">#${index + 1}</span>
+                            <img src="${coin.image}" class="w-8 h-8 mr-3 rounded-full" alt="${coin.name}">
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white">${coin.name}</h3>
+                            <span class="ml-auto px-3 py-1 text-sm font-bold rounded-full text-white ${coin.pumpScore.colorClass}">${coin.pumpScore.score.toFixed(0)}</span>
                         </div>
-                    </div>`;
-            }
-            analysisHTML += `<p class="text-xs text-gray-500 mt-4"><b>Miễn trừ trách nhiệm:</b> Phân tích và đề xuất này là tổng hợp tự động từ dữ liệu thị trường và chỉ mang tính tham khảo, không phải lời khuyên đầu tư.</p>`;
+                        <ul class="list-disc list-inside space-y-1 text-sm pl-2 mt-2">
+                            <li><b>Kỹ thuật:</b> Đà tăng 1h <b>(${(coin.price_change_percentage_1h_in_currency || 0).toFixed(2)}%)</b> và RS <b>(${(coin.rs_24h_percentage || 0).toFixed(2)}%)</b>.</li>
+                            <li><b>Dòng tiền:</b> Tỷ lệ Khối lượng/Vốn hóa <b>${((coin.total_volume / coin.market_cap) * 100).toFixed(2)}%</b>.</li>
+                            ${(coin.funding_rate < -0.0001 && coin.price_change_percentage_24h_in_currency > 0) ? `<li><b>Tâm lý:</b> Có tiềm năng "short squeeze".</li>` : ''}
+                        </ul>`;
+                
+                const { tradeSetup } = coin;
+                if (tradeSetup) {
+                    coinHTML += `
+                        <div class="mt-3 pt-3 border-t border-gray-200/50 dark:border-slate-700/50">
+                            <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                                <span class="text-gray-500 dark:text-gray-400">Entry:</span><span class="font-mono text-right text-gray-800 dark:text-white">${formatPrice(tradeSetup.optimalEntry)}</span>
+                                <span class="text-gray-500 dark:text-gray-400">Stop Loss:</span><span class="font-mono text-right text-red-600 dark:text-red-400">${formatPrice(tradeSetup.stopLoss)}</span>
+                                <span class="text-gray-500 dark:text-gray-400">Take Profit:</span><span class="font-mono text-right text-green-600 dark:text-green-400">${formatPrice(tradeSetup.takeProfit)}</span>
+                            </div>
+                        </div>`;
+                }
+                coinHTML += `</div>`;
+                return coinHTML;
+            }).join('');
+
+            analysisHTML += `<p class="text-xs text-gray-500 mt-4 md:col-span-2 xl:col-span-3"><b>Miễn trừ trách nhiệm:</b> Phân tích này chỉ mang tính tham khảo, không phải lời khuyên đầu tư.</p>`;
             botAnalysisSection.innerHTML = analysisHTML;
         };
 
@@ -440,47 +538,6 @@
             }
         };
 
-        const fetchAndDrawDetailedChart = async (coinId, days = 7) => {
-            modalLoader.classList.remove('hidden');
-            modalError.classList.add('hidden');
-            chartStatusText.textContent = '';
-            let fetchSuccessful = false;
-            try {
-                const data = await fetchWithRetry(getApiUrl(API_PATHS.historical(coinId, days)));
-                if (!data || !data.prices || data.prices.length === 0) throw new Error("Dữ liệu biểu đồ không hợp lệ hoặc rỗng.");
-                chartCache[`${coinId}-${days}`] = data.prices;
-                fetchSuccessful = true;
-            } catch (error) {
-                console.error("Could not fetch detailed chart data after retries:", error);
-                fetchSuccessful = false;
-            } finally {
-                const dataToDraw = chartCache[`${coinId}-${days}`];
-                if (dataToDraw) {
-                    detailedChartCanvas.style.visibility = 'visible';
-                    modalError.classList.add('hidden');
-                    if (detailedChart) detailedChart.destroy();
-                    if (fetchSuccessful) {
-                        chartStatusText.textContent = 'Dữ liệu được cập nhật.';
-                        chartStatusText.className = 'text-sm text-green-500 mb-2 h-5';
-                    } else {
-                        chartStatusText.textContent = 'Lỗi cập nhật. Đang hiển thị dữ liệu cũ.';
-                        chartStatusText.className = 'text-sm text-yellow-500 mb-2 h-5';
-                    }
-                    const isUp = dataToDraw.length > 1 && dataToDraw[dataToDraw.length - 1][1] > dataToDraw[0][1];
-                    detailedChart = new Chart(detailedChartContext, {
-                        type: 'line', data: { datasets: [{ label: 'Giá (USD)', data: dataToDraw.map(item => ({x: item[0], y: item[1]})), borderColor: isUp ? '#22c55e' : '#ef4444', borderWidth: 2, pointRadius: 0, tension: 0.1 }] },
-                        options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: days > 1 ? 'day' : 'hour' }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: '#9ca3af' } }, y: { grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: '#9ca3af', callback: value => `$${value.toLocaleString()}` } } }, plugins: { legend: { display: false } } }
-                    });
-                } else {
-                    if (detailedChart) detailedChart.destroy();
-                    detailedChartCanvas.style.visibility = 'hidden';
-                    modalError.classList.remove('hidden');
-                    chartStatusText.textContent = '';
-                }
-                modalLoader.classList.add('hidden');
-            }
-        };
-
         const setApiStatus = (status, message) => {
             statusDot.className = `status-dot ${status}`;
             statusText.textContent = message;
@@ -496,29 +553,79 @@
             
             let rawCoinsData = await apiResults[0].value.json();
             const btcData = await apiResults[1].value.json();
+            
             let futuresData = [];
-            if (apiResults[2].status === 'fulfilled' && apiResults[2].value.ok) futuresData = await apiResults[2].value.json();
-            else console.warn('Cảnh báo: Không thể tải dữ liệu phái sinh (Futures).');
+            if (apiResults[2].status === 'fulfilled' && apiResults[2].value.ok) {
+                try { futuresData = await apiResults[2].value.json(); } 
+                catch (e) { console.warn('Cảnh báo: Lỗi phân tích dữ liệu phái sinh (Futures).', e); futuresData = []; }
+            } else { console.warn('Cảnh báo: Không thể tải dữ liệu phái sinh (Futures).'); }
+
             let trendingData = { coins: [] };
-            if (apiResults[3].status === 'fulfilled' && apiResults[3].value.ok) trendingData = await apiResults[3].value.json();
-            else console.warn('Cảnh báo: Không thể tải dữ liệu xu hướng (Trending).');
+            if (apiResults[3].status === 'fulfilled' && apiResults[3].value.ok) {
+                try { trendingData = await apiResults[3].value.json(); } 
+                catch (e) { console.warn('Cảnh báo: Lỗi phân tích dữ liệu xu hướng (Trending).', e); trendingData = { coins: [] };}
+            } else { console.warn('Cảnh báo: Không thể tải dữ liệu xu hướng (Trending).');}
 
             const btcChange24h = btcData.bitcoin.usd_24h_change;
             const fundingRates = {};
-            futuresData.forEach(f => { if (!fundingRates[f.symbol]) fundingRates[f.symbol] = f.funding_rate; });
+            futuresData.forEach(f => { if (!fundingRates[f.symbol.toUpperCase()]) fundingRates[f.symbol.toUpperCase()] = f.funding_rate; });
             const newCoinsData = rawCoinsData.map(coin => ({
                 ...coin,
-                potential: getPotentialScore(coin),
+                pumpScore: getPumpScore(coin),
                 rs_24h_percentage: (coin.price_change_percentage_24h_in_currency || 0) - btcChange24h,
                 funding_rate: fundingRates[coin.symbol.toUpperCase()],
                 tradeSetup: calculateTradeSetup(coin.sparkline_in_7d?.price, coin.current_price)
-            })).sort((a, b) => b.potential.score - a.potential.score);
+            }));
             
             if(newCoinsData && newCoinsData.length > 0) allCoinsData = newCoinsData;
-            renderTable(allCoinsData);
+            sortAndRender();
             populateConverter(rawCoinsData);
             renderTrendingList(trendingData);
-            renderBotAnalysis(allCoinsData[0]);
+            const sortedForAnalysis = [...allCoinsData].sort((a,b) => b.pumpScore.score - a.pumpScore.score);
+            renderBotAnalysis(sortedForAnalysis.slice(0, 3));
+        };
+        
+        const getValue = (obj, path) => path.split('.').reduce((o, k) => (o || {})[k], obj);
+
+        const sortAndRender = () => {
+            const currentFilter = searchInput.value.toLowerCase();
+            let dataToRender = allCoinsData;
+            if (currentFilter) {
+                dataToRender = allCoinsData.filter(c => c.name.toLowerCase().includes(currentFilter) || c.symbol.toLowerCase().includes(currentFilter));
+            }
+            
+            const sortedData = [...dataToRender].sort((a, b) => {
+                if(sortState.key === 'market_cap_rank' && sortState.direction === 'desc') {
+                    const valA = getValue(a, 'pumpScore.score');
+                    const valB = getValue(b, 'pumpScore.score');
+                    return valB - valA;
+                }
+                const valA = getValue(a, sortState.key);
+                const valB = getValue(b, sortState.key);
+                if (valA === null || valA === undefined) return 1;
+                if (valB === null || valB === undefined) return -1;
+                if (valA < valB) return sortState.direction === 'asc' ? -1 : 1;
+                if (valA > valB) return sortState.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+            renderTable(sortedData);
+        };
+
+        const updateSortIcons = () => {
+            document.querySelectorAll('#table-header th.sortable').forEach(th => {
+                th.classList.remove('sorted');
+                const icon = th.querySelector('.sort-icon');
+                if(icon) icon.remove();
+            });
+
+            const activeTh = document.querySelector(`#table-header th[data-sort-key="${sortState.key}"]`);
+            if(activeTh){
+                activeTh.classList.add('sorted');
+                const iconSVG = sortState.direction === 'asc' 
+                    ? `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd"></path></svg>`
+                    : `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>`;
+                activeTh.innerHTML += `<span class="sort-icon">${iconSVG}</span>`;
+            }
         };
 
         const mainFetchLoop = async () => {
@@ -547,10 +654,50 @@
         };
 
         // --- EVENT LISTENERS ---
+        // Theme Toggle
+        if (localStorage.getItem('color-theme') === 'light' || (!('color-theme' in localStorage) && !window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            themeToggleLightIcon.classList.remove('hidden');
+        } else {
+            themeToggleDarkIcon.classList.remove('hidden');
+        }
+        themeToggleBtn.addEventListener('click', function() {
+            themeToggleDarkIcon.classList.toggle('hidden');
+            themeToggleLightIcon.classList.toggle('hidden');
+            if (localStorage.getItem('color-theme')) {
+                if (localStorage.getItem('color-theme') === 'light') {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('color-theme', 'dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('color-theme', 'light');
+                }
+            } else {
+                if (document.documentElement.classList.contains('dark')) {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('color-theme', 'light');
+                } else {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('color-theme', 'dark');
+                }
+            }
+        });
+
+        tableHeader.addEventListener('click', (e) => {
+            const th = e.target.closest('th');
+            if(!th || !th.classList.contains('sortable')) return;
+            
+            const key = th.dataset.sortKey;
+            if (sortState.key === key) {
+                sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortState.key = key;
+                sortState.direction = 'desc';
+            }
+            sortAndRender();
+        });
+
         searchInput.addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            const filteredCoins = allCoinsData.filter(c => c.name.toLowerCase().includes(searchTerm) || c.symbol.toLowerCase().includes(searchTerm));
-            renderTable(filteredCoins);
+            sortAndRender();
         });
         
         fromCoinSelect.addEventListener('change', convertCurrency);
@@ -561,29 +708,69 @@
             const row = e.target.closest('tr');
             if (!row || !row.dataset.id) return;
             const coinId = row.dataset.id;
-            currentModalCoinId = coinId; 
             const coin = allCoinsData.find(c => c.id === coinId);
-            modalHeader.innerHTML = `<img src="${coin.image}" alt="${coin.name}" class="w-10 h-10 mr-4 rounded-full"><div><h2 class="text-2xl font-bold text-white">${coin.name}</h2><p class="text-gray-400">${coin.symbol.toUpperCase()}</p></div>`;
-            document.querySelectorAll('.time-range-btn').forEach(btn => {
-                btn.classList.remove('bg-indigo-700'); btn.classList.add('bg-gray-800');
-                if (btn.dataset.days === '7') { btn.classList.add('bg-indigo-700'); btn.classList.remove('bg-gray-800'); }
-            });
-            fetchAndDrawDetailedChart(coinId, 7);
-            modal.classList.remove('hidden'); modal.classList.add('flex');
+            
+            reportModalHeader.innerHTML = `<img src="${coin.image}" alt="${coin.name}" class="w-10 h-10 mr-4 rounded-full"><div><h2 class="text-2xl font-bold text-gray-900 dark:text-white">${coin.name}</h2><p class="text-gray-500 dark:text-gray-400">${coin.symbol.toUpperCase()}</p></div>`;
+            
+            let reportHTML = `
+                <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm border-b border-gray-200 dark:border-slate-700 pb-4">
+                    <span class="text-gray-500 dark:text-gray-400">Điểm Pump:</span><span class="font-bold text-right text-gray-800 dark:text-white">${coin.pumpScore.score.toFixed(0)}</span>
+                    <span class="text-gray-500 dark:text-gray-400">% từ ATH:</span><span class="font-medium text-right ${coin.ath_change_percentage >=0 ? 'price-up' : 'price-down'}">${(coin.ath_change_percentage || 0).toFixed(2)}%</span>
+                </div>
+            `;
+            if (coin.tradeSetup) {
+                const { tradeSetup } = coin;
+                reportHTML += `
+                    <h4 class="font-semibold text-md text-gray-900 dark:text-white pt-4 mb-2">Đề xuất Giao dịch Tối ưu (7 ngày):</h4>
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                        <span class="text-gray-500 dark:text-gray-400">Giá Mua Tốt Nhất (Entry):</span><span class="font-mono text-right text-gray-800 dark:text-white">${formatPrice(tradeSetup.optimalEntry)}</span>
+                        <span class="text-gray-500 dark:text-gray-400">Dừng Lỗ (SL):</span><span class="font-mono text-right text-red-600 dark:text-red-400">${formatPrice(tradeSetup.stopLoss)}</span>
+                        <span class="text-gray-500 dark:text-gray-400">Giá Bán Tốt Nhất (TP):</span><span class="font-mono text-right text-green-600 dark:text-green-400">${formatPrice(tradeSetup.takeProfit)}</span>
+                        <span class="text-gray-500 dark:text-gray-400">Tỷ lệ R:R:</span><span class="font-mono text-right font-bold ${tradeSetup.rrRatio >= 2 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}">${tradeSetup.rrRatio.toFixed(2)} : 1</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-3">Lưu ý: Đề xuất này chỉ hiển thị khi giá hiện tại ở gần vùng vào lệnh tiềm năng.</p>
+                `;
+            } else {
+                 reportHTML += `
+                    <h4 class="font-semibold text-md text-gray-900 dark:text-white pt-4 mb-2">Đề xuất Giao dịch</h4>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Hiện tại chưa có kịch bản giao dịch tối ưu cho đồng tiền này dựa trên cấu trúc giá 7 ngày.</p>
+                `;
+            }
+            reportModalContent.innerHTML = reportHTML;
+            reportModal.classList.remove('hidden');
+            reportModal.classList.add('flex');
         });
 
-        closeModalBtn.addEventListener('click', () => {
-            modal.classList.add('hidden'); modal.classList.remove('flex');
-            if (detailedChart) detailedChart.destroy();
-            chartStatusText.textContent = '';
+        closeReportModal.addEventListener('click', () => {
+            reportModal.classList.add('hidden');
+            reportModal.classList.remove('flex');
         });
 
-        timeRangeSelector.addEventListener('click', (e) => {
-            if (e.target.classList.contains('time-range-btn')) {
-                const days = e.target.dataset.days;
-                if (currentModalCoinId) fetchAndDrawDetailedChart(currentModalCoinId, days);
-                document.querySelectorAll('.time-range-btn').forEach(btn => { btn.classList.remove('bg-indigo-700'); btn.classList.add('bg-gray-800'); });
-                e.target.classList.add('bg-indigo-700'); e.target.classList.remove('bg-gray-800');
+        openScoreExplanationModalBtn.addEventListener('click', () => {
+             scoreExplanationModal.classList.remove('hidden');
+             scoreExplanationModal.classList.add('flex');
+        });
+
+        closeScoreExplanationModalBtn.addEventListener('click', () => {
+            scoreExplanationModal.classList.add('hidden');
+            scoreExplanationModal.classList.remove('flex');
+        });
+        
+        const openAdModal = () => {
+            adModal.classList.remove('hidden');
+            adModal.classList.add('flex');
+        };
+        const closeAdModal = () => {
+            adModal.classList.add('hidden');
+            adModal.classList.remove('flex');
+        };
+
+        adBanner.addEventListener('click', openAdModal);
+        secretButton.addEventListener('click', openAdModal);
+        closeAdModalBtn.addEventListener('click', closeAdModal);
+        adModal.addEventListener('click', (e) => {
+            if(e.target === adModal) {
+                closeAdModal();
             }
         });
 
