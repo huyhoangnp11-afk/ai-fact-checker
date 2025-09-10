@@ -159,20 +159,25 @@
             
             // --- API Communication & Time Sync ---
             async function syncTime() {
-                 try {
+                try {
                     addLog('Bắt đầu đồng bộ thời gian với máy chủ Bybit...', 'info');
-                    const serverTimeRes = await fetch('https://api.bybit.com/v5/market/time?_=' + new Date().getTime(), { cache: 'no-cache' });
-                    const serverTimeData = await serverTimeRes.json();
-                    if (serverTimeData.retCode === 0) {
-                        const serverTime = parseInt(serverTimeData.result.timeNano) / 1000000;
-                        const oldOffset = state.timeOffset;
-                        state.timeOffset = serverTime - Date.now();
-                        state.isTimeSynced = true;
-                        addLog(`Đồng bộ thời gian thành công. Lệch: ${state.timeOffset.toFixed(0)}ms (thay đổi: ${(state.timeOffset - oldOffset).toFixed(0)}ms).`, 'success');
-                        return true;
-                    } else {
-                       throw new Error(serverTimeData.retMsg);
-                    }
+                    const t0 = Date.now();
+                    const res = await fetch('https://api.bybit.com/v5/market/time?_=' + t0, { cache: 'no-store' });
+                    const json = await res.json();
+                    const t1 = Date.now();
+
+                    if (json.retCode !== 0) throw new Error(json.retMsg || 'time API error');
+
+                    const r = json.result || {};
+                    const serverMs = r.timeSecond ? (parseInt(r.timeSecond, 10) * 1000) : Math.floor(parseInt(r.timeNano, 10) / 1e6);
+                    
+                    const midpoint = (t0 + t1) / 2;
+                    const oldOffset = state.timeOffset;
+                    state.timeOffset = serverMs - midpoint;
+
+                    state.isTimeSynced = true;
+                    addLog(`Đồng bộ thời gian thành công. Lệch: ${state.timeOffset.toFixed(0)}ms (thay đổi: ${(state.timeOffset - oldOffset).toFixed(0)}ms).`, 'success');
+                    return true;
                 } catch (e) {
                     state.isTimeSynced = false;
                     addLog(`Lỗi đồng bộ thời gian: ${e.message}. API có thể không hoạt động.`, 'error');
@@ -189,23 +194,28 @@
                 }
 
                 const API_BASE = 'https://api.bybit.com';
-                const fudgeMs = 200; // Subtract 200ms as a safety margin
+                const fudgeMs = 250; 
                 const timestamp = (Date.now() + state.timeOffset - fudgeMs).toString();
                 const recvWindow = '20000';
                 
-                let signaturePayload;
                 let body = null;
-                let url = new URL(API_BASE + endpoint);
+                let qs = '';
+                const url = new URL(API_BASE + endpoint);
 
                 if (method === 'GET') {
-                    signaturePayload = Object.entries(params).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${k}=${v}`).join('&');
-                    if (signaturePayload) { url.search = signaturePayload; }
-                } else { // POST
-                    signaturePayload = JSON.stringify(params);
-                    body = signaturePayload;
+                    const usp = new URLSearchParams();
+                    Object.keys(params || {}).sort().forEach(k => {
+                        const v = params[k];
+                        usp.append(k, Array.isArray(v) ? v.join(',') : String(v));
+                    });
+                    qs = usp.toString();
+                    if (qs) url.search = qs;
+                } else {
+                    body = JSON.stringify(params || {});
+                    qs = body;
                 }
 
-                const stringToSign = timestamp + state.apiKey + recvWindow + signaturePayload;
+                const stringToSign = timestamp + state.apiKey + recvWindow + qs;
                 const signature = CryptoJS.HmacSHA256(stringToSign, state.apiSecret).toString();
                 
                 const headers = { 
@@ -268,8 +278,9 @@
 
             // --- Core Bot Logic ---
             async function runBotLogic() {
-                if (!state.isTimeSynced) {
-                    addLog('Dừng quét do thời gian chưa được đồng bộ.', 'error');
+                const syncSuccess = await syncTime();
+                if (!syncSuccess) {
+                    addLog('Dừng quét do lỗi đồng bộ thời gian.', 'error');
                     elements.stopBotButton.click();
                     return;
                 }
