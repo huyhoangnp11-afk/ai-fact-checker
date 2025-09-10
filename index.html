@@ -180,13 +180,17 @@
                 }
             }
 
-            async function bybitRequest(endpoint, method, params) {
+            async function bybitRequest(endpoint, method, params, isRetry = false) {
                 if (!state.apiKey || !state.apiSecret) { addLog('Lỗi: Vui lòng lưu API Key và Secret trước.', 'error'); return null; }
-                if (!state.isTimeSynced) { addLog('Lỗi: Thời gian chưa được đồng bộ. Vui lòng lưu lại API.', 'error'); return null; }
+                if (!state.isTimeSynced && !isRetry) { // Allow retry to proceed after sync
+                    addLog('Lỗi: Thời gian chưa được đồng bộ. Đang thử đồng bộ lại...', 'info');
+                    const syncSuccess = await syncTime();
+                    if (!syncSuccess) return null; // If resync fails, abort
+                }
 
                 const API_BASE = 'https://api.bybit.com';
                 const timestamp = (Date.now() + state.timeOffset).toString();
-                const recvWindow = '20000'; // Increased to 20s to be more tolerant of network latency
+                const recvWindow = '20000';
                 
                 let signaturePayload;
                 let body = null;
@@ -208,7 +212,20 @@
                 try {
                     const response = await fetch(url, { method, headers, body });
                     const data = await response.json();
-                    if (data.retCode !== 0) { addLog(`Lỗi API (${endpoint}): ${data.retMsg}`, 'error'); return null; }
+
+                    // Self-healing mechanism for timestamp error
+                    if (data.retCode === 10002 && !isRetry) {
+                        addLog(`Phát hiện lỗi timestamp (10002). Tự động đồng bộ lại thời gian và thử lại...`, 'info');
+                        const syncSuccess = await syncTime();
+                        if (syncSuccess) {
+                            return await bybitRequest(endpoint, method, params, true); // Retry once
+                        } else {
+                            addLog('Thử lại thất bại do không thể đồng bộ thời gian.', 'error');
+                            return null;
+                        }
+                    }
+
+                    if (data.retCode !== 0) { addLog(`Lỗi API (${endpoint}): ${data.retMsg} (Code: ${data.retCode})`, 'error'); return null; }
                     return data.result;
                 } catch (error) { addLog(`Lỗi mạng: ${error.message}`, 'error'); return null; }
             }
