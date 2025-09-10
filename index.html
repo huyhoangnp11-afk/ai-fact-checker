@@ -159,30 +159,35 @@
             
             // --- API Communication & Time Sync ---
             async function syncTime() {
-                try {
-                    addLog('Bắt đầu đồng bộ thời gian với máy chủ Bybit...', 'info');
-                    const t0 = Date.now();
-                    const res = await fetch('https://api.bybit.com/v5/market/time?_=' + t0, { cache: 'no-store' });
-                    const json = await res.json();
-                    const t1 = Date.now();
+              try {
+                addLog('Bắt đầu đồng bộ thời gian với máy chủ Bybit...', 'info');
 
-                    if (json.retCode !== 0) throw new Error(json.retMsg || 'time API error');
+                const t0 = Date.now();
+                const res = await fetch('https://api.bybit.com/v5/market/time?_=' + t0, { cache: 'no-store' });
+                const json = await res.json();
+                const t1 = Date.now();
 
-                    const r = json.result || {};
-                    const serverMs = r.timeSecond ? (parseInt(r.timeSecond, 10) * 1000) : Math.floor(parseInt(r.timeNano, 10) / 1e6);
-                    
-                    const midpoint = (t0 + t1) / 2;
-                    const oldOffset = state.timeOffset;
-                    state.timeOffset = serverMs - midpoint;
+                if (json.retCode !== 0) throw new Error(json.retMsg || 'time API error');
 
-                    state.isTimeSynced = true;
-                    addLog(`Đồng bộ thời gian thành công. Lệch: ${state.timeOffset.toFixed(0)}ms (thay đổi: ${(state.timeOffset - oldOffset).toFixed(0)}ms).`, 'success');
-                    return true;
-                } catch (e) {
-                    state.isTimeSynced = false;
-                    addLog(`Lỗi đồng bộ thời gian: ${e.message}. API có thể không hoạt động.`, 'error');
-                    return false;
-                }
+                const r = json.result || {};
+                const serverMs = r.timeSecond ? (parseInt(r.timeSecond, 10) * 1000)
+                                              : Math.floor(parseInt(r.timeNano, 10) / 1e6);
+
+                const midpoint = (t0 + t1) / 2;
+                const oldOffset = state.timeOffset;
+                state.timeOffset = serverMs - midpoint;
+
+                state.isTimeSynced = true;
+                addLog(
+                  `Đồng bộ thời gian thành công. Lệch: ${state.timeOffset.toFixed(0)}ms (thay đổi: ${(state.timeOffset - oldOffset).toFixed(0)}ms).`,
+                  'success'
+                );
+                return true;
+              } catch (e) {
+                state.isTimeSynced = false;
+                addLog(`Lỗi đồng bộ thời gian: ${e.message}. API có thể không hoạt động.`, 'error');
+                return false;
+              }
             }
 
             async function bybitRequest(endpoint, method, params, isRetry = false) {
@@ -194,25 +199,25 @@
                 }
 
                 const API_BASE = 'https://api.bybit.com';
-                const fudgeMs = 250; 
+                const fudgeMs = 250;
                 const timestamp = (Date.now() + state.timeOffset - fudgeMs).toString();
                 const recvWindow = '20000';
-                
+
                 let body = null;
                 let qs = '';
                 const url = new URL(API_BASE + endpoint);
 
                 if (method === 'GET') {
-                    const usp = new URLSearchParams();
-                    Object.keys(params || {}).sort().forEach(k => {
-                        const v = params[k];
-                        usp.append(k, Array.isArray(v) ? v.join(',') : String(v));
-                    });
-                    qs = usp.toString();
-                    if (qs) url.search = qs;
+                  const usp = new URLSearchParams();
+                  Object.keys(params || {}).sort().forEach(k => {
+                    const v = params[k];
+                    usp.append(k, Array.isArray(v) ? v.join(',') : String(v));
+                  });
+                  qs = usp.toString();
+                  if (qs) url.search = qs;
                 } else {
-                    body = JSON.stringify(params || {});
-                    qs = body;
+                  body = JSON.stringify(params || {});
+                  qs = body;
                 }
 
                 const stringToSign = timestamp + state.apiKey + recvWindow + qs;
