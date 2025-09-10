@@ -99,7 +99,7 @@
             let state = {
                 botInterval: null, apiKey: '', apiSecret: '', ws: null, pingInterval: null, lastPrice: 0, isBotRunning: false,
                 instrumentInfo: new Map(), cooldownUntil: 0, activeSymbolWs: null, position: { hasPosition: false, symbol: null, entryTime: 0, coin: null },
-                risk: { consecutiveLosses: 0 }, realtimeData: new Map(), timeOffset: 0, timeSyncInterval: null, isTimeSynced: false,
+                risk: { consecutiveLosses: 0 }, realtimeData: new Map(), timeOffset: 0, isTimeSynced: false,
             };
 
             // --- WebSocket for Real-time Data ---
@@ -182,10 +182,10 @@
 
             async function bybitRequest(endpoint, method, params, isRetry = false) {
                 if (!state.apiKey || !state.apiSecret) { addLog('Lỗi: Vui lòng lưu API Key và Secret trước.', 'error'); return null; }
-                if (!state.isTimeSynced && !isRetry) { // Allow retry to proceed after sync
+                if (!state.isTimeSynced && !isRetry) {
                     addLog('Lỗi: Thời gian chưa được đồng bộ. Đang thử đồng bộ lại...', 'info');
                     const syncSuccess = await syncTime();
-                    if (!syncSuccess) return null; // If resync fails, abort
+                    if (!syncSuccess) return null;
                 }
 
                 const API_BASE = 'https://api.bybit.com';
@@ -213,9 +213,8 @@
                     const response = await fetch(url, { method, headers, body });
                     const data = await response.json();
 
-                    // Self-healing mechanism for timestamp error
-                    if (data.retCode === 10002 && !isRetry) {
-                        addLog(`Phát hiện lỗi timestamp (10002). Tự động đồng bộ lại thời gian và thử lại...`, 'info');
+                    if (data.retCode === 10001 && data.retMsg.includes('timestamp') && !isRetry) {
+                        addLog(`Phát hiện lỗi timestamp (10001). Tự động đồng bộ lại thời gian và thử lại...`, 'info');
                         const syncSuccess = await syncTime();
                         if (syncSuccess) {
                             return await bybitRequest(endpoint, method, params, true); // Retry once
@@ -258,6 +257,11 @@
 
             // --- Core Bot Logic ---
             async function runBotLogic() {
+                if (!state.isTimeSynced) {
+                    addLog('Dừng quét do thời gian chưa được đồng bộ.', 'error');
+                    elements.stopBotButton.click();
+                    return;
+                }
                 if (Date.now() < state.cooldownUntil) {
                     setBotStatusUI('cooldown');
                     addLog(`Bot đang trong thời gian nghỉ, còn lại ${Math.round((state.cooldownUntil - Date.now()) / 1000)}s...`);
@@ -474,17 +478,12 @@
                 addLog('Bot đã bắt đầu quét...', 'success');
                 setBotStatusUI('running');
                 
-                if (state.timeSyncInterval) clearInterval(state.timeSyncInterval);
-                state.timeSyncInterval = setInterval(syncTime, 3 * 60 * 1000); // Resync every 3 minutes
-
-                runBotLogic();
+                if (state.botInterval) clearInterval(state.botInterval);
                 state.botInterval = setInterval(runBotLogic, 15000);
             });
             elements.stopBotButton.addEventListener('click', () => {
                 if (state.botInterval) clearInterval(state.botInterval);
-                if (state.timeSyncInterval) clearInterval(state.timeSyncInterval);
                 state.botInterval = null;
-                state.timeSyncInterval = null;
                 addLog('Bot đã dừng.', 'info');
                 setBotStatusUI('stopped');
             });
