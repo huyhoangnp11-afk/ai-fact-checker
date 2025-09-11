@@ -1,682 +1,541 @@
 <!DOCTYPE html>
-<html lang="vi" class="dark">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bybit Trading Bot Dashboard</title>
+    <title>Bybit Trading Bot</title>
+    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- CryptoJS for API signature generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #111827; color: #d1d5db; }
-        .card { background-color: #1f2937; border: 1px solid #374151; border-radius: 0.75rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
-        .btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.625rem 1.25rem; border-radius: 0.5rem; font-weight: 500; transition: background-color 0.2s, opacity 0.2s; cursor: pointer; opacity: 1; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn-primary { background-color: #3b82f6; color: white; }
-        .btn-primary:hover:not(:disabled) { background-color: #2563eb; }
-        .btn-danger { background-color: #ef4444; color: white; }
-        .btn-danger:hover:not(:disabled) { background-color: #dc2626; }
-        .input-field, textarea { width: 100%; background-color: #374151; border: 1px solid #4b5563; color: #d1d5db; border-radius: 0.5rem; padding: 0.625rem; transition: border-color 0.2s, box-shadow 0.2s; }
-        .input-field:focus, textarea:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px #1e40af; }
-        .status-badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; display: inline-block; }
-        .status-running { background-color: #10b981; color: #064e3b; }
-        .status-stopped { background-color: #f87171; color: #991b1b; }
-        .status-cooldown { background-color: #f59e0b; color: #92400e; }
-        .log-container { height: 250px; background-color: #111827; border: 1px solid #374151; border-radius: 0.5rem; padding: 0.75rem; overflow-y: auto; font-family: monospace; font-size: 0.875rem; }
-        #chartContainer { height: 350px; }
-        #currentPrice.price-up { color: #10b981; transition: color 0.2s ease; }
-        #currentPrice.price-down { color: #ef4444; transition: color 0.2s ease; }
-        .radio-label { display: flex; align-items: center; padding: 0.5rem 1rem; border: 1px solid #4b5563; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; }
-        .radio-label:hover { background-color: #374151; }
-        input[type="radio"]:checked + .radio-label { border-color: #3b82f6; background-color: #1f2937; box-shadow: 0 0 0 2px #1e40af; }
-        input[type="radio"] { opacity: 0; width: 0; height: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .log-area {
+            font-family: 'Courier New', Courier, monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .loader {
+            border-top-color: #3498db;
+            -webkit-animation: spin 1s linear infinite;
+            animation: spin 1s linear infinite;
+        }
+        @-webkit-keyframes spin {
+            0% { -webkit-transform: rotate(0deg); }
+            100% { -webkit-transform: rotate(360deg); }
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .regime-trend { background-color: #166534; color: #dcfce7; }
+        .regime-range { background-color: #1e40af; color: #dbeafe; }
+        .regime-squeeze { background-color: #9a3412; color: #ffedd5; }
+        .regime-micro-grid { background-color: #581c87; color: #f3e8ff; }
+        .regime-none { background-color: #4b5563; color: #d1d5db; }
     </style>
 </head>
-<body class="p-4 sm:p-6 lg:p-8">
-    <div class="max-w-7xl mx-auto">
-        <header class="mb-8">
-            <h1 class="text-3xl font-bold text-white">Bảng điều khiển Bot Giao dịch Bybit (Advanced Order Flow)</h1>
-            <p class="text-gray-400 mt-1">Sử dụng phân tích dòng lệnh nâng cao để tìm kiếm các cơ hội giao dịch có xác suất cao.</p>
+<body class="bg-gray-900 text-gray-200 min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-7xl mx-auto bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 space-y-6">
+        
+        <header class="text-center">
+            <h1 class="text-3xl font-bold text-white">Bybit Trading Bot</h1>
+            <p class="text-gray-400 mt-2">Giao dịch tự động và quản lý tài khoản Bybit của bạn.</p>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Cột cài đặt -->
-            <div class="lg:col-span-1 space-y-6">
-                <div class="card">
-                    <h2 class="text-xl font-semibold text-white mb-4">Cài đặt API</h2>
-                    <div class="space-y-4">
-                        <div><label for="apiKey" class="block text-sm font-medium mb-1">API Key</label><input type="password" id="apiKey" class="input-field" placeholder="Nhập API Key để giao dịch"></div>
-                        <div><label for="apiSecret" class="block text-sm font-medium mb-1">API Secret</label><input type="password" id="apiSecret" class="input-field" placeholder="Nhập API Secret để giao dịch"></div>
-                        <button id="saveApi" class="btn btn-primary w-full pt-2">Lưu API & Lấy số dư</button>
+        <!-- Security Warning -->
+        <div class="bg-red-900 border-l-4 border-red-500 text-red-100 p-4 rounded-lg" role="alert">
+            <p class="font-bold">Cảnh báo bảo mật quan trọng</p>
+            <p>API Key và Secret Key của bạn chỉ được lưu trữ cục bộ trong trình duyệt (localStorage). KHÔNG chia sẻ tệp này hoặc sử dụng trên máy tính công cộng. Mặc dù an toàn trên máy tính cá nhân, hãy luôn thận trọng.</p>
+        </div>
+
+        <!-- Main Grid Layout -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- Left Column: Settings & Account -->
+            <div class="bg-gray-700/50 p-6 rounded-xl space-y-6">
+                <h2 class="text-xl font-semibold border-b border-gray-600 pb-3">Cài đặt API</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label for="apiKey" class="block text-sm font-medium text-gray-300 mb-1">API Key</label>
+                        <input type="password" id="apiKey" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                     </div>
+                    <div>
+                        <label for="apiSecret" class="block text-sm font-medium text-gray-300 mb-1">API Secret</label>
+                        <input type="password" id="apiSecret" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    </div>
+                    <button id="saveApi" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105">Lưu API Key</button>
                 </div>
-                <div class="card">
-                    <h2 class="text-xl font-semibold text-white mb-4">Cấu hình Bot</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Chế độ Giao dịch</label>
-                            <div class="grid grid-cols-3 gap-2">
-                                <div>
-                                    <input type="radio" name="tradeMode" id="modeSafe" value="Safe" checked>
-                                    <label for="modeSafe" class="radio-label justify-center">An toàn</label>
-                                </div>
-                                <div>
-                                    <input type="radio" name="tradeMode" id="modeBalanced" value="Balanced">
-                                    <label for="modeBalanced" class="radio-label justify-center">Cân bằng</label>
-                                </div>
-                                <div>
-                                    <input type="radio" name="tradeMode" id="modeAggressive" value="Aggressive">
-                                    <label for="modeAggressive" class="radio-label justify-center">Táo bạo</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                           <div><label for="orderValue" class="block text-sm font-medium mb-1">Giá trị lệnh ($)</label><input type="number" id="orderValue" class="input-field" step="1" value="8"></div>
-                           <div><label for="timeStop" class="block text-sm font-medium mb-1">Time Stop (giây)</label><input type="number" id="timeStop" class="input-field" value="120"><p class="text-xs text-gray-400 mt-1">Sẽ được điều chỉnh tự động theo chế độ.</p></div>
-                        </div>
-                         <div class="grid grid-cols-2 gap-4 pt-2">
-                            <button id="startBot" class="btn btn-primary" disabled>Bắt đầu Giao dịch</button>
-                            <button id="stopBot" class="btn btn-danger">Dừng Giao dịch</button>
-                        </div>
+
+                <div class="pt-6 border-t border-gray-600">
+                    <h2 class="text-xl font-semibold mb-3">Thông tin tài khoản</h2>
+                     <button id="getBalance" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition mb-4">Lấy số dư (Tài khoản Unified)</button>
+                    <div id="balanceInfo" class="bg-gray-900 p-4 rounded-lg text-sm">
+                        Nhấn nút trên để xem số dư...
                     </div>
                 </div>
             </div>
 
-            <!-- Cột thông tin và nhật ký -->
-            <div class="lg:col-span-2 space-y-6">
-                 <div class="card">
-                    <h2 class="text-xl font-semibold text-white mb-4">Trạng thái Hệ thống</h2>
-                    <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div><span class="text-gray-400">Trạng thái Bot:</span> <span id="botStatus" class="status-badge status-stopped ml-2">Đang Quét...</span></div>
-                        <div><span class="text-gray-400">Số dư USDT:</span> <span id="usdtBalance" class="text-white font-semibold ml-2">--</span></div>
-                        <div><span class="text-gray-400">Cặp tiềm năng:</span> <span id="topCoin" class="text-white font-semibold ml-2">--</span></div>
-                        <div><span class="text-gray-400">Pump Score:</span> <span id="pumpScore" class="text-white font-semibold ml-2">--</span></div>
-                        <div><span class="text-gray-400">Advanced Score:</span> <span id="advancedScore" class="text-white font-semibold ml-2">--</span></div>
-                        <div><span class="text-gray-400">Giá theo dõi:</span> <span id="currentPrice" class="text-white font-semibold ml-2 text-lg">--</span></div>
-                        <div class="lg:col-span-3"><span class="text-gray-400">Vị thế hiện tại:</span> <span id="currentPosition" class="text-white font-semibold ml-2">Không có</span></div>
+            <!-- Right Column: Trading -->
+            <div class="bg-gray-700/50 p-6 rounded-xl space-y-6">
+                <h2 class="text-xl font-semibold border-b border-gray-600 pb-3">Đặt lệnh giao dịch (Spot)</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label for="symbol" class="block text-sm font-medium text-gray-300 mb-1">Cặp giao dịch (ví dụ: BTCUSDT)</label>
+                        <input type="text" id="symbol" value="BTCUSDT" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                     </div>
-                </div>
-                <div class="card">
-                    <h2 class="text-xl font-semibold text-white mb-4" id="chartTitle">Biểu đồ (BTCUSDT)</h2>
-                     <div id="chartContainer"></div>
-                </div>
-                <div class="card">
-                    <h2 class="text-xl font-semibold text-white mb-4">Nhật ký hoạt động</h2>
-                    <div id="logContainer" class="log-container">
-                        <p class="text-gray-500">Chờ bot khởi động...</p>
+                    <div>
+                        <label for="qty" class="block text-sm font-medium text-gray-300 mb-1">Số lượng</label>
+                        <input type="number" id="qty" placeholder="0.01" step="0.001" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button id="buyBtn" class="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out">Mua (Market)</button>
+                        <button id="sellBtn" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out">Bán (Market)</button>
                     </div>
                 </div>
             </div>
+
         </div>
+
+        <!-- DCA Bot Section -->
+        <div class="bg-gray-700/50 p-6 rounded-xl mt-6">
+            <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bot DCA (Trung bình giá)</h2>
+            <div class="bg-blue-900 border-l-4 border-blue-500 text-blue-100 p-4 rounded-lg mb-4" role="alert">
+                <p class="font-bold">Lưu ý quan trọng</p>
+                <p>Bot DCA sẽ chỉ hoạt động khi tab trình duyệt này đang mở. Nếu bạn đóng tab, bot sẽ dừng lại.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div>
+                    <label for="dcaSymbol" class="block text-sm font-medium text-gray-300 mb-1">Cặp giao dịch</label>
+                    <input type="text" id="dcaSymbol" value="BTCUSDT" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                </div>
+                <div>
+                    <label for="dcaAmount" class="block text-sm font-medium text-gray-300 mb-1">Số tiền mỗi lần mua (USDT)</label>
+                    <input type="number" id="dcaAmount" placeholder="1" step="0.1" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                </div>
+                 <div>
+                    <label for="dcaFrequency" class="block text-sm font-medium text-gray-300 mb-1">Tần suất</label>
+                    <select id="dcaFrequency" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        <option value="3600000">Mỗi giờ</option>
+                        <option value="86400000" selected>Mỗi ngày</option>
+                        <option value="604800000">Mỗi tuần</option>
+                        <option value="60000">Mỗi phút (để thử nghiệm)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mt-4">
+                <button id="startDcaBtn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">Bắt đầu Bot DCA</button>
+                <button id="stopDcaBtn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300" disabled>Dừng Bot DCA</button>
+            </div>
+            <div id="dcaStatus" class="mt-4 bg-gray-900 p-3 rounded-lg text-sm text-center">Bot DCA đang không hoạt động.</div>
+        </div>
+
+        <!-- Market Scanner Section -->
+        <div class="bg-gray-700/50 p-6 rounded-xl mt-6">
+            <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Kế Hoạch Giao Dịch Tự Động (V3.2.3)</h2>
+             <div class="bg-blue-900 border-l-4 border-blue-500 text-blue-100 p-4 rounded-lg mb-4" role="alert">
+                <p class="font-bold">Cách Hoạt Động</p>
+                <p>Nhấn "Bắt đầu Quét". Bot sẽ phân tích toàn bộ thị trường và hiển thị tối đa 3 kế hoạch giao dịch chi tiết nhất dựa trên thuật toán Squeeze Breakout.</p>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mt-4">
+                <button id="startScannerBtn" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">Bắt đầu Quét</button>
+                <button id="stopScannerBtn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300" disabled>Dừng Quét</button>
+            </div>
+            <div id="scannerStatus" class="mt-4 bg-gray-900 p-3 rounded-lg text-sm text-center">Công cụ quét đang không hoạt động.</div>
+            
+            <!-- Trading Plan Cards Container -->
+            <div id="scannerResults" class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Trading Plan Cards will be populated here -->
+            </div>
+        </div>
+
+        <!-- Log Area -->
+        <div class="bg-gray-900/70 p-4 rounded-xl mt-6">
+            <h2 class="text-lg font-semibold mb-2">Nhật ký hoạt động</h2>
+            <div id="log" class="log-area bg-black h-48 overflow-y-auto p-3 rounded-lg text-xs text-gray-400"></div>
+        </div>
+
     </div>
+
+    <!-- Loading Spinner Modal -->
+    <div id="loaderModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-24 w-24"></div>
+    </div>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // --- Element References ---
-            const elements = {
-                apiKeyInput: document.getElementById('apiKey'), apiSecretInput: document.getElementById('apiSecret'), saveApiButton: document.getElementById('saveApi'),
-                startBotButton: document.getElementById('startBot'), stopBotButton: document.getElementById('stopBot'), orderValueInput: document.getElementById('orderValue'),
-                timeStopInput: document.getElementById('timeStop'), botStatus: document.getElementById('botStatus'), usdtBalance: document.getElementById('usdtBalance'),
-                topCoin: document.getElementById('topCoin'), pumpScore: document.getElementById('pumpScore'), advancedScore: document.getElementById('advancedScore'),
-                currentPosition: document.getElementById('currentPosition'), logContainer: document.getElementById('logContainer'), currentPriceEl: document.getElementById('currentPrice'),
-                tradeModeRadios: document.querySelectorAll('input[name="tradeMode"]'),
-                chartContainer: document.getElementById('chartContainer'),
-                chartTitle: document.getElementById('chartTitle'),
-            };
+            const apiKeyInput = document.getElementById('apiKey');
+            const apiSecretInput = document.getElementById('apiSecret');
+            const saveApiBtn = document.getElementById('saveApi');
+            const getBalanceBtn = document.getElementById('getBalance');
+            const balanceInfoDiv = document.getElementById('balanceInfo');
+            const symbolInput = document.getElementById('symbol');
+            const qtyInput = document.getElementById('qty');
+            const buyBtn = document.getElementById('buyBtn');
+            const sellBtn = document.getElementById('sellBtn');
+            const logDiv = document.getElementById('log');
+            const loaderModal = document.getElementById('loaderModal');
+            const dcaSymbolInput = document.getElementById('dcaSymbol');
+            const dcaAmountInput = document.getElementById('dcaAmount');
+            const dcaFrequencySelect = document.getElementById('dcaFrequency');
+            const startDcaBtn = document.getElementById('startDcaBtn');
+            const stopDcaBtn = document.getElementById('stopDcaBtn');
+            const dcaStatusDiv = document.getElementById('dcaStatus');
+            const startScannerBtn = document.getElementById('startScannerBtn');
+            const stopScannerBtn = document.getElementById('stopScannerBtn');
+            const scannerStatusDiv = document.getElementById('scannerStatus');
+            const scannerResultsDiv = document.getElementById('scannerResults');
 
-            // --- State Variables ---
-            let state = {
-                scanInterval: null, tradeInterval: null, apiKey: '', apiSecret: '', ws: null, pingInterval: null, lastPrice: 0, isTradingRunning: false,
-                instrumentInfo: new Map(), cooldownUntil: 0, activeSymbolWs: null, position: { hasPosition: false, symbol: null, entryTime: 0, coin: null },
-                risk: { consecutiveLosses: 0 }, realtimeData: new Map(), timeOffset: 0, isTimeSynced: false, mode: 'Safe',
-                latestTopCoin: null,
-                chart: null, candlestickSeries: null, currentCandle: null
-            };
+            const BYBIT_API_URL = 'https://api.bybit.com';
+            let dcaIntervalId = null;
+            let scannerIntervalId = null;
+            let isScanning = false;
 
-            const ADAPTIVE_MODES = {
-                Safe:       { minPumpScore: 70, tpMultiplier: 1.0, timeStop: 120, maxSpread: 0.06, minDepthMultiplier: 10, atrRange: [0.20, 0.80] },
-                Balanced:   { minPumpScore: 65, tpMultiplier: 1.2, timeStop: 90,  maxSpread: 0.08, minDepthMultiplier: 7,  atrRange: [0.15, 1.00] },
-                Aggressive: { minPumpScore: 60, tpMultiplier: 1.4, timeStop: 75,  maxSpread: 0.10, minDepthMultiplier: 5,  atrRange: [0.10, 1.20] }
-            };
+            apiKeyInput.value = localStorage.getItem('bybitApiKey') || '';
+            apiSecretInput.value = localStorage.getItem('bybitApiSecret') || '';
 
-            // --- Chart Logic ---
-            function initChart() {
-                state.chart = LightweightCharts.createChart(elements.chartContainer, {
-                    width: elements.chartContainer.clientWidth,
-                    height: elements.chartContainer.clientHeight,
-                    layout: { backgroundColor: '#1f2937', textColor: '#d1d5db' },
-                    grid: { vertLines: { color: '#374151' }, horzLines: { color: '#374151' } },
-                    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-                    rightPriceScale: { borderColor: '#4b5563' },
-                    timeScale: { borderColor: '#4b5563' }
-                });
-                state.candlestickSeries = state.chart.addCandlestickSeries({
-                    upColor: '#10b981', downColor: '#ef4444',
-                    borderDownColor: '#ef4444', borderUpColor: '#10b981',
-                    wickDownColor: '#ef4444', wickUpColor: '#10b981',
-                });
+            const showLoader = () => loaderModal.classList.remove('hidden');
+            const hideLoader = () => loaderModal.classList.add('hidden');
+
+            function logMessage(message, isError = false) {
+                const timestamp = new Date().toLocaleString();
+                const color = isError ? 'text-red-400' : 'text-green-400';
+                logDiv.innerHTML += `<p class=${color}>[${timestamp}] ${message}</p>`;
+                logDiv.scrollTop = logDiv.scrollHeight;
             }
 
-            async function updateChart(symbol) {
-                if (!state.chart || !state.candlestickSeries) return;
-                elements.chartTitle.textContent = `Biểu đồ (${symbol})`;
-                
-                const klineData = await publicBybitRequest('/v5/market/kline', { category: 'spot', symbol, interval: '1', limit: 200 });
-                if (klineData?.list) {
-                    const formattedData = klineData.list.map(d => ({
-                        time: parseInt(d[0]) / 1000,
-                        open: parseFloat(d[1]),
-                        high: parseFloat(d[2]),
-                        low: parseFloat(d[3]),
-                        close: parseFloat(d[4]),
-                    })).reverse();
-                    
-                    state.candlestickSeries.setData(formattedData);
-                    if (formattedData.length > 0) {
-                       state.currentCandle = formattedData[formattedData.length - 1];
-                    }
-                    state.chart.timeScale().fitContent();
-                }
-            }
-
-            // --- WebSocket for Real-time Data ---
-            function connectWebSocket(symbol) {
-                if (state.activeSymbolWs === symbol) return;
-                if (state.ws) { state.ws.close(); }
-                if (state.pingInterval) { clearInterval(state.pingInterval); }
-                
-                state.activeSymbolWs = symbol;
-                elements.currentPriceEl.textContent = '--';
-                if (!state.realtimeData.has(symbol)) {
-                    state.realtimeData.set(symbol, { orderbook: null, trades: [], cvd: 0, micropriceTilts: [], iceberg: { price: 0, displayed: 0, traded: 0 } });
-                }
-                
-                state.ws = new WebSocket('wss://stream.bybit.com/v5/public/spot');
-                state.ws.onopen = () => {
-                    addLog(`Đã kết nối WebSocket cho ${symbol}.`);
-                    state.ws.send(JSON.stringify({ op: 'subscribe', args: [`publicTrade.${symbol}`, `orderbook.50.${symbol}`] }));
-                    state.pingInterval = setInterval(() => { if (state.ws.readyState === WebSocket.OPEN) state.ws.send(JSON.stringify({ op: 'ping' })); }, 28000);
-                };
-                state.ws.onmessage = (event) => {
-                    const data = JSON.parse(event.data);
-                    const symbolData = state.realtimeData.get(symbol);
-                    if (!symbolData) return;
-
-                    if (data.topic?.startsWith('publicTrade')) {
-                        const trade = data.data[0];
-                        const newPrice = parseFloat(trade.p);
-                        const tradeTime = parseInt(trade.T) / 1000;
-                        
-                        elements.currentPriceEl.classList.toggle('price-up', newPrice > state.lastPrice);
-                        elements.currentPriceEl.classList.toggle('price-down', newPrice < state.lastPrice);
-                        elements.currentPriceEl.textContent = newPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
-                        state.lastPrice = newPrice;
-                        
-                        // Update Chart Candle
-                        if (state.currentCandle && state.candlestickSeries) {
-                           const candleTime = state.currentCandle.time;
-                           const nextCandleTime = candleTime + 60; // 1-minute candles
-                           if(tradeTime >= nextCandleTime) {
-                               state.currentCandle = { time: nextCandleTime, open: newPrice, high: newPrice, low: newPrice, close: newPrice };
-                           } else {
-                               state.currentCandle.high = Math.max(state.currentCandle.high, newPrice);
-                               state.currentCandle.low = Math.min(state.currentCandle.low, newPrice);
-                               state.currentCandle.close = newPrice;
-                           }
-                           state.candlestickSeries.update(state.currentCandle);
-                        }
-
-                        const volume = parseFloat(trade.v);
-                        if (trade.S === 'Buy') symbolData.cvd += volume; else symbolData.cvd -= volume;
-                        if(symbolData.orderbook?.b.length > 0 && newPrice === parseFloat(symbolData.orderbook.b[0][0])) {
-                            if(symbolData.iceberg.price === newPrice) { symbolData.iceberg.traded += volume; } 
-                            else { symbolData.iceberg.price = newPrice; symbolData.iceberg.displayed = parseFloat(symbolData.orderbook.b[0][1]); symbolData.iceberg.traded = volume; }
-                        }
-                    } else if (data.topic?.startsWith('orderbook')) {
-                        symbolData.orderbook = data.data;
-                        if (symbolData.orderbook.b.length > 0 && symbolData.orderbook.a.length > 0) {
-                            const [pBid, qBid] = [parseFloat(symbolData.orderbook.b[0][0]), parseFloat(symbolData.orderbook.b[0][1])];
-                            const [pAsk, qAsk] = [parseFloat(symbolData.orderbook.a[0][0]), parseFloat(symbolData.orderbook.a[0][1])];
-                            if (qBid + qAsk > 0) {
-                                const microprice = (pAsk * qBid + pBid * qAsk) / (qBid + qAsk);
-                                const midprice = (pAsk + pBid) / 2;
-                                const tilt = (microprice - midprice) / midprice * 100;
-                                symbolData.micropriceTilts.push(tilt);
-                                if (symbolData.micropriceTilts.length > 5) symbolData.micropriceTilts.shift();
-                            }
-                        }
-                    }
-                };
-                state.ws.onclose = () => { addLog('Kết nối WebSocket đã đóng.', 'info'); if(state.pingInterval) clearInterval(state.pingInterval); };
-                state.ws.onerror = (error) => addLog(`Lỗi WebSocket: ${error.message || 'Unknown error'}`, 'error');
-            }
-            
-            // --- API Communication & Time Sync ---
-             async function syncTime() {
-              try {
-                addLog('Bắt đầu đồng bộ thời gian với máy chủ Bybit...', 'info');
-                const t0 = Date.now();
-                const res = await fetch('https://api.bybit.com/v5/market/time?_=' + t0, { cache: 'no-store' });
-                const json = await res.json();
-                const t1 = Date.now();
-                if (json.retCode !== 0) throw new Error(json.retMsg || 'time API error');
-                const r = json.result || {};
-                const serverMs = r.timeSecond ? (parseInt(r.timeSecond, 10) * 1000) : Math.floor(parseInt(r.timeNano, 10) / 1e6);
-                const midpoint = (t0 + t1) / 2;
-                const oldOffset = state.timeOffset;
-                state.timeOffset = serverMs - midpoint;
-                state.isTimeSynced = true;
-                addLog(`Đồng bộ thời gian thành công. Lệch: ${state.timeOffset.toFixed(0)}ms (thay đổi: ${(state.timeOffset - oldOffset).toFixed(0)}ms).`, 'success');
-                return true;
-              } catch (e) {
-                state.isTimeSynced = false;
-                addLog(`Lỗi đồng bộ thời gian: ${e.message}. API có thể không hoạt động.`, 'error');
-                return false;
-              }
-            }
-            
-            async function publicBybitRequest(endpoint, params) {
-                const API_BASE = 'https://api.bybit.com';
-                const url = new URL(API_BASE + endpoint);
-                const usp = new URLSearchParams();
-                Object.keys(params || {}).sort().forEach(k => {
-                    usp.append(k, params[k]);
-                });
-                const qs = usp.toString();
-                if (qs) url.search = qs;
-
+            async function bybitPublicRequest(endpoint, params = {}) {
                 try {
+                    const serverTimeRes = await fetch(`${BYBIT_API_URL}/v5/market/time`);
+                    const serverTimeData = await serverTimeRes.json();
+                    if (serverTimeData.retCode !== 0) throw new Error("Could not sync Bybit server time.");
+                    let url = `${BYBIT_API_URL}${endpoint}`;
+                    if (Object.keys(params).length > 0) url += `?${new URLSearchParams(params)}`;
                     const response = await fetch(url);
                     const data = await response.json();
                     if (data.retCode !== 0) {
-                        addLog(`Lỗi API công khai (${endpoint}): ${data.retMsg}`, 'error');
-                        return null;
+                        if (data.retMsg.includes("Not supported symbols") || data.retMsg.includes("Instrument not found")) return null;
+                        throw new Error(`Bybit API Error (${endpoint}): ${data.retMsg} (Code: ${data.retCode})`);
                     }
                     return data.result;
                 } catch (error) {
-                    addLog(`Lỗi mạng công khai: ${error.message}`, 'error');
+                    logMessage(error.message, true);
                     return null;
                 }
             }
-
-            async function bybitRequest(endpoint, method, params, isRetry = false) {
-                if (!state.apiKey || !state.apiSecret) { addLog('Lỗi: Vui lòng lưu API Key và Secret trước.', 'error'); return null; }
-                if (!state.isTimeSynced && !isRetry) {
-                    const syncSuccess = await syncTime();
-                    if (!syncSuccess) return null;
-                }
-
-                const API_BASE = 'https://api.bybit.com';
-                const fudgeMs = 250;
-                const timestamp = (Date.now() + state.timeOffset - fudgeMs).toString();
-                const recvWindow = '20000';
-                let body = null;
-                let qs = '';
-                const url = new URL(API_BASE + endpoint);
-
-                if (method === 'GET') {
-                  const usp = new URLSearchParams();
-                  Object.keys(params || {}).sort().forEach(k => {
-                    const v = params[k];
-                    usp.append(k, Array.isArray(v) ? v.join(',') : String(v));
-                  });
-                  qs = usp.toString();
-                  if (qs) url.search = qs;
-                } else {
-                  body = JSON.stringify(params || {});
-                  qs = body;
-                }
-
-                const stringToSign = timestamp + state.apiKey + recvWindow + qs;
-                const signature = CryptoJS.HmacSHA256(stringToSign, state.apiSecret).toString();
-                
-                const headers = { 
-                    'Content-Type': 'application/json', 'X-BAPI-API-KEY': state.apiKey, 'X-BAPI-TIMESTAMP': timestamp, 
-                    'X-BAPI-RECV-WINDOW': recvWindow, 'X-BAPI-SIGN': signature, 'X-BAPI-SIGN-TYPE': '2',
-                };
-
+            
+            async function bybitRequest(endpoint, method, params = {}) {
+                const apiKey = localStorage.getItem('bybitApiKey'), apiSecret = localStorage.getItem('bybitApiSecret');
+                if (!apiKey || !apiSecret) { logMessage('API Key hoặc Secret chưa được lưu.', true); return null; }
+                showLoader();
                 try {
-                    const response = await fetch(url, { method, headers, body });
+                    const serverTimeRes = await fetch(`${BYBIT_API_URL}/v5/market/time`);
+                    const serverTimeData = await serverTimeRes.json();
+                    const timestamp = (serverTimeData.result.timeNano / 1000000).toString();
+                    const recvWindow = '20000';
+                    let paramStr = method === 'POST' ? JSON.stringify(params) : new URLSearchParams(params).toString();
+                    const signStr = timestamp + apiKey + recvWindow + paramStr;
+                    const signature = CryptoJS.HmacSHA256(signStr, apiSecret).toString(CryptoJS.enc.Hex);
+                    const headers = {'X-BAPI-API-KEY': apiKey, 'X-BAPI-TIMESTAMP': timestamp, 'X-BAPI-RECV-WINDOW': recvWindow, 'X-BAPI-SIGN': signature, 'Content-Type': 'application/json' };
+                    let url = `${BYBIT_API_URL}${endpoint}${method === 'GET' && paramStr ? `?${paramStr}` : ''}`;
+                    const options = { method, headers, body: method === 'POST' ? paramStr : undefined };
+                    const response = await fetch(url, options);
                     const data = await response.json();
-                    const msg = String(data.retMsg || "");
-                    const isTimestampError = data.retCode === 10002 || (data.retCode === 10001 && /timestamp|req_timestamp/i.test(msg));
-
-                    if (isTimestampError && !isRetry) {
-                        addLog(`Phát hiện lỗi timestamp (Code: ${data.retCode}). Tự động đồng bộ lại thời gian và thử lại...`, 'info');
-                        const syncSuccess = await syncTime();
-                        if (syncSuccess) { return await bybitRequest(endpoint, method, params, true); } 
-                        else { addLog('Thử lại thất bại do không thể đồng bộ thời gian.', 'error'); return null; }
-                    }
-
-                    if (data.retCode !== 0) { addLog(`Lỗi API (${endpoint}): ${data.retMsg} (Code: ${data.retCode})`, 'error'); return null; }
+                    if (data.retCode !== 0) throw new Error(`Bybit API Error: ${data.retMsg} (Code: ${data.retCode})`);
+                    logMessage(`Yêu cầu đến ${endpoint} thành công.`);
                     return data.result;
-                } catch (error) { addLog(`Lỗi mạng: ${error.message}`, 'error'); return null; }
-            }
-            
-            // --- UI & Helper Functions ---
-            const addLog = (message, type = 'info') => {
-                const p = document.createElement('p');
-                p.innerHTML = `<span class="text-gray-500">${new Date().toLocaleTimeString()}</span> - ${message}`;
-                if (type === 'error') p.className = 'text-red-400';
-                if (type === 'success') p.className = 'text-green-400';
-                elements.logContainer.appendChild(p);
-                elements.logContainer.scrollTop = elements.logContainer.scrollHeight;
-            };
-            const setBotStatusUI = (status) => {
-                state.isTradingRunning = (status === 'running');
-                let text = 'Đang Quét...', className = 'status-stopped';
-                if (status === 'running') { text = 'Đang Giao dịch'; className = 'status-running'; }
-                if (status === 'cooldown') { text = 'Tạm nghỉ'; className = 'status-cooldown'; }
-                if (status === 'stopped') { text = 'Đã dừng'; className = 'status-stopped'; }
-
-                elements.botStatus.textContent = text;
-                elements.botStatus.className = `status-badge ml-2 ${className}`;
-                elements.startBotButton.disabled = state.isTradingRunning;
-                elements.stopBotButton.disabled = !state.isTradingRunning;
-            };
-            const roundToTickSize = (num, tickSize) => Math.floor(num / tickSize) * tickSize;
-
-            // --- Technical Analysis Calculations ---
-            const calculateEMA = (d, p) => { const k = 2/(p+1); let e=[d[0]]; for(let i=1;i<d.length;i++) e.push(d[i]*k+e[i-1]*(1-k)); return e; };
-            const calculateATR = (klines, p) => { let tr=[]; for(let i=1;i<klines.length;i++) {tr.push(Math.max(klines[i].high-klines[i].low,Math.abs(klines[i].high-klines[i-1].close),Math.abs(klines[i].low-klines[i-1].close)));} return calculateEMA(tr, p).pop(); };
-            const calculateVWAP = (klines, p) => { const rk=klines.slice(-p); let pv=0, v=0; rk.forEach(k => { pv += ((k.high+k.low+k.close)/3)*k.volume; v+=k.volume; }); return v > 0 ? pv/v : 0; };
-
-            // --- Core Bot Logic ---
-            async function runTradingLogic() {
-                if (!state.isTradingRunning) return;
-                
-                const syncSuccess = await syncTime();
-                if (!syncSuccess) {
-                    addLog('Dừng giao dịch do lỗi đồng bộ thời gian.', 'error');
-                    elements.stopBotButton.click();
-                    return;
-                }
-                if (Date.now() < state.cooldownUntil) {
-                    setBotStatusUI('cooldown');
-                    addLog(`Bot đang trong thời gian nghỉ, còn lại ${Math.round((state.cooldownUntil - Date.now()) / 1000)}s...`);
-                    return;
-                }
-                
-                setBotStatusUI('running');
-                await updatePositionStatus();
-
-                if (state.position.hasPosition) { 
-                    await manageOpenPosition(); 
-                } else if (state.latestTopCoin) {
-                    const modeParams = ADAPTIVE_MODES[state.mode];
-                    if (state.latestTopCoin.pumpScore >= modeParams.minPumpScore && state.latestTopCoin.advancedScore >= 30) {
-                        addLog(`Tín hiệu hợp lệ cho ${state.latestTopCoin.symbol} được tìm thấy. Chuẩn bị vào lệnh.`, 'success');
-                        await executeTrade(state.latestTopCoin);
-                    } else {
-                        addLog(`Chờ tín hiệu giao dịch hợp lệ...`);
-                    }
+                } catch (error) {
+                    logMessage(error.message, true);
+                    return null;
+                } finally {
+                    hideLoader();
                 }
             }
             
-            async function discoverPromisingPairs() {
-                const tickersData = await publicBybitRequest('/v5/market/tickers', { category: 'spot' });
-                if (!tickersData?.list) { addLog('Không thể tải danh sách tickers từ Bybit.', 'error'); return []; }
-                const promisingPairs = tickersData.list.filter(t=>t.symbol.endsWith('USDT')).sort((a,b)=>parseFloat(b.turnover24h)-parseFloat(a.turnover24h)).slice(0,40).map(t=>t.symbol);
-                if (promisingPairs.length > 0) addLog(`Quét Top ${promisingPairs.length} cặp...`, 'info');
-                return promisingPairs;
-            }
-
-            async function scanMarket() {
-                const coinList = await discoverPromisingPairs();
-                if (!coinList || coinList.length === 0) { return; }
-                
-                let scoredCoins = [];
-                for (const symbol of coinList) {
-                    try {
-                        const scores = await calculateScores(symbol);
-                        if(scores) scoredCoins.push({ symbol, ...scores });
-                    } catch (e) { /* silent fail for single coin scan */ }
-                }
-                
-                if (scoredCoins.length === 0) { return; }
-                
-                scoredCoins.sort((a, b) => (b.pumpScore + b.advancedScore) - (a.pumpScore + a.advancedScore));
-                const topCoin = scoredCoins[0];
-                if (state.latestTopCoin?.symbol !== topCoin.symbol) {
-                    updateChart(topCoin.symbol);
-                }
-                state.latestTopCoin = topCoin;
-                
-                elements.topCoin.textContent = topCoin.symbol;
-                elements.pumpScore.textContent = `${topCoin.pumpScore.toFixed(0)}/100`;
-                elements.advancedScore.textContent = `${topCoin.advancedScore.toFixed(0)}/60`;
-                connectWebSocket(topCoin.symbol);
-            }
-
-            async function calculateScores(symbol) {
-                const klineData = await publicBybitRequest('/v5/market/kline', { category: 'spot', symbol, interval: '1', limit: 100 });
-                const realtime = state.realtimeData.get(symbol);
-                if (!klineData?.list || klineData.list.length < 50 || !realtime?.orderbook) return null;
-                const klines = klineData.list.map(k=>({time:k[0],open:parseFloat(k[1]),high:parseFloat(k[2]),low:parseFloat(k[3]),close:parseFloat(k[4]),volume:parseFloat(k[5])})).reverse();
-                
-                const modeParams = ADAPTIVE_MODES[state.mode];
-                let pumpScore = 0;
-                const currentPrice = klines[klines.length-1].close;
-                const orderBookData = realtime.orderbook;
-                const bestBid = parseFloat(orderBookData.b[0][0]), bestAsk = parseFloat(orderBookData.a[0][0]);
-                const spread = (bestAsk - bestBid) / bestAsk * 100;
-
-                if (spread <= modeParams.maxSpread) pumpScore += 15;
-                else if (spread <= modeParams.maxSpread + 0.02) pumpScore += 5;
-
-                let depth10 = 0; orderBookData.b.forEach(([p,s]) => { if (parseFloat(p) >= bestBid*0.999) depth10 += parseFloat(s)*parseFloat(p); });
-                if (depth10 >= modeParams.minDepthMultiplier * parseFloat(elements.orderValueInput.value)) pumpScore += 15;
-                else if (depth10 >= (modeParams.minDepthMultiplier / 2) * parseFloat(elements.orderValueInput.value)) pumpScore += 5;
-
-                const bidNotional = orderBookData.b.slice(0,5).reduce((a,[p,s])=>a+(parseFloat(p)*parseFloat(s)),0);
-                const askNotional = orderBookData.a.slice(0,5).reduce((a,[p,s])=>a+(parseFloat(p)*parseFloat(s)),0);
-                if (askNotional > 0 && (bidNotional/askNotional) >= 1.2) pumpScore += 10;
-                
-                const closes = klines.map(k => k.close);
-                if (closes[closes.length-1] > closes[closes.length-2]) pumpScore += 10;
-                if (closes[closes.length-1] > closes[closes.length-4]) pumpScore += 10;
-                const [ema9,ema20,ema50] = [calculateEMA(closes,9).pop(),calculateEMA(closes,20).pop(),calculateEMA(closes,50).pop()];
-                if (ema9>ema20 && ema20>ema50) pumpScore += 10;
-                const atr = calculateATR(klines, 14);
-                if (Math.abs(klines[klines.length-1].close - klines[klines.length-1].open) < 1.5 * atr && Math.abs(klines[klines.length-2].close-klines[klines.length-2].open) < 1.5 * atr) pumpScore += 5;
-                const atrPercent = (atr / currentPrice) * 100;
-                if (atrPercent >= modeParams.atrRange[0] && atrPercent <= modeParams.atrRange[1]) pumpScore += 15;
-                const vwap = calculateVWAP(klines, 20);
-                if (currentPrice > vwap) pumpScore += 10;
-
-                let advancedScore = 0;
-                if (realtime.micropriceTilts.length >= 3 && realtime.micropriceTilts.slice(-3).every(t => t >= 0.02)) advancedScore += 10;
-                const cumBid = orderBookData.b.slice(0,5).reduce((a,[,s])=>a+parseFloat(s),0);
-                const cumAsk = orderBookData.a.slice(0,5).reduce((a,[,s])=>a+parseFloat(s),0);
-                if (cumBid + cumAsk > 0 && (cumBid - cumAsk) / (cumBid + cumAsk) >= 0.2) advancedScore += 10;
-                const cvdTrend = realtime.cvd > (state.realtimeData.get(symbol)?.trades[0]?.cvd_start || 0);
-                const priceTrend = currentPrice > klines[klines.length-5].close;
-                if (cvdTrend && !priceTrend) advancedScore += 10;
-                if (realtime.iceberg.traded > realtime.iceberg.displayed * 1.5) advancedScore += 10;
-                
-                return { pumpScore, advancedScore, currentPrice, spread, atrPercent, vwap, ema20, klines };
-            }
-            
-            async function executeTrade(coinData) {
-                const { symbol, advancedScore, currentPrice, spread, atrPercent, vwap, ema20, klines } = coinData;
-                const info = state.instrumentInfo.get(symbol);
-                if (!info) return addLog(`Thiếu thông tin của cặp ${symbol}`, 'error');
-                
-                const modeParams = ADAPTIVE_MODES[state.mode];
-                const orderValue = parseFloat(elements.orderValueInput.value);
-                const minOrderValue = parseFloat(info.lotSizeFilter.minOrderValue || '5');
-                if(orderValue < minOrderValue) return addLog(`Giá trị lệnh ${orderValue}$ quá nhỏ cho ${symbol} (yêu cầu ≥ ${minOrderValue}$).`);
-
-                const pullbackFactor = advancedScore >= 30 ? 0.45 : 0.6;
-                const hh20 = Math.max(...klines.slice(-20).map(k => k.high));
-                const vungChuan = Math.max(vwap, ema20, hh20);
-                const atrStep = (atrPercent / 100) * currentPrice;
-                const entryPrice = roundToTickSize(vungChuan - pullbackFactor * atrStep, parseFloat(info.priceFilter.tickSize));
-                const tpPercent = Math.max(0.35, modeParams.tpMultiplier * spread, 0.8 * atrPercent) / 100;
-                const takeProfitPrice = roundToTickSize(entryPrice * (1 + (tpPercent + (state.mode === 'Safe' ? 0.0015 : 0.0025) )), parseFloat(info.priceFilter.tickSize));
-                const stopLossPrice = roundToTickSize(vungChuan * 0.996, parseFloat(info.priceFilter.tickSize));
-                const qty = Math.floor((orderValue / entryPrice) / parseFloat(info.lotSizeFilter.qtyStep)) * parseFloat(info.lotSizeFilter.qtyStep);
-
-                addLog(`Chuẩn bị lệnh MUA ${qty} ${symbol} tại ${entryPrice} (pullback ${pullbackFactor}x). TP: ${takeProfitPrice}, SL: ${stopLossPrice}`, 'success');
-                const orderResult = await bybitRequest('/v5/order/create', 'POST', {
-                    category: 'spot', symbol, side: 'Buy', orderType: 'Limit', qty: qty.toString(),
-                    price: entryPrice.toString(), timeInForce: 'PostOnly',
-                    takeProfit: takeProfitPrice.toString(), stopLoss: stopLossPrice.toString(),
-                });
-                
-                if (orderResult?.orderId) {
-                    addLog(`Đặt lệnh thành công. OrderID: ${orderResult.orderId}`, 'success');
-                    state.position.entryTime = Date.now() + state.timeOffset;
-                    state.position.coin = info.baseCoin;
-                    state.position.symbol = symbol;
-                    state.position.hasPosition = true;
-                }
-            }
-
-            async function manageOpenPosition() {
-                const modeParams = ADAPTIVE_MODES[state.mode];
-                const timeStopSeconds = modeParams.timeStop;
-                const elapsedSeconds = ((Date.now() + state.timeOffset) - state.position.entryTime) / 1000;
-                if (elapsedSeconds > timeStopSeconds) {
-                    addLog(`Vị thế đã vượt quá Time-Stop (${timeStopSeconds}s). Đang đóng...`, 'info');
-                    await closePosition(state.position.symbol, state.position.coin);
+            async function fetchWalletBalance() {
+                const result = await bybitRequest('/v5/account/wallet-balance', 'GET', { accountType: 'UNIFIED' });
+                if (result?.list?.length > 0) {
+                    const account = result.list[0];
+                    let balanceHTML = `<p><strong>Tổng vốn (USD):</strong> ${parseFloat(account.totalEquity).toFixed(2)}</p><p><strong>Số dư khả dụng (USD):</strong> ${parseFloat(account.totalAvailableBalance).toFixed(2)}</p><hr class="my-2 border-gray-600"><ul class="space-y-1 max-h-40 overflow-y-auto">`;
+                    account.coin.forEach(c => { if (parseFloat(c.walletBalance) > 0) balanceHTML += `<li><strong>${c.coin}:</strong> ${parseFloat(c.walletBalance).toFixed(6)}</li>`; });
+                    balanceHTML += '</ul>';
+                    balanceInfoDiv.innerHTML = balanceHTML;
                 } else {
-                    addLog(`Đang giữ ${state.position.symbol}. Thời gian mở: ${Math.round(elapsedSeconds)}s / ${timeStopSeconds}s.`);
+                    balanceInfoDiv.textContent = "Không thể lấy dữ liệu số dư.";
                 }
+            }
+
+            async function placeOrder(orderParams) {
+                if (!orderParams.symbol || !orderParams.qty || parseFloat(orderParams.qty) <= 0) { logMessage('Thông tin lệnh không hợp lệ.', true); return null; }
+                const result = await bybitRequest('/v5/order/create', 'POST', orderParams);
+                if (result?.orderId) { logMessage(`Đặt lệnh ${orderParams.side} ${orderParams.symbol} thành công! Order ID: ${result.orderId}`); return result; }
+                return null;
+            }
+
+            saveApiBtn.addEventListener('click', () => {
+                const key = apiKeyInput.value.trim(), secret = apiSecretInput.value.trim();
+                if (key && secret) { localStorage.setItem('bybitApiKey', key); localStorage.setItem('bybitApiSecret', secret); logMessage('API Key và Secret đã được lưu thành công!'); } 
+                else { logMessage('Vui lòng nhập cả API Key và Secret.', true); }
+            });
+            getBalanceBtn.addEventListener('click', fetchWalletBalance);
+            buyBtn.addEventListener('click', () => placeOrder({ category: 'spot', symbol: symbolInput.value.trim().toUpperCase(), side: 'Buy', orderType: 'Market', qty: qtyInput.value.trim() }));
+            sellBtn.addEventListener('click', () => placeOrder({ category: 'spot', symbol: symbolInput.value.trim().toUpperCase(), side: 'Sell', orderType: 'Market', qty: qtyInput.value.trim() }));
+            
+            function updateDcaStatus(message) { dcaStatusDiv.textContent = message; }
+            function stopDcaBot() { if (dcaIntervalId) { clearInterval(dcaIntervalId); dcaIntervalId = null; logMessage("Bot DCA đã dừng."); updateDcaStatus("Bot DCA đã dừng."); startDcaBtn.disabled = false; stopDcaBtn.disabled = true; [dcaSymbolInput, dcaAmountInput, dcaFrequencySelect].forEach(el => el.disabled = false); } }
+            function startDcaBot() {
+                const symbol = dcaSymbolInput.value.trim().toUpperCase(), amount = dcaAmountInput.value.trim(), frequencyMs = parseInt(dcaFrequencySelect.value, 10);
+                if (!symbol || !amount || parseFloat(amount) <= 0) { logMessage("Vui lòng nhập thông tin hợp lệ cho bot DCA.", true); return; }
+                logMessage(`Bắt đầu bot DCA: Mua ${amount} USDT cho ${symbol} mỗi ${dcaFrequencySelect.options[dcaFrequencySelect.selectedIndex].text}.`);
+                startDcaBtn.disabled = true; stopDcaBtn.disabled = false; [dcaSymbolInput, dcaAmountInput, dcaFrequencySelect].forEach(el => el.disabled = true);
+                const executeDcaPurchase = () => {
+                    const nextRunTime = new Date(Date.now() + frequencyMs).toLocaleString();
+                    logMessage(`[DCA] Thực hiện mua ${amount} USDT cho ${symbol}...`);
+                    updateDcaStatus(`Đang hoạt động. Lần mua tiếp theo: ${nextRunTime}`);
+                    placeOrder({ category: 'spot', symbol, side: 'Buy', orderType: 'Market', qty: amount, marketUnit: 'quoteCoin' });
+                };
+                executeDcaPurchase();
+                dcaIntervalId = setInterval(executeDcaPurchase, frequencyMs);
+            }
+            startDcaBtn.addEventListener('click', startDcaBot);
+            stopDcaBtn.addEventListener('click', stopDcaBot);
+            
+            const TA = { ema: (d,p) => { if (!d||d.length<p) return[]; const k=2/(p+1); let e=[d[0]]; for (let i=1;i<d.length;i++) e[i]=d[i]*k+e[i-1]*(1-k); return e }, atr: (k,p) => { if (!k||k.length<p) return[0]; let t=[]; for (let i=1;i<k.length;i++) t.push(Math.max(parseFloat(k[i][2])-parseFloat(k[i][3]),Math.abs(parseFloat(k[i][2])-parseFloat(k[i-1][4])),Math.abs(parseFloat(k[i][3])-parseFloat(k[i-1][4])))); return t.length===0?[0]:TA.ema(t,p) }, stdDev: (d,p) => { if(!d||d.length<p) return[]; let s=[]; for(let i=p-1;i<d.length;i++){ const sl=d.slice(i-p+1,i+1),m=sl.reduce((a,b)=>a+b,0)/p; s.push(Math.sqrt(sl.map(v=>Math.pow(v-m,2)).reduce((a,b)=>a+b,0)/p)) } return s }, adx: (k,p) => { if(!k||k.length<p*2) return[]; let h=k.map(i=>parseFloat(i[2])),l=k.map(i=>parseFloat(i[3])),pDM=[0],mDM=[0]; for (let i=1;i<h.length;i++){ let u=h[i]-h[i-1],d=l[i-1]-l[i];pDM.push(u>d&&u>0?u:0);mDM.push(d>u&&d>0?d:0)} let atr=TA.atr(k,p).slice(-pDM.length); if (atr.length===0) return[]; let spDM=TA.ema(pDM,p),smDM=TA.ema(mDM,p),pDI=[],mDI=[]; for(let i=0;i<spDM.length;i++){pDI.push(atr[i]===0?0:100*(spDM[i]/atr[i]));mDI.push(atr[i]===0?0:100*(smDM[i]/atr[i]))} let dxs=[]; for(let i=0;i<pDI.length;i++){ let den=pDI[i]+mDI[i];dxs.push(den===0?0:100*(Math.abs(pDI[i]-mDI[i])/den))} return TA.ema(dxs,p) }};
+
+            const EDGE_COEF = { range:{tp1:0.65,tp2:0.35,tp1ATR:1.2,tp2ATR:2.2}, squeeze:{tp1:0.55,tp2:0.45,tp1ATR:1.5,tp2ATR:3.0}, trend:{tp1:0.55,tp2:0.45,tp1ATR:1.6,tp2ATR:3.2} };
+            const RAOS_TH_BASE = { range: 0.66, trend: 0.68, squeeze: 0.72 };
+            function toPP(x){ if(x==null||isNaN(x))return 0;const a=Math.abs(x);if(a===0)return 0;if(a<=0.05)return x*100;if(a>=5&&a<=100)return x;return x}
+            function bpsToPP(b){ return(b??0)/100 }
+            function clamp(x,l,h){ return Math.max(l,Math.min(h,x)) }
+            function computeSpreadBps(b,a){ const bid=parseFloat(b),ask=parseFloat(a);if(!isFinite(bid)||!isFinite(ask)||ask<=0||bid<=0)return 1e9;const mid=(ask+bid)/2;return mid>0?((ask-bid)/mid)*10000:1e9 }
+            function decideEntryType(c){ if(c.regime==="Range"&&c.spread_bps<=15)return"limit";return"stop" }
+            function sanitizeCandidate(c){ c.atrPct=toPP(c.atrPct);c.slipPct=toPP(c.slipPct??(decideEntryType(c)==="limit"?0.03:0.06));c.feePctRT=toPP(c.feePctRT??(decideEntryType(c)==="limit"?0.2:0.3));c.spreadPP=bpsToPP(c.spread_bps);c.atrPct=clamp(c.atrPct,0,10);c.slipPct=clamp(c.slipPct,0,2);c.spreadPP=clamp(c.spreadPP,0,2);c.entryType=decideEntryType(c);return c }
+            function costPctPP(c){ const hS=(c.entryType==="stop"?c.spreadPP/2:0);return c.feePctRT+c.slipPct+hS }
+            function expectedGrossEdgePP(c){ const A=EDGE_COEF[c.regime.toLowerCase()]||EDGE_COEF.range,k=A.tp1*A.tp1ATR+A.tp2*A.tp2ATR;return k*c.atrPct }
+            function minEdgeRequiredPP(c,l=0){ const m=c.entryType==="limit"?(l===0?1.8:l===1?1.7:1.6):(l===0?2.2:l===1?2:1.8);const f=l===2?0.33:0.35;return Math.max(m*costPctPP(c),f) }
+            
+            function gateOnce(cands, RAOS_TH_DYN, SPREAD_MAX, level) {
+                const stats = {start:cands.length,afterSD:0,afterRAOS:0,afterEDGE:0,drops:{SPREAD:0,DEPTH:0,RAOS:0,EDGE:0,OTHER:0}};
+                let candidates = cands.map(c => sanitizeCandidate({...c}));
+                let keptSD = [];
+                for(const c of candidates) {
+                    if (c.spread_bps > SPREAD_MAX) { stats.drops.SPREAD++; continue; }
+                    if ((c.depth1pct ?? 401) < 400) { stats.drops.DEPTH++; continue; }
+                    keptSD.push(c);
+                }
+                stats.afterSD = keptSD.length;
+                let keptRAOS = keptSD.filter(c => (c.raos ?? 0) >= (RAOS_TH_DYN[c.regime.toLowerCase()] || RAOS_TH_DYN.range));
+                stats.drops.RAOS = keptSD.length - keptRAOS.length;
+                if (keptRAOS.length < 5 && keptSD.length > 0) {
+                    logMessage(`[Gate L${level}] RAOS Fallback: ${keptRAOS.length} pass, lấy Top 7.`);
+                    keptRAOS = keptSD.sort((a,b)=>b.raos - a.raos).slice(0, Math.min(7, keptSD.length));
+                    stats.drops.RAOS = 0;
+                }
+                stats.afterRAOS = keptRAOS.length;
+                let keptEDGE = [];
+                for(const c of keptRAOS) {
+                    const gross = expectedGrossEdgePP(c), need = minEdgeRequiredPP(c, level);
+                    if (gross < need) {
+                        stats.drops.EDGE++;
+                        // logMessage(`[EDGE-DROP] ${c.symbol} r=${c.regime} e=${c.entryType} atr=${c.atrPct.toFixed(2)}% gross=${gross.toFixed(2)}% cost=${costPctPP(c).toFixed(2)}% need=${need.toFixed(2)}%`, true);
+                        continue;
+                    }
+                    keptEDGE.push(c);
+                }
+                stats.afterEDGE = keptEDGE.length;
+                keptEDGE.sort((a,b)=> b.raos - a.raos || a.spread_bps - b.spread_bps);
+                return {stats, picks: keptEDGE.slice(0,3)};
+            }
+
+            function chooseTop3(cs, RAOS_TH_DYN, SPREAD_MAX){ 
+                for(let l=0;l<=2;l++){
+                    const r = gateOnce(cs, RAOS_TH_DYN, SPREAD_MAX, l);
+                    logMessage(`[Gate L${l}] start=${r.stats.start}->SD=${r.stats.afterSD}->RAOS=${r.stats.afterRAOS}->EDGE=${r.stats.afterEDGE}|Drops:S:${r.stats.drops.SPREAD},D:${r.stats.drops.DEPTH},R:${r.stats.drops.RAOS},E:${r.stats.drops.EDGE}`);
+                    if(r.picks.length) return {level:l, picks:r.picks};
+                }
+                const s = cs.map(sanitizeCandidate).filter(c=>c.spread_bps<=15&&(c.depth1pct??0)>=1000).sort((a,b)=>b.raos-a.raos);
+                const t=s[0];
+                if(!t)return{level:"none",picks:[]};
+                t.regime='Micro-Grid'; t.plan={entry:"Micro-grid ±0.6×ATR",SL:"N/A",TP1:"N/A",TP2:"N/A"};
+                return{level:"L3-failopen",picks:[t]};
+            }
+
+            function updateScannerStatus(message) { scannerStatusDiv.textContent = message; }
+
+            function displayScanResults(results) {
+                scannerResultsDiv.innerHTML = '';
+                if (!results || results.length === 0) {
+                    scannerResultsDiv.innerHTML = '<p class="text-center text-gray-400 col-span-full">Không có kế hoạch giao dịch nào phù hợp. Thị trường có thể đang rất yên tĩnh.</p>';
+                    return;
+                }
+                results.forEach(item => {
+                    const regimeClass = { 'Trend':'regime-trend', 'Range':'regime-range', 'Squeeze':'regime-squeeze', 'Micro-Grid':'regime-micro-grid' }[item.regime] || 'regime-none';
+                    const specialNotes = {
+                        'HAEDALUSDT': 'Cẩn trọng với râu nến dài (FOMO wick).',
+                        'PENDLEUSDT': 'Cân nhắc tăng buffer lên 0.10%-0.12% nếu nhiễu.',
+                        'ALCHUSDT': 'Bỏ qua nếu VolumeZ < 3 khi phá vỡ.'
+                    }[item.symbol] || 'Không có.';
+                    
+                    const cardHTML = `
+                        <div class="bg-gray-900/50 rounded-xl p-4 border border-gray-700 flex flex-col space-y-3">
+                            <div class="flex justify-between items-center">
+                                <h3 class="text-lg font-bold text-cyan-400">${item.symbol}</h3>
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full ${regimeClass}">${item.regime}</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-400">RAOS</span>
+                                <span class="font-semibold text-yellow-400">${item.raos?.toFixed(3) ?? 'N/A'}</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-400">Vốn Phân Bổ</span>
+                                <span class="font-bold text-white">${item.allocationUSD}$</span>
+                            </div>
+                            <div class="border-t border-gray-700 pt-3 space-y-2 text-xs">
+                                <p class="font-semibold text-gray-300">Kế hoạch Lệnh:</p>
+                                <p><strong class="text-green-400">Entry:</strong> ${item.plan.entry}</p>
+                                <p><strong class="text-red-400">Stop Loss:</strong> ${item.plan.SL}</p>
+                                <p><strong class="text-blue-400">Take Profit:</strong> ${item.plan.TP1} (TP1) / ${item.plan.TP2} (TP2)</p>
+                                <p><strong class="text-purple-400">Quản Trị:</strong> Dời SL về hòa vốn khi chạm TP1.</p>
+                            </div>
+                            <div class="border-t border-gray-700 pt-3 space-y-2 text-xs">
+                                <p class="font-semibold text-gray-300">Lưu ý Riêng:</p>
+                                <p class="text-amber-400">${specialNotes}</p>
+                            </div>
+                            <div class="border-t border-gray-700 pt-3 space-y-2 text-xs">
+                                 <p class="font-semibold text-gray-300">Check-list An Toàn:</p>
+                                 <ul class="list-disc list-inside text-gray-400">
+                                    <li>Xác nhận Squeeze & VolumeZ &ge; 3.</li>
+                                    <li>Tránh vào lệnh khi có râu nến dài.</li>
+                                    <li>Chi phí hợp lệ (~0.41-0.46%).</li>
+                                    <li>ATR% đủ lớn (>0.42%).</li>
+                                 </ul>
+                            </div>
+                        </div>
+                    `;
+                    scannerResultsDiv.innerHTML += cardHTML;
+                });
             }
             
-            async function updatePositionStatus() {
-                 const usdtPortfolio = await bybitRequest('/v5/asset/transfer/query-account-coins-balance', 'GET', { accountType: "UNIFIED", coin: "USDT" });
-                 if (usdtPortfolio?.balance) {
-                    const usdtBalance = usdtPortfolio.balance.find(c => c.coin === 'USDT');
-                    if (usdtBalance) elements.usdtBalance.textContent = parseFloat(usdtBalance.walletBalance).toFixed(2);
-                 }
-                 
-                 if (state.position.coin) {
-                    const coinPortfolio = await bybitRequest('/v5/asset/transfer/query-account-coins-balance', 'GET', { accountType: "UNIFIED", coin: state.position.coin });
-                    const coinBalance = coinPortfolio?.balance.find(c => c.coin === state.position.coin);
-                    
-                    if (coinBalance && parseFloat(coinBalance.walletBalance) > 1e-6) {
-                        if (!state.position.hasPosition) { addLog('Phát hiện vị thế mới.', 'success'); }
-                        state.position.hasPosition = true;
-                        elements.currentPosition.textContent = `${coinBalance.coin}: ${parseFloat(coinBalance.walletBalance)}`;
-                    } else {
-                        if (state.position.hasPosition) { addLog(`Vị thế ${state.position.coin} đã được đóng.`, 'info'); }
-                        state.position.hasPosition = false;
-                        state.position.coin = null;
-                        state.position.symbol = null;
-                        elements.currentPosition.textContent = 'Không có';
+            async function executeScan() {
+                if (isScanning) return;
+                isScanning = true;
+                showLoader();
+                logMessage(`[Scanner] Bắt đầu quét với thuật toán V3.2.3...`);
+                
+                try {
+                    updateScannerStatus(`(B0) Lấy danh sách cặp giao dịch`);
+                    const instrumentsInfo = await bybitPublicRequest('/v5/market/instruments-info', { category: 'spot' });
+                    if (!instrumentsInfo?.list) throw new Error("Không thể lấy danh sách các cặp giao dịch.");
+                    const allTradablePairs = instrumentsInfo.list.filter(i => i.status === 'Trading' && i.quoteCoin === 'USDT').map(i => i.symbol);
+                    logMessage(`[Scanner] Tìm thấy ${allTradablePairs.length} cặp SPOT USDT.`);
+
+                    updateScannerStatus(`(B1) Lấy dữ liệu toàn thị trường`);
+                    const allTickersData = await bybitPublicRequest('/v5/market/tickers', { category: 'spot' });
+                    if (!allTickersData?.list) throw new Error("Không thể lấy danh sách tickers.");
+                    let universe = allTickersData.list.filter(t => allTradablePairs.includes(t.symbol) && parseFloat(t.turnover24h) > 500000);
+                    logMessage(`[Scanner] ${universe.length} cặp thanh khoản tốt được đưa vào phân tích.`);
+
+                    updateScannerStatus(`(B2) Lấy Order Book & tính Spread`);
+                    const obPromises = universe.map(t => bybitPublicRequest('/v5/market/orderbook', { category: 'spot', symbol: t.symbol, limit: 1 }));
+                    const obResults = await Promise.all(obPromises);
+                    let enrichedCandidates = [];
+                    for (let i = 0; i < universe.length; i++) {
+                        const ticker = universe[i], ob = obResults[i];
+                        const ask = ob?.a?.[0]?.[0] ?? ticker.ask1Price, bid = ob?.b?.[0]?.[0] ?? ticker.bid1Price;
+                        enrichedCandidates.push({ ...ticker, spread_bps: computeSpreadBps(bid, ask), _bid: bid, _ask: ask });
                     }
-                 } else {
-                    state.position.hasPosition = false;
-                    elements.currentPosition.textContent = 'Không có';
-                 }
+                    enrichedCandidates.forEach((c, i) => i < 3 && logMessage(`[Sanity Check] ${c.symbol} bid=${c._bid} ask=${c._ask} -> spread_bps=${c.spread_bps.toFixed(2)}`));
+                    
+                    const allSpreads = enrichedCandidates.map(c => c.spread_bps).filter(s => isFinite(s)).sort((a,b) => a-b);
+                    const p60 = allSpreads[Math.floor(0.60 * allSpreads.length)];
+                    const SPREAD_MAX = clamp(p60, 15, 25);
+                    logMessage(`[Scanner] Ngưỡng Spread Động (P60, clamped 15-25): ${SPREAD_MAX.toFixed(2)} bps`);
+
+                    updateScannerStatus(`(B3) Lấy Klines`);
+                    const klinePromises = enrichedCandidates.map(t => bybitPublicRequest('/v5/market/kline', { category: 'spot', symbol: t.symbol, interval: '15', limit: 200 }));
+                    const klineResults = await Promise.all(klinePromises);
+                    let candidates = [];
+                    for (let i = 0; i < enrichedCandidates.length; i++) {
+                        if (klineResults[i]?.list?.length >= 50) {
+                            const klines = klineResults[i].list.reverse();
+                            const closes = klines.map(k => parseFloat(k[4])), lastPrice = closes[closes.length - 1];
+                            const lastAtr = TA.atr(klines, 14).pop() || 0, atrPct = lastPrice > 0 ? (lastAtr / lastPrice) * 100 : 0;
+                            candidates.push({ ...enrichedCandidates[i], klines, atrPct, lastAtr });
+                        }
+                    }
+                    if (candidates.length === 0) throw new Error("Không có cặp nào có đủ dữ liệu kline.");
+                    
+                    const atrPercentiles = candidates.map(p => p.atrPct).sort((a,b)=>a-b);
+                    const p40_atr = atrPercentiles[Math.floor(atrPercentiles.length*0.4)], p95_atr = atrPercentiles[Math.floor(atrPercentiles.length*0.95)];
+                    const atrMin=Math.max(p40_atr,0.12), atrMax=Math.min(p95_atr,6.0);
+                    logMessage(`[Scanner] Ngưỡng ATR động: [${atrMin.toFixed(2)}%, ${atrMax.toFixed(2)}%]`);
+                    
+                    updateScannerStatus(`(B4) Chấm điểm ${candidates.length} cặp`);
+                    let processedCandidates = [];
+                    let perRegime = {range:[], trend:[], squeeze:[]};
+                    for (const cand of candidates) {
+                        if (cand.atrPct < atrMin || cand.atrPct > atrMax) continue;
+                        const closes=cand.klines.map(k=>parseFloat(k[4])),adx=TA.adx(cand.klines,14).pop()||0,sma20=closes.slice(-20).reduce((a,b)=>a+b,0)/20;
+                        const stdDev=TA.stdDev(closes,20).pop()||0,bbWidth=sma20>0?((sma20+2*stdDev)-(sma20-2*stdDev))/sma20:0;
+                        let regime="Range"; if(adx>=22)regime="Trend"; if(bbWidth<0.035&&regime!=='Trend')regime="Squeeze";
+                        const roc15m=closes.length>1?(closes[closes.length-1]/closes[closes.length-2]-1)*100:0, roc1h=closes.length>4?(closes[closes.length-1]/closes[closes.length-5]-1)*100:0;
+                        const ema20=TA.ema(closes,20).pop()||0,ema50=TA.ema(closes,50).pop()||0,emaSlope=ema20>ema50?1:-1;
+                        let s_trend=0.4*roc15m+0.2*roc1h+0.2*emaSlope-0.2*(cand.spread_bps/20);
+                        let s_range=cand.lastAtr>0?0.5*(Math.abs(closes[closes.length-1]-sma20)/cand.lastAtr)-0.3*bbWidth-0.2*(cand.spread_bps/20):-1;
+                        let s_squeeze=-0.5*bbWidth+0.3*roc15m-0.2*(cand.spread_bps/20);
+                        const w={range:0.5,squeeze:0.3,trend:0.2};
+                        const raos=w.range*s_range+w.squeeze*s_squeeze+w.trend*s_trend;
+                        const finalCand = { ...cand, raos, regime, depth1pct: 500 };
+                        processedCandidates.push(finalCand);
+                        perRegime[regime.toLowerCase()]?.push(raos);
+                    }
+                    
+                    const q=(arr,p)=>arr.length?arr.slice().sort((a,b)=>a-b)[Math.floor(p*arr.length)]:0;
+                    const RAOS_TH_DYN = {
+                        range: Math.max(RAOS_TH_BASE.range, q(perRegime.range, 0.80) - 0.01),
+                        trend: Math.max(RAOS_TH_BASE.trend, q(perRegime.trend, 0.75) - 0.01),
+                        squeeze: Math.max(RAOS_TH_BASE.squeeze, q(perRegime.squeeze, 0.75) - 0.01),
+                    };
+                    logMessage(`[Diag] RAOS Range (P80-based TH): ${RAOS_TH_DYN.range.toFixed(3)}`);
+                    
+                    const {level, picks} = chooseTop3(processedCandidates, RAOS_TH_DYN, SPREAD_MAX);
+                    
+                    const finalPicks = picks.map((c, i) => {
+                        const {netEdgePct} = (() => { const g=expectedGrossEdgePP(c),co=costPctPP(c); return {netEdgePct:g-co} })();
+                        let plan = c.plan;
+                        if (!plan) { plan = c.regime==="Squeeze"?{entry:"Buy-Stop tại Donchian20 High × (1+buffer)",SL:"max(đáy nến phá vỡ, entry - 0.9*ATR)",TP1:"+1.5*ATR",TP2:"+3.0*ATR"}:c.regime==="Range"?{entry:"Limit gần VWAP-0.6*ATR",SL:"-1.0*ATR",TP1:"+1.2*ATR",TP2:"+2.2*ATR"}:{entry:"Buy-stop trên EMA20",SL:"-0.9*ATR",TP1:"+1.6*ATR",TP2:"+3.2*ATR"}}
+                        return { ...c, netEdgePct, plan, allocationUSD: [2.8, 2.8, 2.4][i] ?? 2.4 };
+                    });
+
+                    displayScanResults(finalPicks);
+                    logMessage(`[Scanner] Quét hoàn tất. Hiển thị ${finalPicks.length} kế hoạch giao dịch (Level ${level}).`);
+                    updateScannerStatus(`Quét xong. Cập nhật lần cuối: ${new Date().toLocaleTimeString()}`);
+                
+                } catch (error) {
+                    logMessage(`[Scanner] Lỗi: ${error.message}`, true);
+                    updateScannerStatus("Đã xảy ra lỗi. Kiểm tra log và thử lại.");
+                    displayScanResults([]);
+                } finally {
+                    isScanning = false;
+                    hideLoader();
+                }
             }
 
-            async function closePosition(symbol, coin) {
-                addLog(`Đang đóng vị thế ${symbol} bằng lệnh Market...`, 'info');
-                await bybitRequest('/v5/order/cancel-all', 'POST', { category: 'spot', symbol });
-                const portfolio = await bybitRequest('/v5/asset/transfer/query-account-coins-balance', 'GET', { accountType: "UNIFIED", coin });
-                const coinBalance = portfolio?.balance[0];
-                if (coinBalance && parseFloat(coinBalance.walletBalance) > 0) {
-                    const info = state.instrumentInfo.get(symbol);
-                    const qty = Math.floor(parseFloat(coinBalance.walletBalance)/parseFloat(info.lotSizeFilter.qtyStep))*parseFloat(info.lotSizeFilter.qtyStep);
-                    if(qty > 0) {
-                        const closeResult = await bybitRequest('/v5/order/create', 'POST', { category: 'spot', symbol, side: 'Sell', orderType: 'Market', qty: qty.toString() });
-                        if (closeResult?.orderId) { addLog('Đóng vị thế thành công.', 'success'); state.risk.consecutiveLosses++; }
-                    }
-                }
-                state.position.hasPosition = false;
-                state.position.coin = null;
-                state.position.symbol = null;
-                if(state.risk.consecutiveLosses >= 2) {
-                    addLog('2 lệnh thua liên tiếp, tạm nghỉ 30 phút.', 'error');
-                    state.cooldownUntil = Date.now() + 30 * 60 * 1000;
-                    state.risk.consecutiveLosses = 0;
-                }
+            function stopScanner() { if (scannerIntervalId) { clearInterval(scannerIntervalId); scannerIntervalId=null; logMessage("Công cụ quét đã dừng."); updateScannerStatus("Công cụ quét đã dừng."); startScannerBtn.disabled=false; stopScannerBtn.disabled=true; } }
+            function startScanner() {
+                logMessage("Bắt đầu công cụ quét thị trường...");
+                startScannerBtn.disabled = true; stopScannerBtn.disabled = false;
+                executeScan();
+                scannerIntervalId = setInterval(executeScan, 120000); 
             }
 
-            // --- Event Listeners & Initialization ---
-            elements.saveApiButton.addEventListener('click', async () => {
-                state.apiKey = elements.apiKeyInput.value.trim();
-                state.apiSecret = elements.apiSecretInput.value.trim();
-                if (state.apiKey && state.apiSecret) {
-                    localStorage.setItem('bybitApiKey', state.apiKey);
-                    localStorage.setItem('bybitApiSecret', state.apiSecret);
-                    
-                    const syncSuccess = await syncTime();
-                    if (!syncSuccess) {
-                        addLog('Không thể khởi tạo bot do lỗi đồng bộ thời gian. Vui lòng thử lại.', 'error');
-                        return;
-                    }
-
-                    addLog('Đã lưu khóa API thành công.', 'success');
-                    await updatePositionStatus();
-                    
-                    const instruments = await publicBybitRequest('/v5/market/instruments-info', { category: 'spot', limit: 1000 });
-                    if (instruments?.list) {
-                        instruments.list.forEach(i => state.instrumentInfo.set(i.symbol, i));
-                        addLog(`Đã tải thông tin cho ${state.instrumentInfo.size} cặp. Bot đã sẵn sàng.`, 'success');
-                        elements.startBotButton.disabled = false;
-                    } else { addLog('Không thể tải thông tin cặp giao dịch.', 'error'); }
-                } else { addLog('Vui lòng nhập cả API Key và Secret.', 'error'); }
-            });
-            elements.startBotButton.addEventListener('click', async () => {
-                if (!state.apiKey || !state.apiSecret) return addLog('Lỗi: Vui lòng lưu API trước khi bắt đầu.', 'error');
-                
-                addLog('Đang kiểm tra & đồng bộ lại thời gian trước khi bắt đầu...', 'info');
-                const syncSuccess = await syncTime();
-                if (!syncSuccess) {
-                    return addLog('Lỗi: Đồng bộ thời gian thất bại. Không thể bắt đầu bot.', 'error');
-                }
-
-                if (state.instrumentInfo.size === 0) return addLog('Lỗi: Chưa có thông tin cặp giao dịch. Vui lòng lưu lại API.', 'error');
-
-                addLog('Bot đã bắt đầu GIAO DỊCH...', 'success');
-                setBotStatusUI('running');
-                
-                if (state.tradeInterval) clearInterval(state.tradeInterval);
-                state.tradeInterval = setInterval(runTradingLogic, 15000);
-            });
-            elements.stopBotButton.addEventListener('click', () => {
-                if (state.tradeInterval) clearInterval(state.tradeInterval);
-                state.tradeInterval = null;
-                addLog('Bot đã dừng GIAO DỊCH. Chế độ quét vẫn chạy.', 'info');
-                setBotStatusUI('stopped');
-            });
-             elements.tradeModeRadios.forEach(radio => {
-                radio.addEventListener('change', (event) => {
-                    state.mode = event.target.value;
-                    addLog(`Chế độ giao dịch đã được đổi thành: ${state.mode}`, 'success');
-                });
-            });
-            async function initialize() {
-                addLog('Khởi tạo bot... Bắt đầu quét thị trường công khai.');
-                initChart();
-                updateChart('BTCUSDT');
-                setBotStatusUI('stopped');
-                elements.stopBotButton.disabled = true;
-
-                const storedApiKey = localStorage.getItem('bybitApiKey');
-                const storedApiSecret = localStorage.getItem('bybitApiSecret');
-                if (storedApiKey && storedApiSecret) {
-                    elements.apiKeyInput.value = storedApiKey;
-                    elements.apiSecretInput.value = storedApiSecret;
-                    await elements.saveApiButton.click();
-                } else { 
-                    addLog('Chào mừng! Bot đang ở chế độ quét. Vui lòng nhập API Key để bật giao dịch.');
-                     const instruments = await publicBybitRequest('/v5/market/instruments-info', { category: 'spot', limit: 1000 });
-                     if (instruments?.list) {
-                        instruments.list.forEach(i => state.instrumentInfo.set(i.symbol, i));
-                     }
-                }
-                
-                if(state.scanInterval) clearInterval(state.scanInterval);
-                state.scanInterval = setInterval(scanMarket, 15000);
-                scanMarket();
-            }
-            initialize();
+            startScannerBtn.addEventListener('click', startScanner);
+            stopScannerBtn.addEventListener('click', stopScanner);
+            logMessage('Bot đã sẵn sàng. Vui lòng lưu API key để bắt đầu.');
         });
     </script>
 </body>
