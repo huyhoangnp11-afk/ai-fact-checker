@@ -137,14 +137,24 @@
 
         <!-- Market Scanner Section -->
         <div class="bg-gray-700/50 p-6 rounded-xl mt-6">
-            <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Kế Hoạch Giao Dịch Tự Động (V3.3.0)</h2>
+            <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Kế Hoạch Giao Dịch Tự Động (V3.4.0)</h2>
             <div class="bg-blue-900 border-l-4 border-blue-500 text-blue-100 p-4 rounded-lg mb-4" role="alert">
-                <p><strong class="font-bold">Cách Hoạt Động:</strong> Nhấn "Bắt đầu Quét". Bot sẽ phân tích toàn bộ thị trường và hiển thị tối đa 3 kế hoạch giao dịch chi tiết nhất dựa trên thuật toán Squeeze Breakout.</p>
+                <p><strong class="font-bold">Cách Hoạt Động:</strong> Nhấn "Bắt đầu Quét". Nếu bật "Tự động Trade", bot sẽ tự vào lệnh Market Mua theo kế hoạch tìm được.</p>
             </div>
-             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                 <div class="md:col-span-1">
                     <label for="scannerCapital" class="block text-sm font-medium text-gray-300 mb-1">Tổng vốn cho Scanner (USD)</label>
                     <input type="number" id="scannerCapital" value="100" step="10" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                </div>
+                <div class="md:col-span-1 flex items-end pb-1">
+                     <label for="autoTradeToggle" class="flex items-center cursor-pointer">
+                        <div class="relative">
+                            <input type="checkbox" id="autoTradeToggle" class="sr-only peer">
+                            <div class="block bg-gray-600 w-14 h-8 rounded-full peer-checked:bg-green-600"></div>
+                            <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform transform peer-checked:translate-x-full"></div>
+                        </div>
+                        <span class="ml-3 text-sm font-medium text-gray-300">Tự động Trade</span>
+                    </label>
                 </div>
                 <div class="md:col-span-2 grid grid-cols-2 gap-4">
                     <button id="startScannerBtn" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 disabled:bg-gray-500 disabled:cursor-not-allowed" disabled>Bắt đầu Quét</button>
@@ -204,6 +214,7 @@
                 },
                 scanner: {
                     capital: document.getElementById('scannerCapital'),
+                    autoTradeToggle: document.getElementById('autoTradeToggle'),
                     startBtn: document.getElementById('startScannerBtn'),
                     stopBtn: document.getElementById('stopScannerBtn'),
                     status: document.getElementById('scannerStatus'),
@@ -219,6 +230,8 @@
                 scannerIntervalId: null,
                 isScanning: false,
                 apiKeysValid: false,
+                autoTradeEnabled: false,
+                recentlyTradedSymbols: [],
             };
 
             // --- Constants ---
@@ -230,30 +243,22 @@
             
             // --- Technical Analysis & Scanner Logic Configuration ---
             const CONFIG = {
-                // Liquidity filter: minimum 24h turnover in quote currency (USDT)
                 MIN_TURNOVER_24H: 500000,
-                // Kline settings for analysis
                 KLINE_INTERVAL: '15',
                 KLINE_LIMIT: 200,
                 MIN_KLINE_LENGTH: 50,
-                // Dynamic ATR% filter bounds (base values, can be adjusted by market percentiles)
                 ATR_PCT_MIN_BASE: 0.12,
                 ATR_PCT_MAX_BASE: 6.0,
-                // Dynamic Spread filter bounds (base values in bps)
                 SPREAD_BPS_MIN: 15,
                 SPREAD_BPS_MAX: 25,
-                // Market Regime Definitions
                 ADX_TREND_THRESHOLD: 22,
-                BBW_SQUEEZE_THRESHOLD: 0.035, // Bollinger Band Width
-                // RAOS (Regime-Adjusted Opportunity Score) Base Thresholds
+                BBW_SQUEEZE_THRESHOLD: 0.035,
                 RAOS_THRESHOLDS: { range: 0.66, trend: 0.68, squeeze: 0.72 },
-                // Edge Calculation Coefficients (for estimating profitability)
                 EDGE_COEFFICIENTS: {
                     range:   { tp1: 0.65, tp2: 0.35, tp1ATR: 1.2, tp2ATR: 2.2 },
                     squeeze: { tp1: 0.55, tp2: 0.45, tp1ATR: 1.5, tp2ATR: 3.0 },
                     trend:   { tp1: 0.55, tp2: 0.45, tp1ATR: 1.6, tp2ATR: 3.2 }
                 },
-                 // Dynamic capital allocation percentages for top 3 picks
                 CAPITAL_ALLOCATION_PCT: [0.028, 0.028, 0.024]
             };
 
@@ -271,65 +276,51 @@
                 ui.logDiv.scrollTop = ui.logDiv.scrollHeight;
             }
 
-            // --- Function to get a valid server timestamp ---
             async function getServerTimestampMs() {
                 const r = await fetch(`${CONSTANTS.BYBIT_API_URL}/v5/market/time`);
                 const j = await r.json();
                 if (j.retCode !== 0) throw new Error("Could not sync Bybit server time.");
-
-                // timeNano is a nanosecond string -> use BigInt to avoid precision loss
                 const nsStr = j.result?.timeNano;
                 let tsMs;
                 if (nsStr) {
-                    tsMs = (BigInt(nsStr) / 1000000n) - 200n;  // Integer ms, subtract 200ms buffer
+                    tsMs = (BigInt(nsStr) / 1000000n) - 200n;
                 } else {
-                    // Fallback if the API returns timeSecond
                     const secStr = j.result?.timeSecond ?? `${Math.floor(Date.now()/1000)}`;
                     tsMs = (BigInt(secStr) * 1000n) - 200n;
                 }
                 return tsMs.toString();
             }
 
-            // --- Bybit API Communication ---
             async function bybitRequest(endpoint, method, params = {}, isPublic = false) {
-                if (!isPublic && !state.apiKeysValid) {
+                const isValidationCall = endpoint === '/v5/user/query-api';
+                if (!isPublic && !state.apiKeysValid && !isValidationCall) {
                     logMessage('API Keys không hợp lệ hoặc chưa được lưu.', true);
                     return null;
                 }
-                
                 const headers = { 'Content-Type': 'application/json' };
                 let url = `${CONSTANTS.BYBIT_API_URL}${endpoint}`;
                 let body;
-
                 if (!isPublic) {
                     const timestamp = await getServerTimestampMs();
                     const paramStr = method === 'POST' ? JSON.stringify(params) : new URLSearchParams(params).toString();
                     const signStr = timestamp + state.apiKey + CONSTANTS.RECV_WINDOW + paramStr;
                     const signature = CryptoJS.HmacSHA256(signStr, state.apiSecret).toString(CryptoJS.enc.Hex);
-                    
                     Object.assign(headers, {
-                        'X-BAPI-API-KEY': state.apiKey,
-                        'X-BAPI-TIMESTAMP': timestamp,
-                        'X-BAPI-RECV-WINDOW': CONSTANTS.RECV_WINDOW,
-                        'X-BAPI-SIGN': signature,
+                        'X-BAPI-API-KEY': state.apiKey, 'X-BAPI-TIMESTAMP': timestamp,
+                        'X-BAPI-RECV-WINDOW': CONSTANTS.RECV_WINDOW, 'X-BAPI-SIGN': signature,
                     });
-                    
                     if (method === 'GET' && paramStr) url += `?${paramStr}`;
                     if (method === 'POST') body = paramStr;
                 } else {
                      if (Object.keys(params).length > 0) url += `?${new URLSearchParams(params)}`;
                 }
-                
                 try {
                     const response = await fetch(url, { method, headers, body });
                     const data = await response.json();
-                    
                     if (data.retCode !== 0) {
-                        // Suppress "Instrument not found" errors for scanner to avoid log spam
                         if (data.retMsg.includes("Not supported symbols") || data.retMsg.includes("Instrument not found")) return null;
                         throw new Error(`Bybit API Error: ${data.retMsg} (Code: ${data.retCode})`);
                     }
-                    
                     return data.result;
                 } catch (error) {
                     logMessage(error.message, true);
@@ -337,7 +328,6 @@
                 }
             }
             
-            // --- UI Update Functions ---
             function updateApiStatus(isValid) {
                 state.apiKeysValid = isValid;
                 if (isValid) {
@@ -354,12 +344,9 @@
             function updateDcaStatus(message) { ui.dca.status.textContent = message; }
             function updateScannerStatus(message) { ui.scanner.status.textContent = message; }
 
-            // --- Main Logic Functions ---
-            
             async function checkApiKeys() {
                 if (!state.apiKey || !state.apiSecret) {
-                    updateApiStatus(false);
-                    return;
+                    updateApiStatus(false); return;
                 }
                 showLoader('Đang xác thực API Keys...');
                 const result = await bybitRequest('/v5/user/query-api', 'GET', {});
@@ -397,8 +384,7 @@
 
             async function placeOrder(orderParams) {
                 if (!orderParams.symbol || !orderParams.qty || parseFloat(orderParams.qty) <= 0) {
-                    logMessage('Thông tin lệnh không hợp lệ.', true);
-                    return null;
+                    logMessage('Thông tin lệnh không hợp lệ.', true); return null;
                 }
                 showLoader(`Đang đặt lệnh ${orderParams.side} ${orderParams.symbol}...`);
                 const result = await bybitRequest('/v5/order/create', 'POST', orderParams);
@@ -410,7 +396,6 @@
                 return null;
             }
             
-            // --- DCA Bot Logic ---
             function stopDcaBot() {
                 if (state.dcaIntervalId) {
                     clearInterval(state.dcaIntervalId);
@@ -427,94 +412,36 @@
                 const symbol = ui.dca.symbol.value.trim().toUpperCase();
                 const amount = ui.dca.amount.value.trim();
                 const frequencyMs = parseInt(ui.dca.frequency.value, 10);
-                
                 if (!symbol || !amount || parseFloat(amount) <= 0) {
-                    logMessage("Vui lòng nhập thông tin hợp lệ cho bot DCA.", true);
-                    return;
+                    logMessage("Vui lòng nhập thông tin hợp lệ cho bot DCA.", true); return;
                 }
-                
                 logMessage(`Bắt đầu bot DCA: Mua ${amount} USDT cho ${symbol} mỗi ${ui.dca.frequency.options[ui.dca.frequency.selectedIndex].text}.`);
                 ui.dca.startBtn.disabled = true;
                 ui.dca.stopBtn.disabled = false;
                 [ui.dca.symbol, ui.dca.amount, ui.dca.frequency].forEach(el => el.disabled = true);
-                
                 const executeDcaPurchase = () => {
                     const nextRunTime = new Date(Date.now() + frequencyMs).toLocaleString();
                     logMessage(`[DCA] Thực hiện mua ${amount} USDT cho ${symbol}...`);
                     updateDcaStatus(`Đang hoạt động. Lần mua tiếp theo: ${nextRunTime}`);
                     placeOrder({ category: 'spot', symbol, side: 'Buy', orderType: 'Market', qty: amount, marketUnit: 'quoteCoin' });
                 };
-                
-                executeDcaPurchase(); // Execute immediately once
+                executeDcaPurchase();
                 state.dcaIntervalId = setInterval(executeDcaPurchase, frequencyMs);
             }
             
             // --- Scanner Bot Logic ---
             const TA = {
-                ema: (data, period) => {
-                    if (!data || data.length < period) return [];
-                    const k = 2 / (period + 1);
-                    let emaData = [data[0]];
-                    for (let i = 1; i < data.length; i++) {
-                        emaData[i] = data[i] * k + emaData[i - 1] * (1 - k);
-                    }
-                    return emaData;
-                },
-                atr: (klines, period) => {
-                    if (!klines || klines.length < period) return [0];
-                    let trueRanges = [];
-                    for (let i = 1; i < klines.length; i++) {
-                        const high = parseFloat(klines[i][2]);
-                        const low = parseFloat(klines[i][3]);
-                        const prevClose = parseFloat(klines[i - 1][4]);
-                        const tr = Math.max(high - low, Math.abs(high - prevClose), Math.abs(low - prevClose));
-                        trueRanges.push(tr);
-                    }
-                    return trueRanges.length === 0 ? [0] : TA.ema(trueRanges, period);
-                },
-                stdDev: (data, period) => {
-                    if (!data || data.length < period) return [];
-                    let stdDevs = [];
-                    for (let i = period - 1; i < data.length; i++) {
-                        const slice = data.slice(i - period + 1, i + 1);
-                        const mean = slice.reduce((a, b) => a + b, 0) / period;
-                        const variance = slice.map(v => Math.pow(v - mean, 2)).reduce((a, b) => a + b, 0) / period;
-                        stdDevs.push(Math.sqrt(variance));
-                    }
-                    return stdDevs;
-                },
-                adx: (klines, period) => {
-                    if (!klines || klines.length < period * 2) return [];
-                    let highs = klines.map(k => parseFloat(k[2]));
-                    let lows = klines.map(k => parseFloat(k[3]));
-                    let plusDM = [0], minusDM = [0];
-                    for (let i = 1; i < highs.length; i++) {
-                        let upMove = highs[i] - highs[i-1];
-                        let downMove = lows[i-1] - lows[i];
-                        plusDM.push(upMove > downMove && upMove > 0 ? upMove : 0);
-                        minusDM.push(downMove > upMove && downMove > 0 ? downMove : 0);
-                    }
-                    let atr = TA.atr(klines, period).slice(-plusDM.length);
-                    if (atr.length === 0) return [];
-                    let smoothedPlusDM = TA.ema(plusDM, period), smoothedMinusDM = TA.ema(minusDM, period);
-                    let plusDI = [], minusDI = [];
-                    for(let i=0; i<smoothedPlusDM.length; i++){
-                        plusDI.push(atr[i] === 0 ? 0 : 100 * (smoothedPlusDM[i] / atr[i]));
-                        minusDI.push(atr[i] === 0 ? 0 : 100 * (smoothedMinusDM[i] / atr[i]));
-                    }
-                    let dxs = [];
-                    for(let i=0; i<plusDI.length; i++){
-                        let denominator = plusDI[i] + minusDI[i];
-                        dxs.push(denominator === 0 ? 0 : 100 * (Math.abs(plusDI[i] - minusDI[i]) / denominator));
-                    }
-                    return TA.ema(dxs, period);
-                }
+                ema: (d, p) => { if (!d || d.length < p) return []; const k = 2 / (p + 1); let e = [d[0]]; for (let i = 1; i < d.length; i++) e[i] = d[i] * k + e[i - 1] * (1 - k); return e },
+                atr: (k, p) => { if (!k || k.length < p) return [0]; let t = []; for (let i = 1; i < k.length; i++) t.push(Math.max(parseFloat(k[i][2]) - parseFloat(k[i][3]), Math.abs(parseFloat(k[i][2]) - parseFloat(k[i - 1][4])), Math.abs(parseFloat(k[i][3]) - parseFloat(k[i - 1][4])))); return t.length === 0 ? [0] : TA.ema(t, p) },
+                stdDev: (d, p) => { if (!d || d.length < p) return []; let s = []; for (let i = p - 1; i < d.length; i++) { const sl = d.slice(i - p + 1, i + 1), m = sl.reduce((a, b) => a + b, 0) / p; s.push(Math.sqrt(sl.map(v => Math.pow(v - m, 2)).reduce((a, b) => a + b, 0) / p)) } return s },
+                adx: (k, p) => { if (!k || k.length < p * 2) return []; let h = k.map(i => parseFloat(i[2])), l = k.map(i => parseFloat(i[3])), pDM = [0], mDM = [0]; for (let i = 1; i < h.length; i++) { let u = h[i] - h[i - 1], d = l[i - 1] - l[i]; pDM.push(u > d && u > 0 ? u : 0); mDM.push(d > u && d > 0 ? d : 0) } let atr = TA.atr(k, p).slice(-pDM.length); if (atr.length === 0) return []; let spDM = TA.ema(pDM, p), smDM = TA.ema(mDM, p), pDI = [], mDI = []; for (let i = 0; i < spDM.length; i++) { pDI.push(atr[i] === 0 ? 0 : 100 * (spDM[i] / atr[i])); mDI.push(atr[i] === 0 ? 0 : 100 * (smDM[i] / atr[i])) } let dxs = []; for (let i = 0; i < pDI.length; i++) { let den = pDI[i] + mDI[i]; dxs.push(den === 0 ? 0 : 100 * (Math.abs(pDI[i] - mDI[i]) / den)) } return TA.ema(dxs, p) }
             };
             
             function stopScanner() {
                 if (state.scannerIntervalId) {
                     clearInterval(state.scannerIntervalId);
                     state.scannerIntervalId = null;
+                    state.recentlyTradedSymbols = [];
                     logMessage("Công cụ quét đã dừng.");
                     updateScannerStatus("Công cụ quét đã dừng.");
                     ui.scanner.startBtn.disabled = false;
@@ -524,53 +451,70 @@
 
             function startScanner() {
                 if (!state.apiKeysValid) {
-                    logMessage('Không thể bắt đầu quét, API keys không hợp lệ.', true);
-                    return;
+                    logMessage('Không thể bắt đầu quét, API keys không hợp lệ.', true); return;
                 }
-                logMessage("Bắt đầu công cụ quét thị trường...");
+                state.recentlyTradedSymbols = [];
+                logMessage("Bắt đầu công cụ quét thị trường. Danh sách các cặp đã giao dịch gần đây đã được xóa.");
                 ui.scanner.startBtn.disabled = true;
                 ui.scanner.stopBtn.disabled = false;
-                executeScan(); // Run immediately
+                executeScan();
                 state.scannerIntervalId = setInterval(executeScan, CONSTANTS.SCANNER_INTERVAL_MS);
+            }
+
+            async function executeAutoTrades(plans) {
+                if (!state.autoTradeEnabled || plans.length === 0) return;
+                logMessage(`[Auto-Trade] Phát hiện ${plans.length} kế hoạch. Bắt đầu kiểm tra để thực thi...`);
+                for (const plan of plans) {
+                    if (state.recentlyTradedSymbols.includes(plan.symbol)) {
+                        logMessage(`[Auto-Trade] Bỏ qua ${plan.symbol} vì đã được giao dịch gần đây.`);
+                        continue;
+                    }
+                    logMessage(`[Auto-Trade] Chuẩn bị thực thi kế hoạch cho ${plan.symbol} với vốn ${plan.allocationUSD} USDT.`);
+                    const orderParams = {
+                        category: 'spot', symbol: plan.symbol, side: 'Buy',
+                        orderType: 'Market', qty: plan.allocationUSD, marketUnit: 'quoteCoin'
+                    };
+                    const result = await placeOrder(orderParams);
+                    if (result && result.orderId) {
+                        logMessage(`[Auto-Trade] Giao dịch thành công cho ${plan.symbol}. Thêm vào danh sách đã giao dịch.`);
+                        state.recentlyTradedSymbols.push(plan.symbol);
+                    } else {
+                        logMessage(`[Auto-Trade] Giao dịch cho ${plan.symbol} thất bại. Sẽ thử lại trong lần quét sau.`, true);
+                    }
+                }
             }
 
             async function executeScan() {
                 if (state.isScanning) return;
                 state.isScanning = true;
-                logMessage(`[Scanner] Bắt đầu quét với thuật toán V3.3.0...`);
-                
+                logMessage(`[Scanner] Bắt đầu quét với thuật toán V3.4.0...`);
                 try {
-                    // Step 0: Get all tradable spot pairs
                     updateScannerStatus(`(B0) Lấy danh sách cặp giao dịch...`); showLoader(ui.scanner.status.textContent);
                     const instrumentsInfo = await bybitRequest('/v5/market/instruments-info', 'GET', { category: 'spot' }, true);
                     if (!instrumentsInfo?.list) throw new Error("Không thể lấy danh sách cặp giao dịch.");
                     const allTradablePairs = instrumentsInfo.list.filter(i => i.status === 'Trading' && i.quoteCoin === 'USDT').map(i => i.symbol);
                     logMessage(`[Scanner] Tìm thấy ${allTradablePairs.length} cặp SPOT USDT.`);
 
-                    // Step 1: Filter by liquidity
                     updateScannerStatus(`(B1) Lọc theo thanh khoản...`); showLoader(ui.scanner.status.textContent);
                     const allTickersData = await bybitRequest('/v5/market/tickers', 'GET', { category: 'spot' }, true);
                     if (!allTickersData?.list) throw new Error("Không thể lấy dữ liệu tickers.");
                     let universe = allTickersData.list.filter(t => allTradablePairs.includes(t.symbol) && parseFloat(t.turnover24h) > CONFIG.MIN_TURNOVER_24H);
                     logMessage(`[Scanner] ${universe.length} cặp đủ thanh khoản được đưa vào phân tích.`);
 
-                    // Step 2 & 3: Enrich with Order Book and Kline data in parallel
                     updateScannerStatus(`(B2+3) Lấy Order Book & Klines cho ${universe.length} cặp...`); showLoader(ui.scanner.status.textContent);
                     const dataPromises = universe.map(t => Promise.all([
                         bybitRequest('/v5/market/orderbook', 'GET', { category: 'spot', symbol: t.symbol, limit: 1 }, true),
                         bybitRequest('/v5/market/kline', 'GET', { category: 'spot', symbol: t.symbol, interval: CONFIG.KLINE_INTERVAL, limit: CONFIG.KLINE_LIMIT }, true)
                     ]));
                     const results = await Promise.all(dataPromises);
-
                     let candidates = [];
                     for (let i = 0; i < universe.length; i++) {
-                        const [ob, klineData] = results[i];
-                        const ticker = universe[i];
+                        const [ob, klineData] = results[i]; const ticker = universe[i];
                         if (ob && klineData?.list?.length >= CONFIG.MIN_KLINE_LENGTH) {
                             const bid = ob?.b?.[0]?.[0] ?? ticker.bid1Price;
                             const ask = ob?.a?.[0]?.[0] ?? ticker.ask1Price;
                             const spreadBps = ((ask-bid)/ask)*10000;
-                            const klines = klineData.list.reverse(); // oldest to newest
+                            const klines = klineData.list.reverse();
                             const closes = klines.map(k => parseFloat(k[4]));
                             const lastPrice = closes[closes.length - 1];
                             const lastAtr = TA.atr(klines, 14).pop() || 0;
@@ -579,9 +523,8 @@
                         }
                     }
                     if (candidates.length === 0) throw new Error("Không có cặp nào có đủ dữ liệu kline.");
-                     logMessage(`[Scanner] ${candidates.length} cặp có đủ dữ liệu để chấm điểm.`);
+                    logMessage(`[Scanner] ${candidates.length} cặp có đủ dữ liệu để chấm điểm.`);
 
-                    // Create dynamic filters based on market conditions
                     const allSpreads = candidates.map(c => c.spread_bps).filter(s => isFinite(s)).sort((a,b) => a-b);
                     const p60Spread = allSpreads[Math.floor(0.60 * allSpreads.length)];
                     const dynamicSpreadMax = Math.max(CONFIG.SPREAD_BPS_MIN, Math.min(p60Spread, CONFIG.SPREAD_BPS_MAX));
@@ -592,44 +535,39 @@
                     const p95Atr = atrPercentiles[Math.floor(atrPercentiles.length*0.95)];
                     const dynamicAtrMin = Math.max(p40Atr, CONFIG.ATR_PCT_MIN_BASE);
                     const dynamicAtrMax = Math.min(p95Atr, CONFIG.ATR_PCT_MAX_BASE);
-                     logMessage(`[Scanner] Ngưỡng ATR động: [${dynamicAtrMin.toFixed(2)}%, ${dynamicAtrMax.toFixed(2)}%]`);
+                    logMessage(`[Scanner] Ngưỡng ATR động: [${dynamicAtrMin.toFixed(2)}%, ${dynamicAtrMax.toFixed(2)}%]`);
 
-                    // Step 4: Score all candidates
                     updateScannerStatus(`(B4) Chấm điểm ${candidates.length} cặp...`); showLoader(ui.scanner.status.textContent);
                     let processedCandidates = [];
                     for (const cand of candidates) {
                         if (cand.atrPct < dynamicAtrMin || cand.atrPct > dynamicAtrMax) continue;
                         if (cand.spread_bps > dynamicSpreadMax) continue;
-                        
                         const closes = cand.klines.map(k => parseFloat(k[4]));
                         const adx = TA.adx(cand.klines, 14).pop() || 0;
                         const sma20 = closes.slice(-20).reduce((a,b) => a+b, 0) / 20;
                         const stdDev = TA.stdDev(closes, 20).pop() || 0;
                         const bbWidth = sma20 > 0 ? (4 * stdDev) / sma20 : 0;
-                        
                         let regime = "Range";
                         if (adx >= CONFIG.ADX_TREND_THRESHOLD) regime = "Trend";
                         if (bbWidth < CONFIG.BBW_SQUEEZE_THRESHOLD && regime !== 'Trend') regime = "Squeeze";
-                        
                         const roc15m = closes.length > 1 ? (closes[closes.length-1] / closes[closes.length-2] - 1) * 100 : 0;
                         const ema20 = TA.ema(closes, 20).pop() || 0;
                         const ema50 = TA.ema(closes, 50).pop() || 0;
-                        
                         let s_trend = 0.5 * roc15m + 0.3 * (ema20 > ema50 ? 1 : -1) - 0.2 * (cand.spread_bps / 20);
                         let s_range = cand.lastAtr > 0 ? 0.5 * (Math.abs(closes[closes.length-1] - sma20) / cand.lastAtr) - 0.3 * bbWidth - 0.2 * (cand.spread_bps / 20) : -1;
                         let s_squeeze = -0.5 * bbWidth + 0.3 * roc15m - 0.2 * (cand.spread_bps / 20);
-                        
                         const raos = 0.5 * s_range + 0.3 * s_squeeze + 0.2 * s_trend;
                         processedCandidates.push({ ...cand, raos, regime });
                     }
                     processedCandidates.sort((a, b) => b.raos - a.raos);
                     
-                    // Step 5: Select top 3 and generate plans
                     const topPicks = processedCandidates.slice(0, 3);
                     const finalPlans = generateTradingPlans(topPicks);
                     displayScanResults(finalPlans);
                     logMessage(`[Scanner] Quét hoàn tất. Hiển thị ${finalPlans.length} kế hoạch giao dịch.`);
                     updateScannerStatus(`Quét xong. Cập nhật lần cuối: ${new Date().toLocaleTimeString()}`);
+                    
+                    await executeAutoTrades(finalPlans);
                 
                 } catch (error) {
                     logMessage(`[Scanner] Lỗi: ${error.message}`, true);
@@ -648,14 +586,11 @@
                     const regimeCoeff = CONFIG.EDGE_COEFFICIENTS[c.regime.toLowerCase()] || CONFIG.EDGE_COEFFICIENTS.range;
                     switch(c.regime) {
                         case "Squeeze":
-                            plan = { entry: "Buy-Stop tại Donchian20 High + buffer", SL: `entry - 0.9 * ATR`, TP1: `+${regimeCoeff.tp1ATR} * ATR`, TP2: `+${regimeCoeff.tp2ATR} * ATR` };
-                            break;
+                            plan = { entry: "Buy-Stop tại Donchian20 High + buffer", SL: `entry - 0.9 * ATR`, TP1: `+${regimeCoeff.tp1ATR} * ATR`, TP2: `+${regimeCoeff.tp2ATR} * ATR` }; break;
                         case "Range":
-                            plan = { entry: "Limit gần VWAP - 0.6 * ATR", SL: `-1.0 * ATR`, TP1: `+${regimeCoeff.tp1ATR} * ATR`, TP2: `+${regimeCoeff.tp2ATR} * ATR` };
-                            break;
+                            plan = { entry: "Limit gần VWAP - 0.6 * ATR", SL: `-1.0 * ATR`, TP1: `+${regimeCoeff.tp1ATR} * ATR`, TP2: `+${regimeCoeff.tp2ATR} * ATR` }; break;
                         case "Trend":
-                            plan = { entry: "Buy-stop trên EMA20", SL: `-0.9 * ATR`, TP1: `+${regimeCoeff.tp1ATR} * ATR`, TP2: `+${regimeCoeff.tp2ATR} * ATR` };
-                            break;
+                            plan = { entry: "Buy-stop trên EMA20", SL: `-0.9 * ATR`, TP1: `+${regimeCoeff.tp1ATR} * ATR`, TP2: `+${regimeCoeff.tp2ATR} * ATR` }; break;
                     }
                     return { ...c, plan, allocationUSD: (totalCapital * CONFIG.CAPITAL_ALLOCATION_PCT[i]).toFixed(2) };
                 });
@@ -731,6 +666,15 @@
             ui.scanner.startBtn.addEventListener('click', startScanner);
             ui.scanner.stopBtn.addEventListener('click', stopScanner);
             
+            ui.scanner.autoTradeToggle.addEventListener('change', (e) => {
+                state.autoTradeEnabled = e.target.checked;
+                if (state.autoTradeEnabled) {
+                    logMessage('[Auto-Trade] Tự động giao dịch đã được BẬT. Các tín hiệu hợp lệ SẼ được thực thi.', false);
+                } else {
+                    logMessage('[Auto-Trade] Tự động giao dịch đã được TẮT.', false);
+                }
+            });
+
             // --- Initialization ---
             function initialize() {
                 loadAndCheckApiKeys();
