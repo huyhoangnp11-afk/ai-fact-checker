@@ -126,7 +126,7 @@
         
         <!-- CSH-RT Bot Section -->
         <div class="bg-gray-700/50 p-6 rounded-xl mt-6">
-            <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bot CSH-RT (V5.0.0 - Auto-Pick Real-Time)</h2>
+            <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bot CSH-RT (V5.0.1 - Auto-Pick Real-Time)</h2>
             <div class="bg-purple-900 border-l-4 border-purple-500 text-purple-100 p-4 rounded-lg mb-4" role="alert">
                 <p><strong class="font-bold">Cách Hoạt Động:</strong> Bot sẽ tự động quét và chọn Top 3 cặp giao dịch tốt nhất sau mỗi nến 15 phút, sau đó bật chế độ giao dịch real-time (CSH-RT) cho các cặp này.</p>
             </div>
@@ -724,7 +724,7 @@
             }
              
             async function primeSymbolMeta(sym){
-              const info = await bybitRequest('/v5/market/instruments-info', {category:'spot', symbol:sym}, true);
+              const info = await bybitRequest('/v5/market/instruments-info', 'GET', {category:'spot', symbol:sym}, true);
               const it = info?.list?.[0];
               if (!it) return null;
               const st = ensureSym(sym);
@@ -923,11 +923,11 @@
             async function autoPickCSHRT(topN = 3) {
               try {
                 logMessage(`[CSH-RT] (S0) Lấy universe…`);
-                const inst = await bybitRequest('/v5/market/instruments-info', { category: 'spot' }, true);
+                const inst = await bybitRequest('/v5/market/instruments-info', 'GET', { category: 'spot' }, true);
                 if (!inst?.list) throw new Error("Không lấy được instruments-info.");
                 const tradables = inst.list.filter(i => i.status==='Trading' && i.quoteCoin==='USDT').map(i => i.symbol);
 
-                const tickers = await bybitRequest('/v5/market/tickers', { category: 'spot' }, true);
+                const tickers = await bybitRequest('/v5/market/tickers', 'GET', { category: 'spot' }, true);
                 if (!tickers?.list) throw new Error("Không lấy được tickers.");
                 let uni = tickers.list.filter(t => tradables.includes(t.symbol));
                 
@@ -935,7 +935,7 @@
                 uni = uni.slice(0, 150);
 
                 logMessage(`[CSH-RT] (S1) Đo spread…`);
-                const ob = await pMap(uni, 20, t => bybitRequest('/v5/market/orderbook', { category:'spot', symbol:t.symbol, limit:1 }, true));
+                const ob = await pMap(uni, 20, t => bybitRequest('/v5/market/orderbook', 'GET', { category:'spot', symbol:t.symbol, limit:1 }, true));
                 const enriched = uni.map((t,i)=>{
                   const o = ob[i];
                   const ask = o?.a?.[0]?.[0] ?? t.ask1Price, bid = o?.b?.[0]?.[0] ?? t.bid1Price;
@@ -948,7 +948,7 @@
                 const liq = enriched.filter(x => x.spread_bps <= SPREAD_MAX);
 
                 logMessage(`[CSH-RT] (S2) ATR & nến cuối (15m) cho ${liq.length} cặp…`);
-                const kl = await pMap(liq, 16, t => bybitRequest('/v5/market/kline', { category:'spot', symbol:t.symbol, interval:'15', limit:200 }, true));
+                const kl = await pMap(liq, 16, t => bybitRequest('/v5/market/kline', 'GET', { category:'spot', symbol:t.symbol, interval:'15', limit:200 }, true));
                 const cands = [];
                 for (let i=0;i<liq.length;i++){
                   const list = kl[i]?.list; if (!list || list.length<50) continue;
