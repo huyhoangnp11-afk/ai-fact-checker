@@ -29,6 +29,11 @@
             border-color: #0891B2; /* cyan-500 */
             color: #ffffff;
         }
+        /* Style for the 'regime-trend' class used in scanner results */
+        .regime-trend {
+            background-color: #059669; /* bg-green-700 */
+            color: #D1FAE5; /* text-green-100 */
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-200 min-h-screen flex items-center justify-center p-4">
@@ -45,27 +50,27 @@
             <!-- Left Column: Settings, Account -->
             <div class="lg:col-span-1 space-y-6">
                 <div class="bg-gray-700/50 p-6 rounded-xl">
-                     <div class="flex items-center justify-between border-b border-gray-600 pb-3 mb-4">
-                        <h2 class="text-xl font-semibold">Cài đặt API</h2>
-                        <span id="apiStatus" class="text-xs font-medium px-2.5 py-1 rounded-full">&nbsp;</span>
-                    </div>
-                    <div class="space-y-4">
-                        <div>
-                            <label for="apiKey" class="block text-sm font-medium text-gray-300 mb-1">API Key</label>
-                            <input type="password" id="apiKey" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-2 focus:ring-blue-500">
+                        <div class="flex items-center justify-between border-b border-gray-600 pb-3 mb-4">
+                            <h2 class="text-xl font-semibold">Cài đặt API</h2>
+                            <span id="apiStatus" class="text-xs font-medium px-2.5 py-1 rounded-full">&nbsp;</span>
                         </div>
-                        <div>
-                            <label for="apiSecret" class="block text-sm font-medium text-gray-300 mb-1">API Secret</label>
-                            <input type="password" id="apiSecret" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-2 focus:ring-blue-500">
-                        </div>
-                         <div class="flex items-center justify-between">
-                            <button id="saveApi" class="w-2/3 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition transform hover:scale-105">Lưu API Key</button>
-                            <div class="flex items-center space-x-2 text-sm">
-                               <label for="showApiKeys" class="text-gray-400">Hiện</label>
-                               <input type="checkbox" id="showApiKeys" class="form-checkbox h-5 w-5 text-blue-500 bg-gray-900 border-gray-600 rounded focus:ring-blue-500">
+                        <div class="space-y-4">
+                            <div>
+                                <label for="apiKey" class="block text-sm font-medium text-gray-300 mb-1">API Key</label>
+                                <input type="password" id="apiKey" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="apiSecret" class="block text-sm font-medium text-gray-300 mb-1">API Secret</label>
+                                <input type="password" id="apiSecret" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-2 focus:ring-blue-500">
+                            </div>
+                             <div class="flex items-center justify-between">
+                                <button id="saveApi" class="w-2/3 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition transform hover:scale-105">Lưu API Key</button>
+                                <div class="flex items-center space-x-2 text-sm">
+                                    <label for="showApiKeys" class="text-gray-400">Hiện</label>
+                                    <input type="checkbox" id="showApiKeys" class="form-checkbox h-5 w-5 text-blue-500 bg-gray-900 border-gray-600 rounded focus:ring-blue-500">
+                                </div>
                             </div>
                         </div>
-                    </div>
                 </div>
 
                 <div class="bg-gray-700/50 p-6 rounded-xl">
@@ -104,12 +109,12 @@
                         </div>
                         <div class="md:col-span-1 flex items-end pb-1">
                              <label for="autoTradeToggle" class="flex items-center cursor-pointer">
-                                <div class="relative">
-                                    <input type="checkbox" id="autoTradeToggle" class="sr-only peer">
-                                    <div class="block bg-gray-600 w-14 h-8 rounded-full peer-checked:bg-green-600"></div>
-                                    <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform transform peer-checked:translate-x-full"></div>
-                                </div>
-                                <span class="ml-3 text-sm font-medium text-gray-300">Tự động</span>
+                                 <div class="relative">
+                                     <input type="checkbox" id="autoTradeToggle" class="sr-only peer">
+                                     <div class="block bg-gray-600 w-14 h-8 rounded-full peer-checked:bg-green-600"></div>
+                                     <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform transform peer-checked:translate-x-full"></div>
+                                 </div>
+                                 <span class="ml-3 text-sm font-medium text-gray-300">Tự động</span>
                             </label>
                         </div>
                         <div class="md:col-span-1 grid grid-cols-2 gap-2">
@@ -243,37 +248,44 @@
                     for (let i = 1; i < d.length; i++) e[i] = d[i] * k + e[i - 1] * (1 - k);
                     return e;
                 },
+                // CORRECTED: Rewrote RSI function for better accuracy and robustness.
                 rsi: (d, p) => {
                     if (!d || d.length < p + 1) return [];
-                    let gains = 0, losses = 0;
-                    for (let i = 1; i <= p; i++) {
+                    let gains = [];
+                    let losses = [];
+                    for (let i = 1; i < d.length; i++) {
                         const diff = d[i] - d[i - 1];
-                        if (diff > 0) gains += diff;
-                        else losses -= diff;
+                        gains.push(diff > 0 ? diff : 0);
+                        losses.push(diff < 0 ? -diff : 0);
                     }
-                    let avgGain = gains / p;
-                    let avgLoss = losses / p;
-                    if (avgLoss === 0) return Array(d.length - p).fill(100);
 
-                    let rsiValues = [100 - (100 / (1 + (avgGain / avgLoss)))];
+                    if (gains.length < p) return [];
+                    
+                    let avgGain = gains.slice(0, p).reduce((a, b) => a + b, 0) / p;
+                    let avgLoss = losses.slice(0, p).reduce((a, b) => a + b, 0) / p;
 
-                    for (let i = p + 1; i < d.length; i++) {
-                        const diff = d[i] - d[i - 1];
-                        let gain = 0, loss = 0;
-                        if (diff > 0) gain = diff;
-                        else loss = -diff;
-                        avgGain = (avgGain * (p - 1) + gain) / p;
-                        avgLoss = (avgLoss * (p - 1) + loss) / p;
+                    let rsiValues = [];
+                    if (avgLoss === 0) {
+                        rsiValues.push(100);
+                    } else {
+                        const rs = avgGain / avgLoss;
+                        rsiValues.push(100 - (100 / (1 + rs)));
+                    }
+
+                    for (let i = p; i < gains.length; i++) {
+                        avgGain = (avgGain * (p - 1) + gains[i]) / p;
+                        avgLoss = (avgLoss * (p - 1) + losses[i]) / p;
                         if (avgLoss === 0) {
-                           rsiValues.push(100);
+                            rsiValues.push(100);
                         } else {
-                           rsiValues.push(100 - (100 / (1 + (avgGain / avgLoss))));
+                            const rs = avgGain / avgLoss;
+                            rsiValues.push(100 - (100 / (1 + rs)));
                         }
                     }
                     return rsiValues;
                 },
                 atr: (k, p) => {
-                    if (!k || k.length < p) return [];
+                    if (!k || k.length < p + 1) return [];
                     let trValues = [];
                     for (let i = 1; i < k.length; i++) {
                         const high = parseFloat(k[i][2]);
@@ -282,7 +294,7 @@
                         const tr = Math.max(high - low, Math.abs(high - prevClose), Math.abs(low - prevClose));
                         trValues.push(tr);
                     }
-                    if (trValues.length === 0) return [];
+                    if (trValues.length < p) return [];
                     return TA.ema(trValues, p);
                 }
             };
@@ -315,14 +327,16 @@
                     const nsStr = j.result?.timeNano;
                     return nsStr ? (BigInt(nsStr) / 1000000n).toString() : (BigInt(j.result.timeSecond) * 1000n).toString();
                 } catch (e) {
+                    logMessage("Không thể lấy thời gian máy chủ Bybit, sử dụng thời gian hệ thống. Sai lệch có thể gây ra lỗi.", true);
                     return Date.now().toString();
                 }
             }
             
+            // CORRECTED: Enhanced error handling for API requests.
             async function bybitRequest(endpoint, method, params = {}, isPublic = false) {
                 const isValidationCall = endpoint === '/v5/user/query-api';
                 if (!isPublic && !state.apiKeysValid && !isValidationCall) {
-                    if (endpoint.includes('/v5/market/tickers')) return null;
+                    if (endpoint.includes('/v5/market/')) return null;
                     logMessage('API Keys không hợp lệ hoặc chưa được lưu.', true);
                     return null;
                 }
@@ -348,6 +362,7 @@
                     const response = await fetch(url, { method, headers, body });
                     const data = await response.json();
                     if (data.retCode !== 0) {
+                        if (isValidationCall) return data;
                         if (data.retMsg.includes("Not supported symbols") || data.retMsg.includes("Instrument not found")) return null;
                         throw new Error(`Bybit API Error: ${data.retMsg} (Code: ${data.retCode})`);
                     }
@@ -356,7 +371,7 @@
                     if (!isValidationCall) { 
                         logMessage(error.message, true);
                     }
-                    return null;
+                    return isValidationCall ? { retCode: -1, retMsg: error.message } : null;
                 }
             }
             
@@ -374,11 +389,13 @@
                 return null;
             }
 
-            function updateApiStatus(isValid) {
+            // CORRECTED: Enhanced API status updates with detailed messages.
+            function updateApiStatus(isValid, message = '') {
                 state.apiKeysValid = isValid;
                 const activeClasses = 'bg-green-900 text-green-300';
                 const inactiveClasses = 'bg-red-900 text-red-300';
                 ui.apiStatus.textContent = isValid ? 'Hợp lệ' : 'Không hợp lệ';
+                ui.apiStatus.title = message; // Add tooltip with error message
                 ui.apiStatus.className = `text-xs font-medium px-2.5 py-1 rounded-full ${isValid ? activeClasses : inactiveClasses}`;
                 ui.scanner.startBtn.disabled = !isValid;
                 ui.csh.startBtn.disabled = !isValid;
@@ -386,19 +403,22 @@
 
             async function checkApiKeys() {
                 if (!state.apiKey || !state.apiSecret) {
-                    updateApiStatus(false); return;
+                    updateApiStatus(false, 'API Key hoặc Secret rỗng.'); return;
                 }
                 const result = await bybitRequest('/v5/user/query-api', 'GET', {});
-                updateApiStatus(!!result);
-                if(!!result) {
+                const isValid = result?.retCode === 0;
+                updateApiStatus(isValid, isValid ? 'Xác thực thành công' : result?.retMsg);
+
+                if(isValid) {
                     logMessage('Xác thực API Key thành công.');
                     await fetchWalletBalance();
                 } else {
-                     logMessage('API Keys không hợp lệ.', true)
+                    logMessage(`API Keys không hợp lệ: ${result?.retMsg || 'Không thể kết nối.'}`, true);
                 }
             }
             
             async function fetchWalletBalance() {
+                if(!state.apiKeysValid) return;
                 const result = await bybitRequest('/v5/account/wallet-balance', 'GET', { accountType: 'UNIFIED' });
                 if (result?.list?.[0]) {
                     const account = result.list[0];
@@ -433,6 +453,11 @@
                 const tradeToClose = { ...state.activeTrade }; 
                 state.activeTrade = null; 
                 clearInterval(tradeToClose.intervalId);
+                
+                if (!tradeToClose.quantity || tradeToClose.quantity <= 0) {
+                    logMessage(`[Trade Manager] Lỗi: Số lượng không hợp lệ (${tradeToClose.quantity}) cho ${tradeToClose.symbol}. Không thể đóng lệnh.`, true);
+                    return;
+                }
 
                 logMessage(`[Trade Manager] Đóng lệnh ${tradeToClose.symbol} vì: ${reason}.`, false);
                 
@@ -598,14 +623,17 @@
                     ui.clearPnlHistoryBtn.classList.remove('hidden');
                 });
                 ui.clearPnlHistoryBtn.addEventListener('click', () => {
-                    state.pnlHistory = [];
-                    localStorage.removeItem('bybitPnlHistory');
-                    if(state.pnlChart) {
-                        state.pnlChart.data.labels = [];
-                        state.pnlChart.data.datasets = [];
-                        state.pnlChart.update();
+                    // CORRECTED: Added confirmation before deleting history.
+                    if (confirm("Bạn có chắc muốn xóa toàn bộ lịch sử lợi nhuận không?")) {
+                        state.pnlHistory = [];
+                        localStorage.removeItem('bybitPnlHistory');
+                        if(state.pnlChart) {
+                            state.pnlChart.data.labels = [];
+                            state.pnlChart.data.datasets = [];
+                            state.pnlChart.update();
+                        }
+                        logMessage('[PNL] Lịch sử PNL đã được xóa.');
                     }
-                    logMessage('[PNL] Lịch sử PNL đã được xóa.');
                 });
             }
              // --- Charting Functions ---
@@ -684,16 +712,16 @@
             let CSHRT_rotationTimer = null;
 
             function wsConnect() {
-              if (ws && ws.readyState === WebSocket.OPEN) return;
-              ws = new WebSocket(CONSTANTS.WS_SPOT_URL);
-              ws.onopen = () => {
-                logMessage("[WS] Connected (public spot)");
-                for (const t of wsSubs) wsSend({op:"subscribe", args:[t]});
-                wsPing = setInterval(()=> wsSend({op:"ping"}), 20000);
-              };
-              ws.onclose = () => { logMessage("[WS] Closed", true); if (wsPing) clearInterval(wsPing); setTimeout(wsConnect, 1500); };
-              ws.onerror = (e) => logMessage("[WS] Error " + (e?.message||""), true);
-              ws.onmessage = wsHandleMessage;
+                if (ws && ws.readyState === WebSocket.OPEN) return;
+                ws = new WebSocket(CONSTANTS.WS_SPOT_URL);
+                ws.onopen = () => {
+                    logMessage("[WS] Connected (public spot)");
+                    for (const t of wsSubs) wsSend({op:"subscribe", args:[t]});
+                    wsPing = setInterval(()=> wsSend({op:"ping"}), 20000);
+                };
+                ws.onclose = () => { logMessage("[WS] Closed", true); if (wsPing) clearInterval(wsPing); setTimeout(wsConnect, 1500); };
+                ws.onerror = (e) => logMessage("[WS] Error " + (e?.message||""), true);
+                ws.onmessage = wsHandleMessage;
             }
 
             function wsSend(obj){ if (ws?.readyState===WebSocket.OPEN) ws.send(JSON.stringify(obj)); }
@@ -702,53 +730,53 @@
             function ensureSym(sym){ if (!CSH.has(sym)) CSH.set(sym, { repriceCount:0 }); return CSH.get(sym); }
 
             function wsHandleMessage(ev){
-              const msg = JSON.parse(ev.data||"{}");
-              if (!msg.topic || !msg.data) return;
+                const msg = JSON.parse(ev.data||"{}");
+                if (!msg.topic || !msg.data) return;
 
-              if (msg.topic.startsWith("kline.")) {
-                const d = Array.isArray(msg.data) ? msg.data[0] : msg.data;
-                const [, interval, sym] = msg.topic.split(".");
-                if (interval !== "15") return; 
-                const st = ensureSym(sym);
-                const O = parseFloat(d.open), H=parseFloat(d.high), L=parseFloat(d.low), C=parseFloat(d.close);
-                if (d.confirm) {
-                  const R = Math.max(1e-12, H - L);
-                  st.lastClosed = {O,H,L,C,R,ts: d.end};
-                  st.entry = L + 0.18 * R;
-                  st.tp    = L + 0.55 * R;
-                  st.candleEndTs = Number(d.end) + 15*60*1000;
-                  st.repriceCount = 0;
-                  logMessage(`[CSH] ${sym} new plan: Entry=${st.entry.toFixed(5)} TP=${st.tp.toFixed(5)}`);
-                } else {
-                  st.live = {O,H,L,C};
+                if (msg.topic.startsWith("kline.")) {
+                    const d = Array.isArray(msg.data) ? msg.data[0] : msg.data;
+                    const [, interval, sym] = msg.topic.split(".");
+                    if (interval !== "15") return; 
+                    const st = ensureSym(sym);
+                    const O = parseFloat(d.open), H=parseFloat(d.high), L=parseFloat(d.low), C=parseFloat(d.close);
+                    if (d.confirm) {
+                        const R = Math.max(1e-12, H - L);
+                        st.lastClosed = {O,H,L,C,R,ts: d.end};
+                        st.entry = L + 0.18 * R;
+                        st.tp    = L + 0.55 * R;
+                        st.candleEndTs = Number(d.end) + 15*60*1000;
+                        st.repriceCount = 0;
+                        logMessage(`[CSH] ${sym} new plan: Entry=${st.entry.toFixed(5)} TP=${st.tp.toFixed(5)}`);
+                    } else {
+                        st.live = {O,H,L,C};
+                    }
+                    updateCshStatusUI();
+                    return;
                 }
-                updateCshStatusUI();
-                return;
-              }
 
-              if (msg.topic.startsWith("orderbook.")) {
-                const sym = msg.topic.split(".").pop();
-                const st = ensureSym(sym);
-                const ob = Array.isArray(msg.data) ? msg.data[0] : msg.data;
-                const ask = (ob.a?.[0]?.[0]) ?? ob.ask1Price ?? ob.bestAskPrice;
-                const bid = (ob.b?.[0]?.[0]) ?? ob.bid1Price ?? ob.bestBidPrice;
-                if (!ask || !bid) return;
-                st.mid = (parseFloat(ask) + parseFloat(bid))/2;
-                maybePlaceOrReprice(sym);
-                updateCshStatusUI();
-                return;
-              }
+                if (msg.topic.startsWith("orderbook.")) {
+                    const sym = msg.topic.split(".").pop();
+                    const st = ensureSym(sym);
+                    const ob = Array.isArray(msg.data) ? msg.data[0] : msg.data;
+                    const ask = (ob.a?.[0]?.[0]) ?? ob.ask1Price ?? ob.bestAskPrice;
+                    const bid = (ob.b?.[0]?.[0]) ?? ob.bid1Price ?? ob.bestBidPrice;
+                    if (!ask || !bid) return;
+                    st.mid = (parseFloat(ask) + parseFloat(bid))/2;
+                    maybePlaceOrReprice(sym);
+                    updateCshStatusUI();
+                    return;
+                }
             }
-             
+              
             async function primeSymbolMeta(sym){
-              const info = await bybitRequest('/v5/market/instruments-info', 'GET', {category:'spot', symbol:sym}, true);
-              const it = info?.list?.[0];
-              if (!it) return null;
-              const st = ensureSym(sym);
-              st.tickSize   = parseFloat(it.priceFilter?.tickSize ?? "0.00000001");
-              st.lotStep    = parseFloat(it.lotSizeFilter?.basePrecision ?? it.lotSizeFilter?.qtyStep ?? "0.00000001");
-              st.minNotional= parseFloat(it.lotSizeFilter?.minOrderAmt ?? "2");
-              return st;
+                const info = await bybitRequest('/v5/market/instruments-info', 'GET', {category:'spot', symbol:sym}, true);
+                const it = info?.list?.[0];
+                if (!it) return null;
+                const st = ensureSym(sym);
+                st.tickSize    = parseFloat(it.priceFilter?.tickSize ?? "0.00000001");
+                st.lotStep   = parseFloat(it.lotSizeFilter?.basePrecision ?? it.lotSizeFilter?.qtyStep ?? "0.00000001");
+                st.minNotional= parseFloat(it.lotSizeFilter?.minOrderAmt ?? "2");
+                return st;
             }
 
             function roundTo(x, step){ return Math.floor(x/step) * step; }
@@ -809,9 +837,9 @@
                 if (st.repriceCount < 3 && st.mid < st.openOrderPrice * 0.9995) {
                     const newP = Math.max(st.entry*(1-0.001), st.openOrderPrice - (st.tickSize||1e-8));
                     if (newP < st.openOrderPrice) {
-                      await cancelOrder(sym, st.openOrderId);
-                      st.repriceCount++;
-                      await placeLimitMaker(sym, newP, parseFloat(ui.csh.capitalInput.value));
+                        await cancelOrder(sym, st.openOrderId);
+                        st.repriceCount++;
+                        await placeLimitMaker(sym, newP, parseFloat(ui.csh.capitalInput.value));
                     }
                 }
             }
@@ -875,181 +903,181 @@
                 }
                 logMessage(`[CSH] Realtime OFF: ${symbols.join(", ")}`);
                 if(wsSubs.size === 0 && ws) ws.close();
-                ui.csh.startBtn.disabled = false;
+                ui.csh.startBtn.disabled = !state.apiKeysValid;
                 ui.csh.stopBtn.disabled = true;
                 updateCshStatusUI();
             }
-           
+            
             // --- Auto-Picker for CSH-RT ---
             async function pMap(items, limit, mapper) {
-              const ret = []; let i = 0; const running = new Set();
-              async function next() {
-                if (i >= items.length) return;
-                const idx = i++;
-                const p = Promise.resolve(mapper(items[idx], idx)).then(v => { ret[idx] = v; running.delete(p); });
-                running.add(p);
-                if (running.size >= limit) await Promise.race(running);
-                return next();
-              }
-              for (let k = 0; k < limit; k++) next();
-              await Promise.all(running);
-              return ret;
+                const ret = []; let i = 0; const running = new Set();
+                async function next() {
+                    if (i >= items.length) return;
+                    const idx = i++;
+                    const p = Promise.resolve(mapper(items[idx], idx)).then(v => { ret[idx] = v; running.delete(p); });
+                    running.add(p);
+                    if (running.size >= limit) await Promise.race(running);
+                    return next();
+                }
+                for (let k = 0; k < limit; k++) next();
+                await Promise.all(running);
+                return ret;
             }
 
             function computeSpreadBps(b,a){ const bid=parseFloat(b),ask=parseFloat(a);if(!isFinite(bid)||!isFinite(ask)||ask<=0||bid<=0)return 1e9;const mid=(ask+bid)/2;return mid>0?((ask-bid)/mid)*10000:1e9 }
             
             function computeCandleEdge(lastK, atrPrice, volZ) {
-              const O = parseFloat(lastK[1]), H = parseFloat(lastK[2]), L = parseFloat(lastK[3]), C = parseFloat(lastK[4]);
-              const R = Math.max(1e-12, H - L); if (!isFinite(R) || R<=0) return null;
-              const LW = Math.max(0, Math.min(O, C) - L);
-              const lwR  = LW / R;
-              const posC = (C - L) / R;
-              const exp  = atrPrice > 0 ? (R / atrPrice) : 0;
+                const O = parseFloat(lastK[1]), H = parseFloat(lastK[2]), L = parseFloat(lastK[3]), C = parseFloat(lastK[4]);
+                const R = Math.max(1e-12, H - L); if (!isFinite(R) || R<=0) return null;
+                const LW = Math.max(0, Math.min(O, C) - L);
+                const lwR  = LW / R;
+                const posC = (C - L) / R;
+                const exp  = atrPrice > 0 ? (R / atrPrice) : 0;
 
-              const clip = (x,lo=0,hi=1)=>Math.max(lo,Math.min(hi,x));
-              const s_exp  = clip((exp - 1.0)/1.5);
-              const s_wick = clip((lwR - 0.35)/0.35);
-              const s_pos  = clip((0.45 - posC)/0.45);
-              const s_vol  = clip((volZ - 2.0)/3.0);
-              const CES_raw = 0.32*s_exp + 0.28*s_wick + 0.22*s_pos + 0.18*s_vol;
+                const clip = (x,lo=0,hi=1)=>Math.max(lo,Math.min(hi,x));
+                const s_exp  = clip((exp - 1.0)/1.5);
+                const s_wick = clip((lwR - 0.35)/0.35);
+                const s_pos  = clip((0.45 - posC)/0.45);
+                const s_vol  = clip((volZ - 2.0)/3.0);
+                const CES_raw = 0.32*s_exp + 0.28*s_wick + 0.22*s_pos + 0.18*s_vol;
 
-              const alpha = 0.18, beta = 0.55;
-              const entry = L + alpha*R;
-              const tp = L + beta*R;
+                const alpha = 0.18, beta = 0.55;
+                const entry = L + alpha*R;
+                const tp = L + beta*R;
 
-              return { R, lwR, posC, exp, CES_raw, entry, tp, O,H,L,C };
+                return { R, lwR, posC, exp, CES_raw, entry, tp, O,H,L,C };
             }
 
             function estimateCostPct_maker(){ return 0.23; }
 
             function corr15m(closesA, closesB) {
-              const n = Math.min(closesA.length, closesB.length, 16);
-              if (n < 8) return 0;
-              const ra = [], rb = [];
-              for (let i=closesA.length-n+1; i<closesA.length; i++){
-                ra.push( (closesA[i]/closesA[i-1])-1 );
-                rb.push( (closesB[i]/closesB[i-1])-1 );
-              }
-              const ma = ra.reduce((a,b)=>a+b,0)/ra.length;
-              const mb = rb.reduce((a,b)=>a+b,0)/rb.length;
-              let num=0, da=0, db=0;
-              for (let i=0;i<ra.length;i++){ const xa=ra[i]-ma, xb=rb[i]-mb; num+=xa*xb; da+=xa*xa; db+=xb*xb; }
-              return (da>0 && db>0) ? (num/Math.sqrt(da*db)) : 0;
+                const n = Math.min(closesA.length, closesB.length, 16);
+                if (n < 8) return 0;
+                const ra = [], rb = [];
+                for (let i=closesA.length-n+1; i<closesA.length; i++){
+                    ra.push( (closesA[i]/closesA[i-1])-1 );
+                    rb.push( (closesB[i]/closesB[i-1])-1 );
+                }
+                const ma = ra.reduce((a,b)=>a+b,0)/ra.length;
+                const mb = rb.reduce((a,b)=>a+b,0)/rb.length;
+                let num=0, da=0, db=0;
+                for (let i=0;i<ra.length;i++){ const xa=ra[i]-ma, xb=rb[i]-mb; num+=xa*xb; da+=xa*xa; db+=xb*xb; }
+                return (da>0 && db>0) ? (num/Math.sqrt(da*db)) : 0;
             }
 
             async function autoPickCSHRT(topN = 3) {
-              try {
-                logMessage(`[CSH-RT] (S0) Lấy universe…`);
-                const inst = await bybitRequest('/v5/market/instruments-info', 'GET', { category: 'spot' }, true);
-                if (!inst?.list) throw new Error("Không lấy được instruments-info.");
-                const tradables = inst.list.filter(i => i.status==='Trading' && i.quoteCoin==='USDT').map(i => i.symbol);
+                try {
+                    logMessage(`[CSH-RT] (S0) Lấy universe…`);
+                    const inst = await bybitRequest('/v5/market/instruments-info', 'GET', { category: 'spot' }, true);
+                    if (!inst?.list) throw new Error("Không lấy được instruments-info.");
+                    const tradables = inst.list.filter(i => i.status==='Trading' && i.quoteCoin==='USDT').map(i => i.symbol);
 
-                const tickers = await bybitRequest('/v5/market/tickers', 'GET', { category: 'spot' }, true);
-                if (!tickers?.list) throw new Error("Không lấy được tickers.");
-                let uni = tickers.list.filter(t => tradables.includes(t.symbol));
-                
-                uni.sort((a,b)=> parseFloat(b.turnover24h) - parseFloat(a.turnover24h) );
-                uni = uni.slice(0, 150);
+                    const tickers = await bybitRequest('/v5/market/tickers', 'GET', { category: 'spot' }, true);
+                    if (!tickers?.list) throw new Error("Không lấy được tickers.");
+                    let uni = tickers.list.filter(t => tradables.includes(t.symbol));
+                    
+                    uni.sort((a,b)=> parseFloat(b.turnover24h) - parseFloat(a.turnover24h) );
+                    uni = uni.slice(0, 150);
 
-                logMessage(`[CSH-RT] (S1) Đo spread…`);
-                const ob = await pMap(uni, 20, t => bybitRequest('/v5/market/orderbook', 'GET', { category:'spot', symbol:t.symbol, limit:1 }, true));
-                const enriched = uni.map((t,i)=>{
-                  const o = ob[i];
-                  const ask = o?.a?.[0]?.[0] ?? t.ask1Price, bid = o?.b?.[0]?.[0] ?? t.bid1Price;
-                  const spread_bps = computeSpreadBps(bid, ask);
-                  return {...t, _ask:ask, _bid:bid, spread_bps};
-                }).filter(x => isFinite(x.spread_bps));
-                const spreads = enriched.map(x=>x.spread_bps).sort((a,b)=>a-b);
-                const p60 = spreads[Math.floor(0.60*spreads.length)] || 20;
-                const SPREAD_MAX = Math.max(15, Math.min(25, p60));
-                const liq = enriched.filter(x => x.spread_bps <= SPREAD_MAX);
+                    logMessage(`[CSH-RT] (S1) Đo spread…`);
+                    const ob = await pMap(uni, 20, t => bybitRequest('/v5/market/orderbook', 'GET', { category:'spot', symbol:t.symbol, limit:1 }, true));
+                    const enriched = uni.map((t,i)=>{
+                        const o = ob[i];
+                        const ask = o?.a?.[0]?.[0] ?? t.ask1Price, bid = o?.b?.[0]?.[0] ?? t.bid1Price;
+                        const spread_bps = computeSpreadBps(bid, ask);
+                        return {...t, _ask:ask, _bid:bid, spread_bps};
+                    }).filter(x => isFinite(x.spread_bps));
+                    const spreads = enriched.map(x=>x.spread_bps).sort((a,b)=>a-b);
+                    const p60 = spreads[Math.floor(0.60*spreads.length)] || 20;
+                    const SPREAD_MAX = Math.max(15, Math.min(25, p60));
+                    const liq = enriched.filter(x => x.spread_bps <= SPREAD_MAX);
 
-                logMessage(`[CSH-RT] (S2) ATR & nến cuối (15m) cho ${liq.length} cặp…`);
-                const kl = await pMap(liq, 16, t => bybitRequest('/v5/market/kline', 'GET', { category:'spot', symbol:t.symbol, interval:'15', limit:200 }, true));
-                const cands = [];
-                for (let i=0;i<liq.length;i++){
-                  const list = kl[i]?.list; if (!list || list.length<50) continue;
-                  const arr = list.map(k => [Number(k[0]), ...k.slice(1,6).map(Number)] ); 
-                  arr.sort((a,b)=>a[0]-b[0]);
-                  const closes = arr.map(r=>r[4]);
-                  const lastK = arr[arr.length-1];
-                  const atrArr = TA.atr(arr.map(k => ['', '', k[2], k[3], k[4]]), 14); const atrPrice = atrArr.pop() || 0;
-                  const volArr = arr.map(r=>r[5]||0); const med20 = volArr.slice(-20).sort((a,b)=>a-b)[10] || 1;
-                  const volZ = med20>0 ? (volArr[volArr.length-1]/med20) : 1;
-                  const lastPrice = closes[closes.length-1] || 0;
-                  const atrPct = lastPrice>0 ? (atrPrice/lastPrice)*100 : 0;
-                  cands.push({...liq[i], klines:arr, closes, lastK, atrPrice, atrPct, volZ});
+                    logMessage(`[CSH-RT] (S2) ATR & nến cuối (15m) cho ${liq.length} cặp…`);
+                    const kl = await pMap(liq, 16, t => bybitRequest('/v5/market/kline', 'GET', { category:'spot', symbol:t.symbol, interval:'15', limit:200 }, true));
+                    const cands = [];
+                    for (let i=0;i<liq.length;i++){
+                        const list = kl[i]?.list; if (!list || list.length<50) continue;
+                        const arr = list.map(k => [Number(k[0]), ...k.slice(1,6).map(Number)] ); 
+                        arr.sort((a,b)=>a[0]-b[0]);
+                        const closes = arr.map(r=>r[4]);
+                        const lastK = arr[arr.length-1];
+                        const atrArr = TA.atr(arr.map(k => ['', '', k[2], k[3], k[4]]), 14); const atrPrice = atrArr.pop() || 0;
+                        const volArr = arr.map(r=>r[5]||0); const med20 = volArr.slice(-20).sort((a,b)=>a-b)[10] || 1;
+                        const volZ = med20>0 ? (volArr[volArr.length-1]/med20) : 1;
+                        const lastPrice = closes[closes.length-1] || 0;
+                        const atrPct = lastPrice>0 ? (atrPrice/lastPrice)*100 : 0;
+                        cands.push({...liq[i], klines:arr, closes, lastK, atrPrice, atrPct, volZ});
+                    }
+                    if (!cands.length) throw new Error("Không đủ dữ liệu kline.");
+                    
+                    const atrs = cands.map(c=>c.atrPct).sort((a,b)=>a-b);
+                    const atrMin = Math.max(atrs[Math.floor(0.40*atrs.length)]||0.12, 0.12);
+                    const atrMax = Math.min(atrs[Math.floor(0.95*atrs.length)]||6.0, 6.0);
+                    const filtered = cands.filter(c => c.atrPct>=atrMin && c.atrPct<=atrMax);
+
+                    const ranked = [];
+                    for (const c of filtered) {
+                        const ce = computeCandleEdge(c.lastK, c.atrPrice, c.volZ);
+                        if (!ce) continue;
+                        if (!(ce.exp >= 1.2 && ce.lwR >= 0.35 && ce.posC <= 0.40 && c.volZ >= 2)) continue;
+                        const cost = estimateCostPct_maker();
+                        const pen_cost = Math.min(1, cost/0.6);
+                        const CES = ce.CES_raw - 0.20*pen_cost;
+                        const grossPct = c.entry>0 ? ((ce.tp-ce.entry)/ce.entry)*100 : 0;
+                        if (CES < 0.65 || grossPct < 2.0*cost) continue;
+                        ranked.push({ symbol: c.symbol, spread_bps: c.spread_bps, atrPct: c.atrPct, CES, grossPct, closes: c.closes });
+                    }
+
+                    ranked.sort((a,b)=> b.CES - a.CES || a.spread_bps - b.spread_bps);
+                    const picks = [];
+                    for (const r of ranked) {
+                        let ok = true;
+                        for (const p of picks) {
+                            if (corr15m(r.closes, p.closes) > 0.85) { ok = false; break; }
+                        }
+                        if (ok) {
+                            picks.push(r);
+                            if (picks.length >= topN) break;
+                        }
+                    }
+
+                    if (!picks.length) { logMessage(`[CSH-RT] Không tìm thấy cặp phù hợp.`); return []; }
+
+                    picks.forEach((p,i)=>{ logMessage(`[CSH-RT] Pick #${i+1} ${p.symbol} | CES=${p.CES.toFixed(3)} | spread=${p.spread_bps.toFixed(1)}bps | ATR=${p.atrPct.toFixed(2)}% | gross≈${p.grossPct.toFixed(2)}%`); });
+                    return picks.map(p=>p.symbol);
+                } catch (e) {
+                    logMessage(`[CSH-RT] Auto-pick lỗi: ${e.message}`, true);
+                    return [];
                 }
-                if (!cands.length) throw new Error("Không đủ dữ liệu kline.");
-                
-                const atrs = cands.map(c=>c.atrPct).sort((a,b)=>a-b);
-                const atrMin = Math.max(atrs[Math.floor(0.40*atrs.length)]||0.12, 0.12);
-                const atrMax = Math.min(atrs[Math.floor(0.95*atrs.length)]||6.0, 6.0);
-                const filtered = cands.filter(c => c.atrPct>=atrMin && c.atrPct<=atrMax);
-
-                const ranked = [];
-                for (const c of filtered) {
-                  const ce = computeCandleEdge(c.lastK, c.atrPrice, c.volZ);
-                  if (!ce) continue;
-                  if (!(ce.exp >= 1.2 && ce.lwR >= 0.35 && ce.posC <= 0.40 && c.volZ >= 2)) continue;
-                  const cost = estimateCostPct_maker();
-                  const pen_cost = Math.min(1, cost/0.6);
-                  const CES = ce.CES_raw - 0.20*pen_cost;
-                  const grossPct = c.entry>0 ? ((ce.tp-ce.entry)/ce.entry)*100 : 0;
-                  if (CES < 0.65 || grossPct < 2.0*cost) continue;
-                  ranked.push({ symbol: c.symbol, spread_bps: c.spread_bps, atrPct: c.atrPct, CES, grossPct, closes: c.closes });
-                }
-
-                ranked.sort((a,b)=> b.CES - a.CES || a.spread_bps - b.spread_bps);
-                const picks = [];
-                for (const r of ranked) {
-                  let ok = true;
-                  for (const p of picks) {
-                    if (corr15m(r.closes, p.closes) > 0.85) { ok = false; break; }
-                  }
-                  if (ok) {
-                    picks.push(r);
-                    if (picks.length >= topN) break;
-                  }
-                }
-
-                if (!picks.length) { logMessage(`[CSH-RT] Không tìm thấy cặp phù hợp.`); return []; }
-
-                picks.forEach((p,i)=>{ logMessage(`[CSH-RT] Pick #${i+1} ${p.symbol} | CES=${p.CES.toFixed(3)} | spread=${p.spread_bps.toFixed(1)}bps | ATR=${p.atrPct.toFixed(2)}% | gross≈${p.grossPct.toFixed(2)}%`); });
-                return picks.map(p=>p.symbol);
-              } catch (e) {
-                logMessage(`[CSH-RT] Auto-pick lỗi: ${e.message}`, true);
-                return [];
-              }
             }
             
             async function startCSHRT_Auto(topN=3){
-              const syms = await autoPickCSHRT(topN);
-              if (!syms.length) {
-                  logMessage(`[CSH-RT] Không có cặp để bật real-time. Thử lại sau 15 phút.`, true);
-                  scheduleCSHRT_Rotation(topN, []);
-                  return;
-              }
-              startCSH_RT(syms); 
-              scheduleCSHRT_Rotation(topN, syms);
+                const syms = await autoPickCSHRT(topN);
+                if (!syms.length) {
+                    logMessage(`[CSH-RT] Không có cặp để bật real-time. Thử lại sau 15 phút.`, true);
+                    scheduleCSHRT_Rotation(topN, []);
+                    return;
+                }
+                startCSH_RT(syms); 
+                scheduleCSHRT_Rotation(topN, syms);
             }
 
             function scheduleCSHRT_Rotation(topN, currentSyms){
-              if (CSHRT_rotationTimer) clearTimeout(CSHRT_rotationTimer);
-              const now = Date.now();
-              const msToNext15 = 15*60*1000 - (now % (15*60*1000)) + 1500;
-              logMessage(`[CSH-RT] Lần quét chọn cặp tiếp theo sau: ${(msToNext15/60000).toFixed(1)} phút.`);
-              CSHRT_rotationTimer = setTimeout(async ()=>{
-                stopCSH_RT(currentSyms);
-                startCSHRT_Auto(topN);
-              }, msToNext15);
+                if (CSHRT_rotationTimer) clearTimeout(CSHRT_rotationTimer);
+                const now = Date.now();
+                const msToNext15 = 15*60*1000 - (now % (15*60*1000)) + 1500;
+                logMessage(`[CSH-RT] Lần quét chọn cặp tiếp theo sau: ${(msToNext15/60000).toFixed(1)} phút.`);
+                CSHRT_rotationTimer = setTimeout(async ()=>{
+                    stopCSH_RT(currentSyms);
+                    startCSHRT_Auto(topN);
+                }, msToNext15);
             }
 
             function stopCSHRT_Auto(){
-              if (CSHRT_rotationTimer) clearTimeout(CSHRT_rotationTimer);
-              const currentSyms = Array.from(wsSubs).map(t => t.split(".").pop());
-              if (currentSyms.length) stopCSH_RT(currentSyms);
-              logMessage(`[CSH-RT] Auto-pick stopped.`);
+                if (CSHRT_rotationTimer) clearTimeout(CSHRT_rotationTimer);
+                const currentSyms = Array.from(wsSubs).map(t => t.split(".").pop());
+                if (currentSyms.length) stopCSH_RT(currentSyms);
+                logMessage(`[CSH-RT] Auto-pick stopped.`);
             }
             
             // --- Scanner Bot (V4) ---
@@ -1077,7 +1105,7 @@
                 }
                 logMessage("Công cụ quét đã dừng bởi người dùng.");
                 updateScannerStatus("Công cụ quét đang không hoạt động.");
-                ui.scanner.startBtn.disabled = false;
+                ui.scanner.startBtn.disabled = !state.apiKeysValid; // CORRECTED: Set disabled state based on API validity
                 ui.scanner.stopBtn.disabled = true;
 
                  if(state.activeTrade) {
@@ -1087,7 +1115,7 @@
             async function executeScan() {
                  if (state.isScanning || state.activeTrade) return;
                 state.isScanning = true;
-                logMessage(`[Scanner] Bắt đầu quét với thuật toán V4.2.1...`);
+                logMessage(`[Scanner] Bắt đầu quét với thuật toán V4...`);
                 try {
                     updateScannerStatus(`(B1) Lấy dữ liệu thị trường...`); showLoader(ui.scanner.status.textContent);
                     const instrumentsInfo = await bybitRequest('/v5/market/instruments-info', 'GET', { category: 'spot' }, true);
@@ -1227,7 +1255,7 @@
                     state.apiSecret = storedApiSecret;
                     checkApiKeys();
                 } else {
-                    updateApiStatus(false);
+                    updateApiStatus(false, "Vui lòng nhập API Key và Secret.");
                 }
                 setupEventListeners();
                 initializeCharts();
