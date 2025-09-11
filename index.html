@@ -96,7 +96,7 @@
                 </div>
                  <!-- Market Scanner Section -->
                 <div class="bg-gray-700/50 p-6 rounded-xl">
-                    <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bot Giao Dịch Theo Xu Hướng (V4.3.0)</h2>
+                    <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bot Giao Dịch Theo Xu Hướng (V4.3.1)</h2>
                      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                         <div class="md:col-span-1">
                             <label for="scannerCapital" class="block text-sm font-medium text-gray-300 mb-1">Vốn Tối Đa / Lệnh</label>
@@ -129,7 +129,7 @@
         
         <!-- CSH-RT Bot Section -->
         <div class="bg-gray-700/50 p-6 rounded-xl mt-6">
-            <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bot CSH-RT (V5.2.0 - Tích hợp OCO)</h2>
+            <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bot CSH-RT (V5.2.1 - Tích hợp OCO)</h2>
             <div class="bg-purple-900 border-l-4 border-purple-500 text-purple-100 p-4 rounded-lg mb-4" role="alert">
                 <p><strong class="font-bold">Cách Hoạt Động:</strong> Tự động chọn cặp, đặt lệnh Maker kèm TP/SL (OCO) và tự hủy nếu không khớp trước khi nến đóng.</p>
             </div>
@@ -498,8 +498,8 @@
                         category: 'spot', symbol: plan.symbol, side: 'Buy',
                         orderType: 'Market', qty: orderQty.toString(), marketUnit: 'quoteCoin',
                         tpslMode: 'Full',
-                        takeProfit: takeProfitPrice.toFixed(8),
-                        stopLoss: stopLossPrice.toFixed(8)
+                        takeProfit: takeProfitPrice.toString(),
+                        stopLoss: stopLossPrice.toString()
                     };
                     const result = await placeOrder(orderParams);
                     hideLoader();
@@ -735,7 +735,7 @@
               return st;
             }
 
-            function roundTo(x, step){ return Math.floor(x/step) * step; }
+            function roundTo(x, step){ return (Math.floor(x/step) * step).toString(); }
 
             async function placeLimitMaker(sym, price, quoteSizeUSD){
                 const st = ensureSym(sym);
@@ -746,16 +746,17 @@
                 }
 
                 const p = roundTo(price, st.tickSize);
-                let qty = (quoteSizeUSD / p);
-                qty = Math.max(st.lotStep, roundTo(qty, st.lotStep));
+                let qty = (quoteSizeUSD / parseFloat(p));
+                qty = roundTo(qty, st.lotStep);
 
-                if (p * qty < st.minNotional) {
-                    logMessage(`[CSH] ${sym} giá trị lệnh quá nhỏ: ${(p * qty).toFixed(3)} < ${st.minNotional}`, true);
+                if (parseFloat(p) * parseFloat(qty) < st.minNotional) {
+                    logMessage(`[CSH] ${sym} giá trị lệnh quá nhỏ: ${(parseFloat(p) * parseFloat(qty)).toFixed(3)} < ${st.minNotional}`, true);
                     return null;
                 }
                 
                 const atrPrice = st.lastAtr || (st.lastClosed.R * 0.7); // Fallback ATR
                 const stopLossPrice = roundTo(st.lastClosed.L - (atrPrice * 0.3), st.tickSize);
+                const takeProfitPrice = roundTo(st.tp, st.tickSize);
 
                 const res = await bybitRequest('/v5/order/create','POST',{
                     category:'spot', 
@@ -763,18 +764,18 @@
                     side:'Buy', 
                     orderType:'Limit', 
                     timeInForce:'PostOnly',
-                    price: p.toFixed(8), 
-                    qty: qty.toFixed(8),
+                    price: p, 
+                    qty: qty,
                     tpslMode: 'Full',
-                    takeProfit: roundTo(st.tp, st.tickSize).toFixed(8),
-                    stopLoss: stopLossPrice.toFixed(8),
+                    takeProfit: takeProfitPrice,
+                    stopLoss: stopLossPrice,
                 });
 
                 if (res?.orderId) {
                     st.openOrderId = res.orderId;
-                    st.openOrderPrice = p;
+                    st.openOrderPrice = parseFloat(p);
                     st.repriceCount = 0;
-                    logMessage(`[CSH] Đặt lệnh OCO ${sym} @ ${p.toFixed(5)} | TP=${st.tp.toFixed(5)}, SL=${stopLossPrice.toFixed(5)}`);
+                    logMessage(`[CSH] Đặt lệnh OCO ${sym} @ ${p} | TP=${takeProfitPrice}, SL=${stopLossPrice}`);
                 }
                 return res;
             }
@@ -1092,6 +1093,7 @@
 
                     updateScannerStatus(`(B2) Lấy dữ liệu chi tiết cho ${universe.length} cặp...`);
                     const dataPromises = universe.map(t => Promise.all([
+                        bybitRequest('/v5/market/instruments-info', 'GET', { category: 'spot', symbol: t.symbol }, true),
                         bybitRequest('/v5/market/orderbook', 'GET', { category: 'spot', symbol: t.symbol, limit: 1 }, true),
                         bybitRequest('/v5/market/kline', 'GET', { category: 'spot', symbol: t.symbol, interval: '15', limit: 200 }, true)
                     ]));
@@ -1099,12 +1101,18 @@
                     
                     state.scannedCandidates.clear();
                     for (let i = 0; i < universe.length; i++) {
-                        const [ob, klineData] = results[i];
-                        if (ob && klineData?.list?.length >= 51) {
+                        const [instInfo, ob, klineData] = results[i];
+                        if (ob && klineData?.list?.length >= 51 && instInfo?.list?.[0]) {
                             const ticker = universe[i];
+                            const info = instInfo.list[0];
                             const ask = ob?.a?.[0]?.[0] ?? ticker.ask1Price;
                             const bid = ob?.b?.[0]?.[0] ?? ticker.bid1Price;
-                            const candidateData = { ...ticker, spread_bps: ((ask - bid) / ask) * 10000, klines: klineData.list.reverse() };
+                            const candidateData = { 
+                                ...ticker, 
+                                spread_bps: ((ask - bid) / ask) * 10000, 
+                                klines: klineData.list.reverse(),
+                                tickSize: parseFloat(info.priceFilter?.tickSize ?? "0.00000001")
+                            };
                             state.scannedCandidates.set(ticker.symbol, candidateData);
                         }
                     }
@@ -1145,7 +1153,7 @@
                     
                     const topPicks = processedCandidates.slice(0, 3);
                     displayScanResults(topPicks);
-                    if (topPicks.length > 0 && !state.activeTrade) { // Only update chart if not in a trade
+                    if (topPicks.length > 0 && !state.activeTrade) {
                         renderPriceChart(topPicks[0].symbol, topPicks[0].klines);
                     } else if (topPicks.length === 0) {
                         initializeCharts(); 
