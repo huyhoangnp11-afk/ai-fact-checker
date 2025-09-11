@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- CryptoJS for API signature generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <!-- Chart.js for charting -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -39,147 +41,100 @@
             <p class="text-gray-400 mt-2">Giao dịch tự động và quản lý tài khoản Bybit của bạn.</p>
         </header>
 
-        <!-- Security Warning -->
-        <div class="bg-red-900 border-l-4 border-red-500 text-red-100 p-4 rounded-lg" role="alert">
-            <p class="font-bold">Cảnh báo bảo mật quan trọng</p>
-            <p>API Key và Secret Key của bạn chỉ được lưu trữ cục bộ trong trình duyệt. Bot không lưu lại trạng thái giao dịch khi bạn tải lại trang.</p>
-        </div>
-
         <!-- Main Grid Layout -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
-            <!-- Left Column: Settings & Account -->
-            <div class="bg-gray-700/50 p-6 rounded-xl space-y-6">
-                 <div class="flex items-center justify-between border-b border-gray-600 pb-3">
-                    <h2 class="text-xl font-semibold">Cài đặt API</h2>
-                    <span id="apiStatus" class="text-xs font-medium px-2.5 py-1 rounded-full">&nbsp;</span>
-                </div>
-                <div class="space-y-4">
-                    <div>
-                        <label for="apiKey" class="block text-sm font-medium text-gray-300 mb-1">API Key</label>
-                        <input type="password" id="apiKey" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+            <!-- Left Column: Settings, Account -->
+            <div class="lg:col-span-1 space-y-6">
+                <div class="bg-gray-700/50 p-6 rounded-xl">
+                     <div class="flex items-center justify-between border-b border-gray-600 pb-3 mb-4">
+                        <h2 class="text-xl font-semibold">Cài đặt API</h2>
+                        <span id="apiStatus" class="text-xs font-medium px-2.5 py-1 rounded-full">&nbsp;</span>
                     </div>
-                    <div>
-                        <label for="apiSecret" class="block text-sm font-medium text-gray-300 mb-1">API Secret</label>
-                        <input type="password" id="apiSecret" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                    </div>
-                     <div class="flex items-center justify-between">
-                        <button id="saveApi" class="w-2/3 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105">Lưu API Key</button>
-                        <div class="flex items-center space-x-2 text-sm">
-                           <label for="showApiKeys" class="text-gray-400">Hiện Keys</label>
-                           <input type="checkbox" id="showApiKeys" class="form-checkbox h-5 w-5 text-blue-500 bg-gray-900 border-gray-600 rounded focus:ring-blue-500">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="apiKey" class="block text-sm font-medium text-gray-300 mb-1">API Key</label>
+                            <input type="password" id="apiKey" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label for="apiSecret" class="block text-sm font-medium text-gray-300 mb-1">API Secret</label>
+                            <input type="password" id="apiSecret" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-2 focus:ring-blue-500">
+                        </div>
+                         <div class="flex items-center justify-between">
+                            <button id="saveApi" class="w-2/3 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition transform hover:scale-105">Lưu API Key</button>
+                            <div class="flex items-center space-x-2 text-sm">
+                               <label for="showApiKeys" class="text-gray-400">Hiện</label>
+                               <input type="checkbox" id="showApiKeys" class="form-checkbox h-5 w-5 text-blue-500 bg-gray-900 border-gray-600 rounded focus:ring-blue-500">
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="pt-6 border-t border-gray-600">
-                    <h2 class="text-xl font-semibold mb-3">Thông tin tài khoản</h2>
-                    <button id="getBalance" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition mb-4 disabled:bg-gray-500 disabled:cursor-not-allowed" disabled>Lấy số dư (Tài khoản Unified)</button>
-                    <div id="balanceInfo" class="bg-gray-900 p-4 rounded-lg text-sm min-h-[80px]">
-                        Nhấn nút trên để xem số dư...
+                <div class="bg-gray-700/50 p-6 rounded-xl">
+                    <h2 class="text-xl font-semibold mb-3 border-b border-gray-600 pb-3">Thông tin tài khoản</h2>
+                    <div id="balanceInfo" class="bg-gray-900 p-4 rounded-lg text-sm min-h-[120px]">
+                        Vui lòng xác thực API để xem số dư...
                     </div>
                 </div>
             </div>
 
-            <!-- Right Column: Trading -->
-            <div class="bg-gray-700/50 p-6 rounded-xl space-y-6">
-                <h2 class="text-xl font-semibold border-b border-gray-600 pb-3">Đặt lệnh giao dịch (Spot)</h2>
-                <div class="space-y-4">
-                    <div>
-                        <label for="symbol" class="block text-sm font-medium text-gray-300 mb-1">Cặp giao dịch (ví dụ: BTCUSDT)</label>
-                        <input type="text" id="symbol" value="BTCUSDT" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                    </div>
-                    <div>
-                        <label for="qty" class="block text-sm font-medium text-gray-300 mb-1">Số lượng</label>
-                        <input type="number" id="qty" placeholder="0.01" step="0.001" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <button id="buyBtn" class="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out disabled:bg-gray-500 disabled:cursor-not-allowed" disabled>Mua (Market)</button>
-                        <button id="sellBtn" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out disabled:bg-gray-500 disabled:cursor-not-allowed" disabled>Bán (Market)</button>
+            <!-- Right Column: Dashboard & Scanner -->
+            <div class="lg:col-span-2 space-y-6">
+                 <!-- Trading Dashboard -->
+                <div class="bg-gray-700/50 p-6 rounded-xl">
+                    <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bảng điều khiển Giao dịch</h2>
+                    <div class="bg-gray-900 rounded-lg p-4 h-64">
+                        <canvas id="priceChart"></canvas>
                     </div>
                 </div>
-            </div>
-
-        </div>
-
-        <!-- DCA Bot Section -->
-        <div class="bg-gray-700/50 p-6 rounded-xl mt-6">
-            <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bot DCA (Trung bình giá)</h2>
-            <div class="bg-blue-900 border-l-4 border-blue-500 text-blue-100 p-4 rounded-lg mb-4" role="alert">
-                <p><strong class="font-bold">Lưu ý:</strong> Bot DCA sẽ chỉ hoạt động khi tab trình duyệt này đang mở. Nếu bạn đóng tab, bot sẽ dừng lại.</p>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                <div>
-                    <label for="dcaSymbol" class="block text-sm font-medium text-gray-300 mb-1">Cặp giao dịch</label>
-                    <input type="text" id="dcaSymbol" value="BTCUSDT" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                </div>
-                <div>
-                    <label for="dcaAmount" class="block text-sm font-medium text-gray-300 mb-1">Số tiền mỗi lần mua (USDT)</label>
-                    <input type="number" id="dcaAmount" placeholder="10" step="1" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                </div>
-                <div>
-                    <label for="dcaFrequency" class="block text-sm font-medium text-gray-300 mb-1">Tần suất</label>
-                    <select id="dcaFrequency" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                        <option value="3600000">Mỗi giờ</option>
-                        <option value="86400000" selected>Mỗi ngày</option>
-                        <option value="604800000">Mỗi tuần</option>
-                        <option value="60000">Mỗi phút (thử nghiệm)</option>
-                    </select>
-                </div>
-            </div>
-            <div class="grid grid-cols-2 gap-4 mt-4">
-                <button id="startDcaBtn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 disabled:bg-gray-500 disabled:cursor-not-allowed" disabled>Bắt đầu Bot DCA</button>
-                <button id="stopDcaBtn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300" disabled>Dừng Bot DCA</button>
-            </div>
-            <div id="dcaStatus" class="mt-4 bg-gray-900 p-3 rounded-lg text-sm text-center">Bot DCA đang không hoạt động.</div>
-        </div>
-
-        <!-- Market Scanner Section -->
-        <div class="bg-gray-700/50 p-6 rounded-xl mt-6">
-            <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Kế Hoạch Giao Dịch Tự Động (V3.6.0)</h2>
-            <div class="bg-blue-900 border-l-4 border-blue-500 text-blue-100 p-4 rounded-lg mb-4" role="alert">
-                <p><strong class="font-bold">Cách Hoạt Động Mới:</strong> Bot sử dụng kết hợp RSI và EMA để tránh mua đỉnh, tìm điểm vào lệnh tối ưu trong một xu hướng tăng.</p>
-            </div>
-             <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-                <div class="md:col-span-1">
-                    <label for="scannerCapital" class="block text-sm font-medium text-gray-300 mb-1">Vốn cho mỗi lệnh (USD)</label>
-                    <input type="number" id="scannerCapital" value="8" step="1" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                </div>
-                <div>
-                    <label for="takeProfitPercent" class="block text-sm font-medium text-gray-300 mb-1">Chốt Lời (%)</label>
-                    <input type="number" id="takeProfitPercent" value="1.5" step="0.1" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-2 focus:ring-blue-500">
-                </div>
-                 <div>
-                    <label for="stopLossPercent" class="block text-sm font-medium text-gray-300 mb-1">Cắt Lỗ (%)</label>
-                    <input type="number" id="stopLossPercent" value="0.8" step="0.1" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div class="md:col-span-1 flex items-end pb-1">
-                     <label for="autoTradeToggle" class="flex items-center cursor-pointer">
-                        <div class="relative">
-                            <input type="checkbox" id="autoTradeToggle" class="sr-only peer">
-                            <div class="block bg-gray-600 w-14 h-8 rounded-full peer-checked:bg-green-600"></div>
-                            <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform transform peer-checked:translate-x-full"></div>
+                 <!-- Market Scanner Section -->
+                <div class="bg-gray-700/50 p-6 rounded-xl">
+                    <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bot Giao Dịch Tự Động (V4.0.0)</h2>
+                    <div class="bg-blue-900 border-l-4 border-blue-500 text-blue-100 p-4 rounded-lg mb-4" role="alert">
+                        <p><strong class="font-bold">Cách Hoạt Động Mới:</strong> Bot sử dụng RSI để tìm điểm vào lệnh sau khi giá điều chỉnh (pullback) trong một xu hướng tăng, tránh mua đỉnh.</p>
+                    </div>
+                     <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+                        <div class="md:col-span-1">
+                            <label for="scannerCapital" class="block text-sm font-medium text-gray-300 mb-1">Vốn Tối Đa / Lệnh</label>
+                            <input type="number" id="scannerCapital" value="8" step="1" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200">
                         </div>
-                        <span class="ml-3 text-sm font-medium text-gray-300">Tự động Trade</span>
-                    </label>
-                </div>
-                <div class="md:col-span-1 grid grid-cols-2 gap-2">
-                    <button id="startScannerBtn" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 disabled:bg-gray-500 disabled:cursor-not-allowed" disabled>Bắt đầu</button>
-                    <button id="stopScannerBtn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300" disabled>Dừng</button>
+                        <div>
+                            <label for="takeProfitPercent" class="block text-sm font-medium text-gray-300 mb-1">Chốt Lời (%)</label>
+                            <input type="number" id="takeProfitPercent" value="1.5" step="0.1" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200">
+                        </div>
+                         <div>
+                            <label for="stopLossPercent" class="block text-sm font-medium text-gray-300 mb-1">Cắt Lỗ (%)</label>
+                            <input type="number" id="stopLossPercent" value="0.8" step="0.1" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200">
+                        </div>
+                        <div class="md:col-span-1 flex items-end pb-1">
+                             <label for="autoTradeToggle" class="flex items-center cursor-pointer">
+                                <div class="relative">
+                                    <input type="checkbox" id="autoTradeToggle" class="sr-only peer">
+                                    <div class="block bg-gray-600 w-14 h-8 rounded-full peer-checked:bg-green-600"></div>
+                                    <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform transform peer-checked:translate-x-full"></div>
+                                </div>
+                                <span class="ml-3 text-sm font-medium text-gray-300">Tự động</span>
+                            </label>
+                        </div>
+                        <div class="md:col-span-1 grid grid-cols-2 gap-2">
+                            <button id="startScannerBtn" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition disabled:bg-gray-500" disabled>Bắt đầu</button>
+                            <button id="stopScannerBtn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition" disabled>Dừng</button>
+                        </div>
+                    </div>
+                    <div id="scannerStatus" class="mt-4 bg-gray-900 p-3 rounded-lg text-sm text-center">Công cụ quét đang không hoạt động.</div>
                 </div>
             </div>
-            <div id="scannerStatus" class="mt-4 bg-gray-900 p-3 rounded-lg text-sm text-center">Công cụ quét đang không hoạt động.</div>
-            
-            <!-- Trading Plan Cards Container -->
-            <div id="scannerResults" class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Trading Plan Cards will be populated here -->
-            </div>
+        </div>
+
+        <!-- Trading Plan Cards Container -->
+        <div id="scannerResults" class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Trading Plan Cards will be populated here -->
         </div>
 
         <!-- Log Area -->
         <div class="bg-gray-900/70 p-4 rounded-xl mt-6">
             <h2 class="text-lg font-semibold mb-2">Nhật ký hoạt động</h2>
-            <div id="log" class="log-area bg-black h-48 overflow-y-auto p-3 rounded-lg text-xs text-gray-400"></div>
+            <div id="log" class="log-area bg-black h-64 overflow-y-auto p-3 rounded-lg text-xs text-gray-400"></div>
         </div>
 
     </div>
@@ -202,23 +157,11 @@
                 saveApiBtn: document.getElementById('saveApi'),
                 showApiKeysCheckbox: document.getElementById('showApiKeys'),
                 apiStatus: document.getElementById('apiStatus'),
-                getBalanceBtn: document.getElementById('getBalance'),
                 balanceInfoDiv: document.getElementById('balanceInfo'),
-                symbolInput: document.getElementById('symbol'),
-                qtyInput: document.getElementById('qty'),
-                buyBtn: document.getElementById('buyBtn'),
-                sellBtn: document.getElementById('sellBtn'),
                 logDiv: document.getElementById('log'),
                 loaderModal: document.getElementById('loaderModal'),
                 loaderText: document.getElementById('loaderText'),
-                dca: {
-                    symbol: document.getElementById('dcaSymbol'),
-                    amount: document.getElementById('dcaAmount'),
-                    frequency: document.getElementById('dcaFrequency'),
-                    startBtn: document.getElementById('startDcaBtn'),
-                    stopBtn: document.getElementById('stopDcaBtn'),
-                    status: document.getElementById('dcaStatus'),
-                },
+                chartCanvas: document.getElementById('priceChart'),
                 scanner: {
                     capital: document.getElementById('scannerCapital'),
                     takeProfitInput: document.getElementById('takeProfitPercent'),
@@ -235,12 +178,15 @@
             const state = {
                 apiKey: '',
                 apiSecret: '',
-                dcaIntervalId: null,
                 scannerIntervalId: null,
+                balanceUpdateIntervalId: null,
                 isScanning: false,
                 apiKeysValid: false,
                 autoTradeEnabled: false,
-                activeTrade: null, // Holds { symbol, entryPrice, quantity, intervalId }
+                activeTrade: null,
+                priceChart: null,
+                scannedCandidates: new Map(),
+                availableUsdt: 0,
             };
 
             // --- Constants & Config ---
@@ -249,6 +195,7 @@
                 RECV_WINDOW: '10000', 
                 SCANNER_INTERVAL_MS: 120000, 
                 TRADE_MONITOR_INTERVAL_MS: 7000,
+                BALANCE_UPDATE_INTERVAL_MS: 60000,
             };
             const CONFIG = {
                 MIN_ORDER_VALUE_USDT: 3, 
@@ -369,8 +316,7 @@
                 const result = await bybitRequest('/v5/order/create', 'POST', orderParams);
                 if (result?.orderId) {
                     logMessage(`Đặt lệnh ${orderParams.side} ${orderParams.symbol} thành công! Order ID: ${result.orderId}`);
-                    // Fetch order details to get accurate entry price and quantity
-                    await new Promise(resolve => setTimeout(resolve, 1500)); // Wait for order to fill
+                    await new Promise(resolve => setTimeout(resolve, 1500)); 
                     const orderHistory = await bybitRequest('/v5/order/history', 'GET', { category: 'spot', orderId: result.orderId });
                     return orderHistory?.list?.[0] ?? result;
                 }
@@ -383,7 +329,7 @@
                 const inactiveClasses = 'bg-red-900 text-red-300';
                 ui.apiStatus.textContent = isValid ? 'Hợp lệ' : 'Không hợp lệ';
                 ui.apiStatus.className = `text-xs font-medium px-2.5 py-1 rounded-full ${isValid ? activeClasses : inactiveClasses}`;
-                [ui.getBalanceBtn, ui.buyBtn, ui.sellBtn, ui.dca.startBtn, ui.scanner.startBtn].forEach(btn => btn.disabled = !isValid);
+                ui.scanner.startBtn.disabled = !isValid;
             }
 
             async function checkApiKeys() {
@@ -392,11 +338,31 @@
                 }
                 const result = await bybitRequest('/v5/user/query-api', 'GET', {});
                 updateApiStatus(!!result);
-                logMessage(!!result ? 'Xác thực API Key thành công.' : 'API Keys không hợp lệ.', !result);
+                if(!!result) {
+                    logMessage('Xác thực API Key thành công.');
+                    await fetchWalletBalance();
+                } else {
+                     logMessage('API Keys không hợp lệ.', true)
+                }
             }
             
-            // --- Trade Management ---
+            async function fetchWalletBalance() {
+                const result = await bybitRequest('/v5/account/wallet-balance', 'GET', { accountType: 'UNIFIED' });
+                if (result?.list?.[0]) {
+                    const account = result.list[0];
+                    const usdtAsset = account.coin.find(c => c.coin === 'USDT');
+                    state.availableUsdt = usdtAsset ? parseFloat(usdtAsset.availableToWithdraw) : 0;
 
+                    let balanceHTML = `<p><strong>Tổng vốn (USD):</strong> ${parseFloat(account.totalEquity).toFixed(2)}</p><p><strong>USDT Khả dụng:</strong> <span class="font-bold text-yellow-300">${state.availableUsdt.toFixed(2)}</span></p><hr class="my-2 border-gray-600"><ul class="space-y-1 max-h-40 overflow-y-auto">`;
+                    account.coin.forEach(c => { if (parseFloat(c.walletBalance) > 0.00001) balanceHTML += `<li><strong>${c.coin}:</strong> ${parseFloat(c.walletBalance).toFixed(5)}</li>`; });
+                    balanceHTML += '</ul>';
+                    ui.balanceInfoDiv.innerHTML = balanceHTML;
+                } else {
+                    ui.balanceInfoDiv.textContent = "Không thể lấy dữ liệu số dư.";
+                }
+            }
+
+            // --- Trade Management ---
             async function closeActiveTrade(reason) {
                 if (!state.activeTrade) return;
 
@@ -406,6 +372,7 @@
 
                 logMessage(`[Trade Manager] Đóng lệnh ${tradeToClose.symbol} vì: ${reason}.`, false);
                 
+                showLoader(`Đang đặt lệnh Bán ${tradeToClose.symbol}...`);
                 const orderParams = {
                     category: 'spot',
                     symbol: tradeToClose.symbol,
@@ -413,8 +380,9 @@
                     orderType: 'Market',
                     qty: tradeToClose.quantity.toString(),
                 };
-
                 const sellResult = await placeOrder(orderParams);
+                hideLoader();
+
                 if (sellResult && sellResult.orderId) {
                     const entryValue = parseFloat(tradeToClose.entryValue);
                     const exitValue = parseFloat(sellResult.cumExecValue);
@@ -469,26 +437,40 @@
             async function executeAutoTrades(plans) {
                 if (!state.autoTradeEnabled || plans.length === 0 || state.activeTrade) {
                     if (state.activeTrade) {
-                         updateScannerStatus(`Đang trong giao dịch ${state.activeTrade.symbol}. Tạm dừng quét.`);
+                        updateScannerStatus(`Đang trong giao dịch ${state.activeTrade.symbol}. Tạm dừng quét.`);
                     }
                     return;
                 }
 
-                const capital = parseFloat(ui.scanner.capital.value);
-                if (capital < CONFIG.MIN_ORDER_VALUE_USDT) {
-                    logMessage(`[Auto-Trade] Vốn ${capital} USDT quá thấp, yêu cầu tối thiểu ${CONFIG.MIN_ORDER_VALUE_USDT} USDT.`, true);
+                logMessage("[Auto-Trade] Bắt đầu quy trình vào lệnh...");
+
+                if (state.availableUsdt < CONFIG.MIN_ORDER_VALUE_USDT) {
+                    logMessage(`[Auto-Trade] Số dư khả dụng (${state.availableUsdt.toFixed(2)} USDT) thấp hơn mức tối thiểu (${CONFIG.MIN_ORDER_VALUE_USDT} USDT). Không thể giao dịch.`, true);
                     return;
                 }
 
-                logMessage("[Auto-Trade] Bắt đầu thực thi chiến lược 'Ưu tiên tín hiệu tốt nhất'.");
+                const maxCapitalPerTrade = parseFloat(ui.scanner.capital.value);
+                const capitalToUse = Math.min(state.availableUsdt, maxCapitalPerTrade);
+                
+                if (capitalToUse < CONFIG.MIN_ORDER_VALUE_USDT) {
+                    logMessage(`[Auto-Trade] Vốn sau khi giới hạn (${capitalToUse.toFixed(2)} USDT) thấp hơn mức tối thiểu (${CONFIG.MIN_ORDER_VALUE_USDT} USDT). Không thể giao dịch.`, true);
+                    return;
+                }
+                
+                const orderQty = (capitalToUse * 0.995).toFixed(5);
+
+                logMessage(`[Auto-Trade] Vốn khả dụng: ${state.availableUsdt.toFixed(2)} USDT. Vốn tối đa: ${maxCapitalPerTrade.toFixed(2)} USDT. Sẽ sử dụng ~${orderQty} USDT cho lệnh.`);
 
                 for (const plan of plans) {
-                    logMessage(`[Auto-Trade] Thử vào lệnh cho tín hiệu #1: ${plan.symbol} với ${capital} USDT.`);
+                    logMessage(`[Auto-Trade] Thử vào lệnh cho tín hiệu #1: ${plan.symbol} với ${orderQty} USDT.`);
+                    
+                    showLoader(`Đang đặt lệnh Mua ${plan.symbol}...`);
                     const orderParams = {
                         category: 'spot', symbol: plan.symbol, side: 'Buy',
-                        orderType: 'Market', qty: capital.toString(), marketUnit: 'quoteCoin'
+                        orderType: 'Market', qty: orderQty.toString(), marketUnit: 'quoteCoin'
                     };
                     const result = await placeOrder(orderParams);
+                    hideLoader();
 
                     if (result && result.orderId && result.cumExecQty && parseFloat(result.cumExecQty) > 0) {
                         logMessage(`[Auto-Trade] VÀO LỆNH THÀNH CÔNG cho ${plan.symbol}.`);
@@ -500,7 +482,7 @@
                             intervalId: null,
                         };
                         startTradeMonitor();
-                        return; // Exit after one successful trade
+                        return;
                     } else {
                         logMessage(`[Auto-Trade] Lệnh cho ${plan.symbol} thất bại hoặc không khớp. Thử tín hiệu tiếp theo...`, true);
                     }
@@ -527,13 +509,6 @@
                     ui.apiSecretInput.type = type;
                 });
                 
-                ui.getBalanceBtn.addEventListener('click', fetchWalletBalance);
-                ui.buyBtn.addEventListener('click', () => placeOrder({ category: 'spot', symbol: ui.symbolInput.value.trim().toUpperCase(), side: 'Buy', orderType: 'Market', qty: ui.qtyInput.value.trim() }));
-                ui.sellBtn.addEventListener('click', () => placeOrder({ category: 'spot', symbol: ui.symbolInput.value.trim().toUpperCase(), side: 'Sell', orderType: 'Market', qty: ui.qtyInput.value.trim() }));
-                
-                ui.dca.startBtn.addEventListener('click', startDcaBot);
-                ui.dca.stopBtn.addEventListener('click', stopDcaBot);
-
                 ui.scanner.startBtn.addEventListener('click', startScanner);
                 ui.scanner.stopBtn.addEventListener('click', stopScanner);
                 
@@ -541,6 +516,88 @@
                     state.autoTradeEnabled = e.target.checked;
                     logMessage(`[Auto-Trade] Tự động giao dịch đã được ${state.autoTradeEnabled ? 'BẬT' : 'TẮT'}.`);
                 });
+            }
+             // --- Charting Functions ---
+            function initializeChart() {
+                if (state.priceChart) {
+                    state.priceChart.destroy();
+                }
+                const ctx = ui.chartCanvas.getContext('2d');
+                state.priceChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: []
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                ticks: { color: '#9CA3AF', maxRotation: 0, autoSkip: true, maxTicksLimit: 10 },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            },
+                            y: {
+                                ticks: { color: '#9CA3AF' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: { color: '#D1D5DB' }
+                            },
+                            tooltip: {
+                                titleColor: '#FFFFFF',
+                                bodyColor: '#E5E7EB',
+                                backgroundColor: '#1F2937',
+                            }
+                        }
+                    }
+                });
+            }
+
+            function renderChart(symbol, klines) {
+                if (!state.priceChart || !klines || klines.length === 0) {
+                    initializeChart(); 
+                    return;
+                }
+                
+                const closes = klines.map(k => parseFloat(k[4]));
+                const labels = klines.map(k => new Date(parseInt(k[0])).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }));
+
+                const ema20 = TA.ema(closes, 20);
+                const ema50 = TA.ema(closes, 50);
+
+                const ema20Data = [...Array(klines.length - ema20.length).fill(null), ...ema20];
+                const ema50Data = [...Array(klines.length - ema50.length).fill(null), ...ema50];
+
+                state.priceChart.data.labels = labels;
+                state.priceChart.data.datasets = [
+                    {
+                        label: `Giá ${symbol}`,
+                        data: closes,
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.1,
+                        pointRadius: 0,
+                    },
+                    {
+                        label: 'EMA 20',
+                        data: ema20Data,
+                        borderColor: '#f1c40f',
+                        borderWidth: 1,
+                        pointRadius: 0,
+                    },
+                    {
+                        label: 'EMA 50',
+                        data: ema50Data,
+                        borderColor: '#e74c3c',
+                        borderWidth: 1,
+                        pointRadius: 0,
+                    }
+                ];
+                state.priceChart.update();
             }
 
             function initialize() {
@@ -556,6 +613,7 @@
                     updateApiStatus(false);
                 }
                 setupEventListeners();
+                initializeChart();
                 logMessage('Bot đã sẵn sàng. Vui lòng lưu API key để kích hoạt các tính năng.');
             }
             
@@ -563,65 +621,74 @@
             async function executeScan() {
                 if (state.isScanning || state.activeTrade) return;
                 state.isScanning = true;
-                logMessage(`[Scanner] Bắt đầu quét với thuật toán V3.6.0...`);
+                logMessage(`[Scanner] Bắt đầu quét với thuật toán V4.0.0...`);
                 try {
-                    updateScannerStatus(`(B0) Lấy danh sách cặp giao dịch...`); showLoader(ui.scanner.status.textContent);
+                    updateScannerStatus(`(B1) Lấy dữ liệu thị trường...`); showLoader(ui.scanner.status.textContent);
                     const instrumentsInfo = await bybitRequest('/v5/market/instruments-info', 'GET', { category: 'spot' }, true);
                     const allTradablePairs = instrumentsInfo.list.filter(i => i.status === 'Trading' && i.quoteCoin === 'USDT').map(i => i.symbol);
 
-                    updateScannerStatus(`(B1) Lọc theo thanh khoản...`); showLoader(ui.scanner.status.textContent);
                     const allTickersData = await bybitRequest('/v5/market/tickers', 'GET', { category: 'spot' }, true);
-                    let universe = allTickersData.list.filter(t => allTradablePairs.includes(t.symbol) && parseFloat(t.turnover24h) > CONFIG.MIN_TURNOVER_24H);
+                    let universe = allTickersData.list.filter(t => allTradablePairs.includes(t.symbol) && parseFloat(t.turnover24h) > CONFIG.MIN_TURNOVER_24H).slice(0, 150);
 
-                    updateScannerStatus(`(B2+3) Lấy dữ liệu chi tiết cho ${universe.length} cặp...`); showLoader(ui.scanner.status.textContent);
+                    updateScannerStatus(`(B2) Lấy dữ liệu chi tiết cho ${universe.length} cặp...`); showLoader(ui.scanner.status.textContent);
                     const dataPromises = universe.map(t => Promise.all([
                         bybitRequest('/v5/market/orderbook', 'GET', { category: 'spot', symbol: t.symbol, limit: 1 }, true),
                         bybitRequest('/v5/market/kline', 'GET', { category: 'spot', symbol: t.symbol, interval: '15', limit: 200 }, true)
                     ]));
                     const results = await Promise.all(dataPromises);
-                    let candidates = [];
-                     for (let i = 0; i < universe.length; i++) {
+                    
+                    state.scannedCandidates.clear();
+                    for (let i = 0; i < universe.length; i++) {
                         const [ob, klineData] = results[i];
                         if (ob && klineData?.list?.length >= 51) {
                             const ticker = universe[i];
                             const ask = ob?.a?.[0]?.[0] ?? ticker.ask1Price;
                             const bid = ob?.b?.[0]?.[0] ?? ticker.bid1Price;
-                            candidates.push({ ...ticker, spread_bps: ((ask - bid) / ask) * 10000, klines: klineData.list.reverse() });
+                            const candidateData = { ...ticker, spread_bps: ((ask - bid) / ask) * 10000, klines: klineData.list.reverse() };
+                            state.scannedCandidates.set(ticker.symbol, candidateData);
                         }
                     }
                     
-                    updateScannerStatus(`(B4) Chấm điểm ${candidates.length} cặp với logic EMA/RSI...`); showLoader(ui.scanner.status.textContent);
+                    updateScannerStatus(`(B3) Chấm điểm ${state.scannedCandidates.size} cặp với logic "Bắt đáy trong Uptrend"...`); showLoader(ui.scanner.status.textContent);
                     let processedCandidates = [];
-                    for (const cand of candidates) {
+                    for (const [symbol, cand] of state.scannedCandidates.entries()) {
                         const closes = cand.klines.map(k => parseFloat(k[4]));
                         const lastPrice = closes[closes.length - 1];
-                        if (!lastPrice || closes.length < 51) continue; 
+                        if (!lastPrice || closes.length < 52) continue; // Need at least 2 RSI values
 
                         const ema20 = TA.ema(closes, 20).pop();
                         const ema50 = TA.ema(closes, 50).pop();
-                        const rsi14 = TA.rsi(closes, 14).pop();
+                        const rsiValues = TA.rsi(closes, 14);
+                        if (ema20 === undefined || ema50 === undefined || rsiValues.length < 2) continue;
                         
-                        if (ema20 === undefined || ema50 === undefined || rsi14 === undefined) continue;
+                        const lastRsi = rsiValues[rsiValues.length - 1];
+                        const prevRsi = rsiValues[rsiValues.length - 2];
 
                         const isUptrend = ema20 > ema50;
                         const priceAboveTrend = lastPrice > ema50;
-                        const notOverbought = rsi14 < 75; 
-                        const notOversold = rsi14 > 40; 
+                        const inPullbackZone = lastRsi > 45 && lastRsi < 65; // Stricter RSI range
+                        const isRecovering = lastRsi > prevRsi; // RSI is hooking up
 
-                        if (isUptrend && priceAboveTrend && notOverbought && notOversold) {
-                            const rsiScore = (75 - rsi14) / 35; 
+                        if (isUptrend && priceAboveTrend && inPullbackZone && isRecovering) {
+                            const rsiScore = (65 - lastRsi) / 20; // Higher score for lower RSI in the zone
                             const proximityToEmaScore = 1 - Math.min(1, Math.abs(lastPrice - ema20) / lastPrice * 10);
                             const spreadScore = 1 - Math.min(1, cand.spread_bps / 30);
-                            const finalScore = (rsiScore * 0.4) + (proximityToEmaScore * 0.4) + (spreadScore * 0.2);
+                            const finalScore = (rsiScore * 0.5) + (proximityToEmaScore * 0.3) + (spreadScore * 0.2);
 
-                            processedCandidates.push({ ...cand, raos: finalScore, regime: 'Uptrend Pullback', rsi: rsi14 });
+                            processedCandidates.push({ ...cand, raos: finalScore, regime: 'Uptrend Pullback', rsi: lastRsi });
                         }
                     }
                     processedCandidates.sort((a, b) => b.raos - a.raos);
                     
                     const topPicks = processedCandidates.slice(0, 3);
                     displayScanResults(topPicks);
-                    logMessage(`[Scanner] Quét hoàn tất. Hiển thị ${topPicks.length} kế hoạch giao dịch.`);
+                    if (topPicks.length > 0) {
+                        renderChart(topPicks[0].symbol, topPicks[0].klines);
+                    } else {
+                        initializeChart(); 
+                    }
+
+                    logMessage(`[Scanner] Quét hoàn tất. Hiển thị ${topPicks.length} tín hiệu tiềm năng.`);
                     updateScannerStatus(`Quét xong. Cập nhật lần cuối: ${new Date().toLocaleTimeString()}`);
                     
                     await executeAutoTrades(topPicks);
@@ -639,51 +706,48 @@
             function displayScanResults(results) {
                  ui.scanner.results.innerHTML = '';
                 if (!results || results.length === 0) {
-                    ui.scanner.results.innerHTML = '<p class="text-center text-gray-400 col-span-full">Không có kế hoạch giao dịch nào phù hợp.</p>';
+                    ui.scanner.results.innerHTML = '<div class="col-span-full text-center text-gray-400">Không có kế hoạch giao dịch nào phù hợp.</div>';
                     return;
                 }
-                const totalCapital = parseFloat(ui.scanner.capital.value) || 8;
                 results.forEach((item, index) => {
-                    const capitalDisplay = index === 0 ? `$${totalCapital.toFixed(2)} (Ưu tiên #1)` : 'Dự phòng';
+                    const capitalDisplay = index === 0 ? `(Ưu tiên #1)` : '(Dự phòng)';
                     const cardHTML = `
                         <div class="bg-gray-900/50 rounded-xl p-4 border border-gray-700 flex flex-col space-y-3 ${index > 0 ? 'opacity-60' : ''}">
                             <div class="flex justify-between items-center">
                                 <h3 class="text-lg font-bold text-cyan-400">${item.symbol}</h3>
-                                <span class="px-2 py-1 text-xs font-semibold rounded-full regime-trend">${item.regime}</span>
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full regime-trend">${item.regime} ${capitalDisplay}</span>
                             </div>
                             <div class="grid grid-cols-2 gap-x-4 text-sm">
                                 <span class="text-gray-400">Score</span><span class="font-semibold text-yellow-400 text-right">${item.raos?.toFixed(3) ?? 'N/A'}</span>
                                 <span class="text-gray-400">RSI(14)</span><span class="font-semibold text-white text-right">${item.rsi?.toFixed(2) ?? 'N/A'}</span>
                                 <span class="text-gray-400">Spread</span><span class="font-semibold text-white text-right">${item.spread_bps?.toFixed(2) ?? 'N/A'} bps</span>
-                                <span class="text-gray-400">Vốn Phân Bổ</span><span class="font-bold text-white text-right">${capitalDisplay}</span>
                             </div>
+                             <button class="view-chart-btn mt-2 w-full bg-gray-600 hover:bg-gray-500 text-white text-xs font-bold py-2 px-4 rounded-lg transition" data-symbol="${item.symbol}">Xem Biểu Đồ</button>
                         </div>`;
                     ui.scanner.results.innerHTML += cardHTML;
                 });
+
+                document.querySelectorAll('.view-chart-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const symbol = e.target.dataset.symbol;
+                        const candidateData = state.scannedCandidates.get(symbol);
+                        if(candidateData) {
+                            renderChart(symbol, candidateData.klines);
+                        }
+                    });
+                });
             }
-            // --- Stubs for unused functions ---
-            const startDcaBot = () => logMessage("DCA Bot is not implemented in this version.", true);
-            const stopDcaBot = () => {};
-            const fetchWalletBalance = async () => {
-                 showLoader('Đang lấy số dư...');
-                const result = await bybitRequest('/v5/account/wallet-balance', 'GET', { accountType: 'UNIFIED' });
-                hideLoader();
-                if (result?.list?.[0]) {
-                    const account = result.list[0];
-                    let balanceHTML = `<p><strong>Tổng vốn (USD):</strong> ${parseFloat(account.totalEquity).toFixed(2)}</p><p><strong>Số dư khả dụng (USD):</strong> ${parseFloat(account.totalAvailableBalance).toFixed(2)}</p><hr class="my-2 border-gray-600"><ul class="space-y-1 max-h-40 overflow-y-auto">`;
-                    account.coin.forEach(c => { if (parseFloat(c.walletBalance) > 0) balanceHTML += `<li><strong>${c.coin}:</strong> ${parseFloat(c.walletBalance).toFixed(6)}</li>`; });
-                    balanceHTML += '</ul>';
-                    ui.balanceInfoDiv.innerHTML = balanceHTML;
-                } else {
-                    ui.balanceInfoDiv.textContent = "Không thể lấy dữ liệu số dư.";
-                }
-            };
+           
             const startScanner = () => {
                 if (!state.apiKeysValid) { logMessage('API keys không hợp lệ.', true); return; }
                 if (state.scannerIntervalId || state.activeTrade) { logMessage('Bot đang bận, vui lòng dừng trước khi bắt đầu lại.', true); return; }
                 logMessage("Bắt đầu công cụ quét thị trường...");
                 ui.scanner.startBtn.disabled = true;
                 ui.scanner.stopBtn.disabled = false;
+                
+                fetchWalletBalance(); // Initial balance check
+                state.balanceUpdateIntervalId = setInterval(fetchWalletBalance, CONSTANTS.BALANCE_UPDATE_INTERVAL_MS);
+
                 executeScan();
                 state.scannerIntervalId = setInterval(executeScan, CONSTANTS.SCANNER_INTERVAL_MS);
             };
@@ -691,16 +755,21 @@
                 if (state.scannerIntervalId) {
                     clearInterval(state.scannerIntervalId);
                     state.scannerIntervalId = null;
-                    logMessage("Công cụ quét đã dừng bởi người dùng.");
-                    updateScannerStatus("Công cụ quét đang không hoạt động.");
-                    ui.scanner.startBtn.disabled = false;
-                    ui.scanner.stopBtn.disabled = true;
                 }
+                if (state.balanceUpdateIntervalId) {
+                    clearInterval(state.balanceUpdateIntervalId);
+                    state.balanceUpdateIntervalId = null;
+                }
+                logMessage("Công cụ quét đã dừng bởi người dùng.");
+                updateScannerStatus("Công cụ quét đang không hoạt động.");
+                ui.scanner.startBtn.disabled = false;
+                ui.scanner.stopBtn.disabled = true;
+
                  if(state.activeTrade) {
                     closeActiveTrade("Người dùng yêu cầu dừng bot.");
                 }
             };
-
+            
             // --- Start the application ---
             initialize();
         });
