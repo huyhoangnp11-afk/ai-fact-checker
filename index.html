@@ -93,7 +93,7 @@
                 </div>
                  <!-- Market Scanner Section -->
                 <div class="bg-gray-700/50 p-6 rounded-xl">
-                    <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bot Giao Dịch Tự Động (V4.2.0)</h2>
+                    <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bot Giao Dịch Tự Động (V4.2.1)</h2>
                     <div class="bg-blue-900 border-l-4 border-blue-500 text-blue-100 p-4 rounded-lg mb-4" role="alert">
                         <p><strong class="font-bold">TP/SL Động (ATR):</strong> Bot tự động đặt Chốt Lời (1.5 x ATR) và Cắt Lỗ (1.0 x ATR) dựa trên biến động của từng cặp tiền.</p>
                     </div>
@@ -374,7 +374,12 @@
                 if (result?.list?.[0]) {
                     const account = result.list[0];
                     const usdtAsset = account.coin.find(c => c.coin === 'USDT');
-                    state.availableUsdt = usdtAsset ? parseFloat(usdtAsset.availableToWithdraw) : 0;
+                    const availableBalanceStr = usdtAsset?.availableToWithdraw;
+                    state.availableUsdt = availableBalanceStr ? parseFloat(availableBalanceStr) : 0;
+                    if (isNaN(state.availableUsdt)) {
+                        logMessage(`[Balance Check] Giá trị số dư không hợp lệ nhận được: ${availableBalanceStr}. Đặt lại thành 0.`, true);
+                        state.availableUsdt = 0;
+                    }
                     
                     const totalEquity = parseFloat(account.totalEquity);
                     if (state.pnlHistory.length === 0 || state.pnlHistory[state.pnlHistory.length - 1].equity !== totalEquity) {
@@ -647,13 +652,19 @@
             async function executeScan() {
                 if (state.isScanning || state.activeTrade) return;
                 state.isScanning = true;
-                logMessage(`[Scanner] Bắt đầu quét với thuật toán V4.2.0...`);
+                logMessage(`[Scanner] Bắt đầu quét với thuật toán V4.2.1...`);
                 try {
                     updateScannerStatus(`(B1) Lấy dữ liệu thị trường...`); showLoader(ui.scanner.status.textContent);
                     const instrumentsInfo = await bybitRequest('/v5/market/instruments-info', 'GET', { category: 'spot' }, true);
+                    if (!instrumentsInfo || !instrumentsInfo.list) {
+                        throw new Error("Không thể lấy danh sách cặp giao dịch từ Bybit.");
+                    }
                     const allTradablePairs = instrumentsInfo.list.filter(i => i.status === 'Trading' && i.quoteCoin === 'USDT').map(i => i.symbol);
 
                     const allTickersData = await bybitRequest('/v5/market/tickers', 'GET', { category: 'spot' }, true);
+                     if (!allTickersData || !allTickersData.list) {
+                        throw new Error("Không thể lấy dữ liệu tickers từ Bybit.");
+                    }
                     let universe = allTickersData.list.filter(t => allTradablePairs.includes(t.symbol) && parseFloat(t.turnover24h) > CONFIG.MIN_TURNOVER_24H).slice(0, 150);
 
                     updateScannerStatus(`(B2) Lấy dữ liệu chi tiết cho ${universe.length} cặp...`); showLoader(ui.scanner.status.textContent);
