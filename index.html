@@ -93,22 +93,14 @@
                 </div>
                  <!-- Market Scanner Section -->
                 <div class="bg-gray-700/50 p-6 rounded-xl">
-                    <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bot Giao Dịch Tự Động (V4.1.0)</h2>
+                    <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bot Giao Dịch Tự Động (V4.2.0)</h2>
                     <div class="bg-blue-900 border-l-4 border-blue-500 text-blue-100 p-4 rounded-lg mb-4" role="alert">
-                        <p><strong class="font-bold">Cách Hoạt Động:</strong> Bot sẽ tự động cập nhật số dư USDT và dùng nó để vào lệnh, tránh mua đỉnh và tự động chốt lời/cắt lỗ.</p>
+                        <p><strong class="font-bold">TP/SL Động (ATR):</strong> Bot tự động đặt Chốt Lời (1.5 x ATR) và Cắt Lỗ (1.0 x ATR) dựa trên biến động của từng cặp tiền.</p>
                     </div>
-                     <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                         <div class="md:col-span-1">
                             <label for="scannerCapital" class="block text-sm font-medium text-gray-300 mb-1">Vốn Tối Đa / Lệnh</label>
                             <input type="number" id="scannerCapital" value="8" step="1" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200">
-                        </div>
-                        <div>
-                            <label for="takeProfitPercent" class="block text-sm font-medium text-gray-300 mb-1">Chốt Lời (%)</label>
-                            <input type="number" id="takeProfitPercent" value="1.5" step="0.1" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200">
-                        </div>
-                         <div>
-                            <label for="stopLossPercent" class="block text-sm font-medium text-gray-300 mb-1">Cắt Lỗ (%)</label>
-                            <input type="number" id="stopLossPercent" value="0.8" step="0.1" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200">
                         </div>
                         <div class="md:col-span-1 flex items-end pb-1">
                              <label for="autoTradeToggle" class="flex items-center cursor-pointer">
@@ -173,8 +165,6 @@
                 pnlChartContainer: document.getElementById('pnlChartContainer'),
                 scanner: {
                     capital: document.getElementById('scannerCapital'),
-                    takeProfitInput: document.getElementById('takeProfitPercent'),
-                    stopLossInput: document.getElementById('stopLossPercent'),
                     autoTradeToggle: document.getElementById('autoTradeToggle'),
                     startBtn: document.getElementById('startScannerBtn'),
                     stopBtn: document.getElementById('stopScannerBtn'),
@@ -211,6 +201,8 @@
             const CONFIG = {
                 MIN_ORDER_VALUE_USDT: 3, 
                 MIN_TURNOVER_24H: 500000,
+                ATR_TP_MULTIPLIER: 1.5,
+                ATR_SL_MULTIPLIER: 1.0,
             };
             
              // --- Technical Analysis Lib ---
@@ -250,6 +242,20 @@
                         }
                     }
                     return rsiValues;
+                },
+                atr: (k, p) => {
+                    if (!k || k.length < p) return [];
+                    let trValues = [];
+                    for (let i = 1; i < k.length; i++) {
+                        const high = parseFloat(k[i][2]);
+                        const low = parseFloat(k[i][3]);
+                        const prevClose = parseFloat(k[i - 1][4]);
+                        const tr = Math.max(high - low, Math.abs(high - prevClose), Math.abs(low - prevClose));
+                        trValues.push(tr);
+                    }
+                    if (trValues.length === 0) return [];
+                    // Using EMA for ATR is a common method (Wilder's Smoothing)
+                    return TA.ema(trValues, p);
                 }
             };
 
@@ -265,6 +271,12 @@
                 const colorClass = isError ? 'text-red-400' : 'text-green-400';
                 ui.logDiv.innerHTML += `<p class="${colorClass}">[${timestamp}] ${message}</p>`;
                 ui.logDiv.scrollTop = ui.logDiv.scrollHeight;
+            }
+
+            function updateScannerStatus(message) {
+                if (ui.scanner.status) {
+                    ui.scanner.status.textContent = message;
+                }
             }
 
             async function getServerTimestampMs() {
@@ -365,8 +377,10 @@
                     state.availableUsdt = usdtAsset ? parseFloat(usdtAsset.availableToWithdraw) : 0;
                     
                     const totalEquity = parseFloat(account.totalEquity);
-                    state.pnlHistory.push({ time: new Date(), equity: totalEquity });
-                    renderPnlChart();
+                    if (state.pnlHistory.length === 0 || state.pnlHistory[state.pnlHistory.length - 1].equity !== totalEquity) {
+                        state.pnlHistory.push({ time: new Date(), equity: totalEquity });
+                        renderPnlChart();
+                    }
 
                     let balanceHTML = `<p><strong>Tổng vốn (USD):</strong> ${totalEquity.toFixed(2)}</p><p><strong>USDT Khả dụng:</strong> <span class="font-bold text-yellow-300">${state.availableUsdt.toFixed(2)}</span></p><hr class="my-2 border-gray-600"><ul class="space-y-1 max-h-40 overflow-y-auto">`;
                     account.coin.forEach(c => { if (parseFloat(c.walletBalance) > 0.00001) balanceHTML += `<li><strong>${c.coin}:</strong> ${parseFloat(c.walletBalance).toFixed(5)}</li>`; });
@@ -413,20 +427,18 @@
             function startTradeMonitor() {
                 if (!state.activeTrade) return;
 
-                const tpPercent = parseFloat(ui.scanner.takeProfitInput.value) / 100;
-                const slPercent = parseFloat(ui.scanner.stopLossInput.value) / 100;
-                
-                if (isNaN(tpPercent) || isNaN(slPercent) || tpPercent <= 0 || slPercent <= 0) {
-                     logMessage('[Trade Manager] Lỗi: Tỷ lệ TP/SL không hợp lệ. Giao dịch sẽ không được quản lý.', true);
-                     state.activeTrade = null; 
-                     return;
+                const { symbol, entryPrice, lastAtr } = state.activeTrade;
+
+                if (!lastAtr || lastAtr <= 0) {
+                    logMessage(`[Trade Manager] Lỗi: Không có dữ liệu ATR hợp lệ cho ${symbol}. Không thể đặt TP/SL động.`, true);
+                    closeActiveTrade("Lỗi dữ liệu ATR");
+                    return;
                 }
+                
+                const tpPrice = entryPrice + (lastAtr * CONFIG.ATR_TP_MULTIPLIER);
+                const slPrice = entryPrice - (lastAtr * CONFIG.ATR_SL_MULTIPLIER);
 
-                const { symbol, entryPrice } = state.activeTrade;
-                const tpPrice = entryPrice * (1 + tpPercent);
-                const slPrice = entryPrice * (1 - slPercent);
-
-                logMessage(`[Trade Manager] Bắt đầu giám sát ${symbol}. Entry: ${entryPrice.toFixed(4)}, TP: ${tpPrice.toFixed(4)}, SL: ${slPrice.toFixed(4)}.`);
+                logMessage(`[Trade Manager] Bắt đầu giám sát ${symbol}. Entry: ${entryPrice.toFixed(4)}, ATR: ${lastAtr.toFixed(4)}, TP: ${tpPrice.toFixed(4)}, SL: ${slPrice.toFixed(4)}.`);
                 
                 const intervalId = setInterval(async () => {
                     if (!state.activeTrade || state.activeTrade.symbol !== symbol) {
@@ -494,6 +506,7 @@
                             entryPrice: parseFloat(result.avgPrice),
                             quantity: parseFloat(result.cumExecQty),
                             entryValue: parseFloat(result.cumExecValue),
+                            lastAtr: plan.lastAtr,
                             intervalId: null,
                         };
                         startTradeMonitor();
@@ -634,7 +647,7 @@
             async function executeScan() {
                 if (state.isScanning || state.activeTrade) return;
                 state.isScanning = true;
-                logMessage(`[Scanner] Bắt đầu quét với thuật toán V4.0.0...`);
+                logMessage(`[Scanner] Bắt đầu quét với thuật toán V4.2.0...`);
                 try {
                     updateScannerStatus(`(B1) Lấy dữ liệu thị trường...`); showLoader(ui.scanner.status.textContent);
                     const instrumentsInfo = await bybitRequest('/v5/market/instruments-info', 'GET', { category: 'spot' }, true);
@@ -672,23 +685,26 @@
                         const ema20 = TA.ema(closes, 20).pop();
                         const ema50 = TA.ema(closes, 50).pop();
                         const rsiValues = TA.rsi(closes, 14);
-                        if (ema20 === undefined || ema50 === undefined || rsiValues.length < 2) continue;
+                        const atrValues = TA.atr(cand.klines, 14);
+
+                        if (ema20 === undefined || ema50 === undefined || rsiValues.length < 2 || atrValues.length < 1) continue;
                         
                         const lastRsi = rsiValues[rsiValues.length - 1];
                         const prevRsi = rsiValues[rsiValues.length - 2];
+                        const lastAtr = atrValues[atrValues.length - 1];
 
                         const isUptrend = ema20 > ema50;
                         const priceAboveTrend = lastPrice > ema50;
-                        const inPullbackZone = lastRsi > 45 && lastRsi < 65; // Stricter RSI range
-                        const isRecovering = lastRsi > prevRsi; // RSI is hooking up
+                        const inPullbackZone = lastRsi > 45 && lastRsi < 65;
+                        const isRecovering = lastRsi > prevRsi;
 
                         if (isUptrend && priceAboveTrend && inPullbackZone && isRecovering) {
-                            const rsiScore = (65 - lastRsi) / 20; // Higher score for lower RSI in the zone
+                            const rsiScore = (65 - lastRsi) / 20; 
                             const proximityToEmaScore = 1 - Math.min(1, Math.abs(lastPrice - ema20) / lastPrice * 10);
                             const spreadScore = 1 - Math.min(1, cand.spread_bps / 30);
                             const finalScore = (rsiScore * 0.5) + (proximityToEmaScore * 0.3) + (spreadScore * 0.2);
 
-                            processedCandidates.push({ ...cand, raos: finalScore, regime: 'Uptrend Pullback', rsi: lastRsi });
+                            processedCandidates.push({ ...cand, raos: finalScore, regime: 'Uptrend Pullback', rsi: lastRsi, lastAtr: lastAtr });
                         }
                     }
                     processedCandidates.sort((a, b) => b.raos - a.raos);
@@ -724,6 +740,9 @@
                 }
                 results.forEach((item, index) => {
                     const capitalDisplay = index === 0 ? `(Ưu tiên #1)` : '(Dự phòng)';
+                    const lastPrice = parseFloat(item.lastPrice);
+                    const potentialTp = lastPrice + (item.lastAtr * CONFIG.ATR_TP_MULTIPLIER);
+                    const potentialSl = lastPrice - (item.lastAtr * CONFIG.ATR_SL_MULTIPLIER);
                     const cardHTML = `
                         <div class="bg-gray-900/50 rounded-xl p-4 border border-gray-700 flex flex-col space-y-3 ${index > 0 ? 'opacity-60' : ''}">
                             <div class="flex justify-between items-center">
@@ -734,6 +753,11 @@
                                 <span class="text-gray-400">Score</span><span class="font-semibold text-yellow-400 text-right">${item.raos?.toFixed(3) ?? 'N/A'}</span>
                                 <span class="text-gray-400">RSI(14)</span><span class="font-semibold text-white text-right">${item.rsi?.toFixed(2) ?? 'N/A'}</span>
                                 <span class="text-gray-400">Spread</span><span class="font-semibold text-white text-right">${item.spread_bps?.toFixed(2) ?? 'N/A'} bps</span>
+                            </div>
+                             <div class="border-t border-gray-700 pt-2 mt-2 text-xs">
+                                <p class="font-semibold text-gray-400">TP/SL Động (dựa trên ATR):</p>
+                                <div class="flex justify-between"><span>Chốt lời (ước tính):</span><span class="text-green-400">${potentialTp.toFixed(4)}</span></div>
+                                <div class="flex justify-between"><span>Cắt lỗ (ước tính):</span><span class="text-red-400">${potentialSl.toFixed(4)}</span></div>
                             </div>
                              <button class="view-chart-btn mt-2 w-full bg-gray-600 hover:bg-gray-500 text-white text-xs font-bold py-2 px-4 rounded-lg transition" data-symbol="${item.symbol}">Xem Biểu Đồ</button>
                         </div>`;
