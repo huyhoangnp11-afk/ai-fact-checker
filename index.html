@@ -24,13 +24,11 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        .regime-trend { background-color: #166534; color: #dcfce7; }
-        .regime-range { background-color: #1e40af; color: #dbeafe; }
-        .regime-squeeze { background-color: #9a3412; color: #ffedd5; }
-        .regime-micro-grid { background-color: #581c87; color: #f3e8ff; }
-        .regime-none { background-color: #4b5563; color: #d1d5db; }
-        .toggle-checkbox:checked { right: 0; border-color: #68d391; }
-        .toggle-checkbox:checked + .toggle-label { background-color: #68d391; }
+        .tab-active {
+            border-bottom-width: 2px;
+            border-color: #0891B2; /* cyan-500 */
+            color: #ffffff;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-200 min-h-screen flex items-center justify-center p-4">
@@ -82,16 +80,22 @@
             <div class="lg:col-span-2 space-y-6">
                  <!-- Trading Dashboard -->
                 <div class="bg-gray-700/50 p-6 rounded-xl">
-                    <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bảng điều khiển Giao dịch</h2>
-                    <div class="bg-gray-900 rounded-lg p-4 h-64">
+                    <div class="flex border-b border-gray-600 mb-4">
+                        <button id="priceChartTab" class="py-2 px-4 font-semibold tab-active">Biểu Đồ Giá</button>
+                        <button id="pnlChartTab" class="py-2 px-4 text-gray-400 font-semibold">Lịch Sử PNL</button>
+                    </div>
+                    <div id="priceChartContainer" class="bg-gray-900 rounded-lg p-4 h-64">
                         <canvas id="priceChart"></canvas>
+                    </div>
+                     <div id="pnlChartContainer" class="bg-gray-900 rounded-lg p-4 h-64 hidden">
+                        <canvas id="pnlChart"></canvas>
                     </div>
                 </div>
                  <!-- Market Scanner Section -->
                 <div class="bg-gray-700/50 p-6 rounded-xl">
-                    <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bot Giao Dịch Tự Động (V4.0.0)</h2>
+                    <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bot Giao Dịch Tự Động (V4.1.0)</h2>
                     <div class="bg-blue-900 border-l-4 border-blue-500 text-blue-100 p-4 rounded-lg mb-4" role="alert">
-                        <p><strong class="font-bold">Cách Hoạt Động Mới:</strong> Bot sử dụng RSI để tìm điểm vào lệnh sau khi giá điều chỉnh (pullback) trong một xu hướng tăng, tránh mua đỉnh.</p>
+                        <p><strong class="font-bold">Cách Hoạt Động:</strong> Bot sẽ tự động cập nhật số dư USDT và dùng nó để vào lệnh, tránh mua đỉnh và tự động chốt lời/cắt lỗ.</p>
                     </div>
                      <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
                         <div class="md:col-span-1">
@@ -161,7 +165,12 @@
                 logDiv: document.getElementById('log'),
                 loaderModal: document.getElementById('loaderModal'),
                 loaderText: document.getElementById('loaderText'),
-                chartCanvas: document.getElementById('priceChart'),
+                priceChartCanvas: document.getElementById('priceChart'),
+                pnlChartCanvas: document.getElementById('pnlChart'),
+                priceChartTab: document.getElementById('priceChartTab'),
+                pnlChartTab: document.getElementById('pnlChartTab'),
+                priceChartContainer: document.getElementById('priceChartContainer'),
+                pnlChartContainer: document.getElementById('pnlChartContainer'),
                 scanner: {
                     capital: document.getElementById('scannerCapital'),
                     takeProfitInput: document.getElementById('takeProfitPercent'),
@@ -185,6 +194,8 @@
                 autoTradeEnabled: false,
                 activeTrade: null,
                 priceChart: null,
+                pnlChart: null,
+                pnlHistory: [],
                 scannedCandidates: new Map(),
                 availableUsdt: 0,
             };
@@ -250,7 +261,7 @@
             const hideLoader = () => ui.loaderModal.classList.add('hidden');
 
             function logMessage(message, isError = false) {
-                const timestamp = new Date().toLocaleString();
+                const timestamp = new Date().toLocaleString('vi-VN');
                 const colorClass = isError ? 'text-red-400' : 'text-green-400';
                 ui.logDiv.innerHTML += `<p class="${colorClass}">[${timestamp}] ${message}</p>`;
                 ui.logDiv.scrollTop = ui.logDiv.scrollHeight;
@@ -352,8 +363,12 @@
                     const account = result.list[0];
                     const usdtAsset = account.coin.find(c => c.coin === 'USDT');
                     state.availableUsdt = usdtAsset ? parseFloat(usdtAsset.availableToWithdraw) : 0;
+                    
+                    const totalEquity = parseFloat(account.totalEquity);
+                    state.pnlHistory.push({ time: new Date(), equity: totalEquity });
+                    renderPnlChart();
 
-                    let balanceHTML = `<p><strong>Tổng vốn (USD):</strong> ${parseFloat(account.totalEquity).toFixed(2)}</p><p><strong>USDT Khả dụng:</strong> <span class="font-bold text-yellow-300">${state.availableUsdt.toFixed(2)}</span></p><hr class="my-2 border-gray-600"><ul class="space-y-1 max-h-40 overflow-y-auto">`;
+                    let balanceHTML = `<p><strong>Tổng vốn (USD):</strong> ${totalEquity.toFixed(2)}</p><p><strong>USDT Khả dụng:</strong> <span class="font-bold text-yellow-300">${state.availableUsdt.toFixed(2)}</span></p><hr class="my-2 border-gray-600"><ul class="space-y-1 max-h-40 overflow-y-auto">`;
                     account.coin.forEach(c => { if (parseFloat(c.walletBalance) > 0.00001) balanceHTML += `<li><strong>${c.coin}:</strong> ${parseFloat(c.walletBalance).toFixed(5)}</li>`; });
                     balanceHTML += '</ul>';
                     ui.balanceInfoDiv.innerHTML = balanceHTML;
@@ -516,88 +531,86 @@
                     state.autoTradeEnabled = e.target.checked;
                     logMessage(`[Auto-Trade] Tự động giao dịch đã được ${state.autoTradeEnabled ? 'BẬT' : 'TẮT'}.`);
                 });
+
+                ui.priceChartTab.addEventListener('click', () => {
+                    ui.priceChartContainer.classList.remove('hidden');
+                    ui.pnlChartContainer.classList.add('hidden');
+                    ui.priceChartTab.classList.add('tab-active', 'text-white');
+                    ui.pnlChartTab.classList.remove('tab-active', 'text-white');
+                });
+                 ui.pnlChartTab.addEventListener('click', () => {
+                    ui.pnlChartContainer.classList.remove('hidden');
+                    ui.priceChartContainer.classList.add('hidden');
+                    ui.pnlChartTab.classList.add('tab-active', 'text-white');
+                    ui.priceChartTab.classList.remove('tab-active', 'text-white');
+                });
             }
              // --- Charting Functions ---
-            function initializeChart() {
-                if (state.priceChart) {
-                    state.priceChart.destroy();
-                }
-                const ctx = ui.chartCanvas.getContext('2d');
-                state.priceChart = new Chart(ctx, {
+            function createChart(canvas) {
+                const ctx = canvas.getContext('2d');
+                 return new Chart(ctx, {
                     type: 'line',
-                    data: {
-                        labels: [],
-                        datasets: []
-                    },
+                    data: { labels: [], datasets: [] },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
                         scales: {
-                            x: {
-                                ticks: { color: '#9CA3AF', maxRotation: 0, autoSkip: true, maxTicksLimit: 10 },
-                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
-                            },
-                            y: {
-                                ticks: { color: '#9CA3AF' },
-                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
-                            }
+                            x: { ticks: { color: '#9CA3AF', maxRotation: 0, autoSkip: true, maxTicksLimit: 8 }, grid: { color: 'rgba(255, 255, 255, 0.1)' } },
+                            y: { ticks: { color: '#9CA3AF' }, grid: { color: 'rgba(255, 255, 255, 0.1)' } }
                         },
-                        plugins: {
-                            legend: {
-                                labels: { color: '#D1D5DB' }
-                            },
-                            tooltip: {
-                                titleColor: '#FFFFFF',
-                                bodyColor: '#E5E7EB',
-                                backgroundColor: '#1F2937',
-                            }
-                        }
+                        plugins: { legend: { labels: { color: '#D1D5DB' } }, tooltip: { titleColor: '#FFFFFF', bodyColor: '#E5E7EB', backgroundColor: '#1F2937' } }
                     }
                 });
             }
 
-            function renderChart(symbol, klines) {
-                if (!state.priceChart || !klines || klines.length === 0) {
-                    initializeChart(); 
-                    return;
-                }
+            function initializeCharts() {
+                if (state.priceChart) state.priceChart.destroy();
+                state.priceChart = createChart(ui.priceChartCanvas);
+                if (state.pnlChart) state.pnlChart.destroy();
+                state.pnlChart = createChart(ui.pnlChartCanvas);
+            }
+
+            function renderPriceChart(symbol, klines) {
+                if (!state.priceChart || !klines || klines.length === 0) return;
                 
                 const closes = klines.map(k => parseFloat(k[4]));
                 const labels = klines.map(k => new Date(parseInt(k[0])).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }));
-
                 const ema20 = TA.ema(closes, 20);
                 const ema50 = TA.ema(closes, 50);
-
                 const ema20Data = [...Array(klines.length - ema20.length).fill(null), ...ema20];
                 const ema50Data = [...Array(klines.length - ema50.length).fill(null), ...ema50];
 
                 state.priceChart.data.labels = labels;
                 state.priceChart.data.datasets = [
-                    {
-                        label: `Giá ${symbol}`,
-                        data: closes,
-                        borderColor: '#3498db',
-                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.1,
-                        pointRadius: 0,
-                    },
-                    {
-                        label: 'EMA 20',
-                        data: ema20Data,
-                        borderColor: '#f1c40f',
-                        borderWidth: 1,
-                        pointRadius: 0,
-                    },
-                    {
-                        label: 'EMA 50',
-                        data: ema50Data,
-                        borderColor: '#e74c3c',
-                        borderWidth: 1,
-                        pointRadius: 0,
-                    }
+                    { label: `Giá ${symbol}`, data: closes, borderColor: '#3498db', borderWidth: 2, tension: 0.1, pointRadius: 0 },
+                    { label: 'EMA 20', data: ema20Data, borderColor: '#f1c40f', borderWidth: 1, pointRadius: 0 },
+                    { label: 'EMA 50', data: ema50Data, borderColor: '#e74c3c', borderWidth: 1, pointRadius: 0 }
                 ];
                 state.priceChart.update();
+            }
+
+            function renderPnlChart() {
+                if (!state.pnlChart || state.pnlHistory.length === 0) return;
+
+                const labels = state.pnlHistory.map(p => p.time.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit'}));
+                const data = state.pnlHistory.map(p => p.equity);
+                
+                const firstEquity = state.pnlHistory[0].equity;
+                const pointBackgroundColors = data.map(equity => equity >= firstEquity ? 'rgba(46, 204, 113, 0.7)' : 'rgba(231, 76, 60, 0.7)');
+
+                state.pnlChart.data.labels = labels;
+                state.pnlChart.data.datasets = [{
+                    label: 'Tổng Vốn (USD)',
+                    data: data,
+                    borderColor: '#2ecc71',
+                    backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.1,
+                    fill: true,
+                    pointBackgroundColor: pointBackgroundColors,
+                    pointRadius: 3,
+                }];
+                state.pnlChart.update();
             }
 
             function initialize() {
@@ -613,7 +626,7 @@
                     updateApiStatus(false);
                 }
                 setupEventListeners();
-                initializeChart();
+                initializeCharts();
                 logMessage('Bot đã sẵn sàng. Vui lòng lưu API key để kích hoạt các tính năng.');
             }
             
@@ -683,13 +696,13 @@
                     const topPicks = processedCandidates.slice(0, 3);
                     displayScanResults(topPicks);
                     if (topPicks.length > 0) {
-                        renderChart(topPicks[0].symbol, topPicks[0].klines);
+                        renderPriceChart(topPicks[0].symbol, topPicks[0].klines);
                     } else {
-                        initializeChart(); 
+                        initializeCharts(); 
                     }
 
                     logMessage(`[Scanner] Quét hoàn tất. Hiển thị ${topPicks.length} tín hiệu tiềm năng.`);
-                    updateScannerStatus(`Quét xong. Cập nhật lần cuối: ${new Date().toLocaleTimeString()}`);
+                    updateScannerStatus(`Quét xong. Cập nhật lần cuối: ${new Date().toLocaleTimeString('vi-VN')}`);
                     
                     await executeAutoTrades(topPicks);
                 
@@ -732,7 +745,7 @@
                         const symbol = e.target.dataset.symbol;
                         const candidateData = state.scannedCandidates.get(symbol);
                         if(candidateData) {
-                            renderChart(symbol, candidateData.klines);
+                            renderPriceChart(symbol, candidateData.klines);
                         }
                     });
                 });
@@ -745,7 +758,7 @@
                 ui.scanner.startBtn.disabled = true;
                 ui.scanner.stopBtn.disabled = false;
                 
-                fetchWalletBalance(); // Initial balance check
+                fetchWalletBalance(); 
                 state.balanceUpdateIntervalId = setInterval(fetchWalletBalance, CONSTANTS.BALANCE_UPDATE_INTERVAL_MS);
 
                 executeScan();
