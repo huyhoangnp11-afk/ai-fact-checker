@@ -93,10 +93,7 @@
                 </div>
                  <!-- Market Scanner Section -->
                 <div class="bg-gray-700/50 p-6 rounded-xl">
-                    <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bot Giao Dịch Tự Động (V4.2.2)</h2>
-                    <div class="bg-blue-900 border-l-4 border-blue-500 text-blue-100 p-4 rounded-lg mb-4" role="alert">
-                        <p><strong class="font-bold">TP/SL Động (ATR):</strong> Bot tự động đặt Chốt Lời (1.5 x ATR) và Cắt Lỗ (1.0 x ATR) dựa trên biến động của từng cặp tiền.</p>
-                    </div>
+                    <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bot Giao Dịch Theo Xu Hướng (V4)</h2>
                      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                         <div class="md:col-span-1">
                             <label for="scannerCapital" class="block text-sm font-medium text-gray-300 mb-1">Vốn Tối Đa / Lệnh</label>
@@ -129,21 +126,17 @@
         
         <!-- CSH-RT Bot Section -->
         <div class="bg-gray-700/50 p-6 rounded-xl mt-6">
-            <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bot CSH-RT (V5.0.0 - Giao dịch Real-Time)</h2>
+            <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bot CSH-RT (V5.0.0 - Auto-Pick Real-Time)</h2>
             <div class="bg-purple-900 border-l-4 border-purple-500 text-purple-100 p-4 rounded-lg mb-4" role="alert">
-                <p><strong class="font-bold">Cách Hoạt Động:</strong> Bot sẽ theo dõi nến 15m theo thời gian thực qua WebSocket. Nó sẽ cố gắng đặt lệnh Limit Buy ở vùng giá thấp của nến tiếp theo để "thu hoạch" các chênh lệch nhỏ.</p>
+                <p><strong class="font-bold">Cách Hoạt Động:</strong> Bot sẽ tự động quét và chọn Top 3 cặp giao dịch tốt nhất sau mỗi nến 15 phút, sau đó bật chế độ giao dịch real-time (CSH-RT) cho các cặp này.</p>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                <div class="md:col-span-2">
-                    <label for="cshSymbols" class="block text-sm font-medium text-gray-300 mb-1">Cặp Giao Dịch (cách nhau bởi dấu phẩy)</label>
-                    <input type="text" id="cshSymbols" value="BTCUSDT,ETHUSDT" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200">
-                </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                 <div>
                     <label for="cshCapital" class="block text-sm font-medium text-gray-300 mb-1">Vốn / Lệnh (USDT)</label>
                     <input type="number" id="cshCapital" value="5" step="1" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200">
                 </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <button id="startCshBtn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition disabled:bg-gray-500" disabled>Bắt đầu</button>
+                <div class="md:col-span-2 grid grid-cols-2 gap-2">
+                    <button id="startCshBtn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition disabled:bg-gray-500" disabled>Bắt đầu Auto-Pick</button>
                     <button id="stopCshBtn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition" disabled>Dừng</button>
                 </div>
             </div>
@@ -197,7 +190,6 @@
                     results: document.getElementById('scannerResults'),
                 },
                 csh: {
-                    symbolsInput: document.getElementById('cshSymbols'),
                     capitalInput: document.getElementById('cshCapital'),
                     startBtn: document.getElementById('startCshBtn'),
                     stopBtn: document.getElementById('stopCshBtn'),
@@ -583,15 +575,8 @@
                     logMessage(`[Auto-Trade] Tự động giao dịch đã được ${state.autoTradeEnabled ? 'BẬT' : 'TẮT'}.`);
                 });
 
-                ui.csh.startBtn.addEventListener('click', () => {
-                    const symbols = ui.csh.symbolsInput.value.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
-                    if (symbols.length > 0) {
-                        startCSH_RT(symbols);
-                    } else {
-                        logMessage('[CSH] Vui lòng nhập ít nhất một cặp giao dịch.', true);
-                    }
-                });
-                ui.csh.stopBtn.addEventListener('click', stopCSH_RT);
+                ui.csh.startBtn.addEventListener('click', () => startCSHRT_Auto(3));
+                ui.csh.stopBtn.addEventListener('click', () => stopCSHRT_Auto());
 
                 ui.priceChartTab.addEventListener('click', () => {
                     ui.priceChartContainer.classList.remove('hidden');
@@ -679,6 +664,7 @@
             let ws = null;
             let wsSubs = new Set();
             let wsPing = null;
+            let CSHRT_rotationTimer = null;
 
             function wsConnect() {
               if (ws && ws.readyState === WebSocket.OPEN) return;
@@ -776,7 +762,7 @@
                     st.openOrderId = res.orderId;
                     st.openOrderPrice = p;
                     st.repriceCount = 0;
-                    logMessage(`[CSH] Đặt lệnh LIMIT MAKER ${sym} @ ${p.toFixed(5)} SL=${st.sl?.toFixed(5)} TP=${st.tp?.toFixed(5)}`);
+                    logMessage(`[CSH] Đặt lệnh LIMIT MAKER ${sym} @ ${p.toFixed(5)}`);
                 }
                 return res;
             }
@@ -792,6 +778,7 @@
                 const st = CSH.get(sym);
                 if (!st || !st.entry || !st.mid || st.openOrderId) return;
                 
+                // Entry Trigger
                 if (st.mid <= st.entry * 1.0002) {
                     const capital = parseFloat(ui.csh.capitalInput.value);
                     if (isNaN(capital) || capital < CONFIG.MIN_ORDER_VALUE_USDT) {
@@ -801,6 +788,15 @@
                     await placeLimitMaker(sym, st.entry, capital);
                     scheduleAutoCancel(sym);
                 }
+                // Re-price Logic
+                if (st.repriceCount < 3 && st.mid < st.openOrderPrice * 0.9995) {
+                    const newP = Math.max(st.entry*(1-0.001), st.openOrderPrice - (st.tickSize||1e-8));
+                    if (newP < st.openOrderPrice) {
+                      await cancelOrder(sym, st.openOrderId);
+                      st.repriceCount++;
+                      await placeLimitMaker(sym, newP, parseFloat(ui.csh.capitalInput.value));
+                    }
+                }
             }
 
             function scheduleAutoCancel(sym){
@@ -809,9 +805,10 @@
                 const msLeft = st.candleEndTs - Date.now() - 8000; 
                 if (msLeft > 0) {
                     setTimeout(async ()=>{
-                        if (st.openOrderId) {
+                        const currentSt = CSH.get(sym);
+                        if (currentSt && currentSt.openOrderId) {
                             logMessage(`[CSH] Tự động hủy lệnh ${sym} chưa khớp trước khi nến đóng.`);
-                            await cancelOrder(sym, st.openOrderId);
+                            await cancelOrder(sym, currentSt.openOrderId);
                         }
                     }, msLeft);
                 }
@@ -829,7 +826,7 @@
                         <div class="font-bold text-purple-400">${symbol}</div>
                         <div>Giá giữa: <span class="text-white">${data.mid?.toFixed(5) || '...'}</span></div>
                         <div>Entry/TP: <span class="text-green-400">${data.entry?.toFixed(5) || '...'} / ${data.tp?.toFixed(5) || '...'}</span></div>
-                        <div>Trạng thái: <span class="text-yellow-400">${data.openOrderId ? `Đang chờ khớp (${data.openOrderId})` : 'Đang theo dõi'}</span></div>
+                        <div>Trạng thái: <span class="text-yellow-400">${data.openOrderId ? `Đang chờ khớp` : 'Đang theo dõi'}</span></div>
                     </div>`;
                 }
                 html += '</div>';
@@ -849,8 +846,8 @@
                 updateCshStatusUI();
             }
 
-            function stopCSH_RT() {
-                const symbols = Array.from(wsSubs).map(t => t.split('.').pop());
+            function stopCSH_RT(symbolsToStop) {
+                const symbols = symbolsToStop || Array.from(wsSubs).map(t => t.split('.').pop());
                 for (const sym of symbols) {
                     wsUnsub(`kline.15.${sym}`);
                     wsUnsub(`orderbook.1.${sym}`);
@@ -860,14 +857,185 @@
                     }
                 }
                 logMessage(`[CSH] Realtime OFF: ${symbols.join(", ")}`);
-                wsSubs.clear();
-                if(ws) ws.close();
+                if(wsSubs.size === 0 && ws) ws.close();
                 ui.csh.startBtn.disabled = false;
                 ui.csh.stopBtn.disabled = true;
                 updateCshStatusUI();
             }
            
-            // --- Scanner Bot ---
+            // --- Auto-Picker for CSH-RT ---
+            async function pMap(items, limit, mapper) {
+              const ret = []; let i = 0; const running = new Set();
+              async function next() {
+                if (i >= items.length) return;
+                const idx = i++;
+                const p = Promise.resolve(mapper(items[idx], idx)).then(v => { ret[idx] = v; running.delete(p); });
+                running.add(p);
+                if (running.size >= limit) await Promise.race(running);
+                return next();
+              }
+              for (let k = 0; k < limit; k++) next();
+              await Promise.all(running);
+              return ret;
+            }
+
+            function computeSpreadBps(b,a){ const bid=parseFloat(b),ask=parseFloat(a);if(!isFinite(bid)||!isFinite(ask)||ask<=0||bid<=0)return 1e9;const mid=(ask+bid)/2;return mid>0?((ask-bid)/mid)*10000:1e9 }
+            
+            function computeCandleEdge(lastK, atrPrice, volZ) {
+              const O = parseFloat(lastK[1]), H = parseFloat(lastK[2]), L = parseFloat(lastK[3]), C = parseFloat(lastK[4]);
+              const R = Math.max(1e-12, H - L); if (!isFinite(R) || R<=0) return null;
+              const LW = Math.max(0, Math.min(O, C) - L);
+              const lwR  = LW / R;
+              const posC = (C - L) / R;
+              const exp  = atrPrice > 0 ? (R / atrPrice) : 0;
+
+              const clip = (x,lo=0,hi=1)=>Math.max(lo,Math.min(hi,x));
+              const s_exp  = clip((exp - 1.0)/1.5);
+              const s_wick = clip((lwR - 0.35)/0.35);
+              const s_pos  = clip((0.45 - posC)/0.45);
+              const s_vol  = clip((volZ - 2.0)/3.0);
+              const CES_raw = 0.32*s_exp + 0.28*s_wick + 0.22*s_pos + 0.18*s_vol;
+
+              const alpha = 0.18, beta = 0.55;
+              const entry = L + alpha*R;
+              const tp = L + beta*R;
+
+              return { R, lwR, posC, exp, CES_raw, entry, tp, O,H,L,C };
+            }
+
+            function estimateCostPct_maker(){ return 0.23; }
+
+            function corr15m(closesA, closesB) {
+              const n = Math.min(closesA.length, closesB.length, 16);
+              if (n < 8) return 0;
+              const ra = [], rb = [];
+              for (let i=closesA.length-n+1; i<closesA.length; i++){
+                ra.push( (closesA[i]/closesA[i-1])-1 );
+                rb.push( (closesB[i]/closesB[i-1])-1 );
+              }
+              const ma = ra.reduce((a,b)=>a+b,0)/ra.length;
+              const mb = rb.reduce((a,b)=>a+b,0)/rb.length;
+              let num=0, da=0, db=0;
+              for (let i=0;i<ra.length;i++){ const xa=ra[i]-ma, xb=rb[i]-mb; num+=xa*xb; da+=xa*xa; db+=xb*xb; }
+              return (da>0 && db>0) ? (num/Math.sqrt(da*db)) : 0;
+            }
+
+            async function autoPickCSHRT(topN = 3) {
+              try {
+                logMessage(`[CSH-RT] (S0) Lấy universe…`);
+                const inst = await bybitRequest('/v5/market/instruments-info', { category: 'spot' }, true);
+                if (!inst?.list) throw new Error("Không lấy được instruments-info.");
+                const tradables = inst.list.filter(i => i.status==='Trading' && i.quoteCoin==='USDT').map(i => i.symbol);
+
+                const tickers = await bybitRequest('/v5/market/tickers', { category: 'spot' }, true);
+                if (!tickers?.list) throw new Error("Không lấy được tickers.");
+                let uni = tickers.list.filter(t => tradables.includes(t.symbol));
+                
+                uni.sort((a,b)=> parseFloat(b.turnover24h) - parseFloat(a.turnover24h) );
+                uni = uni.slice(0, 150);
+
+                logMessage(`[CSH-RT] (S1) Đo spread…`);
+                const ob = await pMap(uni, 20, t => bybitRequest('/v5/market/orderbook', { category:'spot', symbol:t.symbol, limit:1 }, true));
+                const enriched = uni.map((t,i)=>{
+                  const o = ob[i];
+                  const ask = o?.a?.[0]?.[0] ?? t.ask1Price, bid = o?.b?.[0]?.[0] ?? t.bid1Price;
+                  const spread_bps = computeSpreadBps(bid, ask);
+                  return {...t, _ask:ask, _bid:bid, spread_bps};
+                }).filter(x => isFinite(x.spread_bps));
+                const spreads = enriched.map(x=>x.spread_bps).sort((a,b)=>a-b);
+                const p60 = spreads[Math.floor(0.60*spreads.length)] || 20;
+                const SPREAD_MAX = Math.max(15, Math.min(25, p60));
+                const liq = enriched.filter(x => x.spread_bps <= SPREAD_MAX);
+
+                logMessage(`[CSH-RT] (S2) ATR & nến cuối (15m) cho ${liq.length} cặp…`);
+                const kl = await pMap(liq, 16, t => bybitRequest('/v5/market/kline', { category:'spot', symbol:t.symbol, interval:'15', limit:200 }, true));
+                const cands = [];
+                for (let i=0;i<liq.length;i++){
+                  const list = kl[i]?.list; if (!list || list.length<50) continue;
+                  const arr = list.map(k => [Number(k[0]), ...k.slice(1,6).map(Number)] ); 
+                  arr.sort((a,b)=>a[0]-b[0]);
+                  const closes = arr.map(r=>r[4]);
+                  const lastK = arr[arr.length-1];
+                  const atrArr = TA.atr(arr.map(k => ['', '', k[2], k[3], k[4]]), 14); const atrPrice = atrArr.pop() || 0;
+                  const volArr = arr.map(r=>r[5]||0); const med20 = volArr.slice(-20).sort((a,b)=>a-b)[10] || 1;
+                  const volZ = med20>0 ? (volArr[volArr.length-1]/med20) : 1;
+                  const lastPrice = closes[closes.length-1] || 0;
+                  const atrPct = lastPrice>0 ? (atrPrice/lastPrice)*100 : 0;
+                  cands.push({...liq[i], klines:arr, closes, lastK, atrPrice, atrPct, volZ});
+                }
+                if (!cands.length) throw new Error("Không đủ dữ liệu kline.");
+                
+                const atrs = cands.map(c=>c.atrPct).sort((a,b)=>a-b);
+                const atrMin = Math.max(atrs[Math.floor(0.40*atrs.length)]||0.12, 0.12);
+                const atrMax = Math.min(atrs[Math.floor(0.95*atrs.length)]||6.0, 6.0);
+                const filtered = cands.filter(c => c.atrPct>=atrMin && c.atrPct<=atrMax);
+
+                const ranked = [];
+                for (const c of filtered) {
+                  const ce = computeCandleEdge(c.lastK, c.atrPrice, c.volZ);
+                  if (!ce) continue;
+                  if (!(ce.exp >= 1.2 && ce.lwR >= 0.35 && ce.posC <= 0.40 && c.volZ >= 2)) continue;
+                  const cost = estimateCostPct_maker();
+                  const pen_cost = Math.min(1, cost/0.6);
+                  const CES = ce.CES_raw - 0.20*pen_cost;
+                  const grossPct = c.entry>0 ? ((ce.tp-ce.entry)/ce.entry)*100 : 0;
+                  if (CES < 0.65 || grossPct < 2.0*cost) continue;
+                  ranked.push({ symbol: c.symbol, spread_bps: c.spread_bps, atrPct: c.atrPct, CES, grossPct, closes: c.closes });
+                }
+
+                ranked.sort((a,b)=> b.CES - a.CES || a.spread_bps - b.spread_bps);
+                const picks = [];
+                for (const r of ranked) {
+                  let ok = true;
+                  for (const p of picks) {
+                    if (corr15m(r.closes, p.closes) > 0.85) { ok = false; break; }
+                  }
+                  if (ok) {
+                    picks.push(r);
+                    if (picks.length >= topN) break;
+                  }
+                }
+
+                if (!picks.length) { logMessage(`[CSH-RT] Không tìm thấy cặp phù hợp.`); return []; }
+
+                picks.forEach((p,i)=>{ logMessage(`[CSH-RT] Pick #${i+1} ${p.symbol} | CES=${p.CES.toFixed(3)} | spread=${p.spread_bps.toFixed(1)}bps | ATR=${p.atrPct.toFixed(2)}% | gross≈${p.grossPct.toFixed(2)}%`); });
+                return picks.map(p=>p.symbol);
+              } catch (e) {
+                logMessage(`[CSH-RT] Auto-pick lỗi: ${e.message}`, true);
+                return [];
+              }
+            }
+            
+            async function startCSHRT_Auto(topN=3){
+              const syms = await autoPickCSHRT(topN);
+              if (!syms.length) {
+                  logMessage(`[CSH-RT] Không có cặp để bật real-time. Thử lại sau 15 phút.`, true);
+                  scheduleCSHRT_Rotation(topN, []);
+                  return;
+              }
+              startCSH_RT(syms); 
+              scheduleCSHRT_Rotation(topN, syms);
+            }
+
+            function scheduleCSHRT_Rotation(topN, currentSyms){
+              if (CSHRT_rotationTimer) clearTimeout(CSHRT_rotationTimer);
+              const now = Date.now();
+              const msToNext15 = 15*60*1000 - (now % (15*60*1000)) + 1500;
+              logMessage(`[CSH-RT] Lần quét chọn cặp tiếp theo sau: ${(msToNext15/60000).toFixed(1)} phút.`);
+              CSHRT_rotationTimer = setTimeout(async ()=>{
+                stopCSH_RT(currentSyms);
+                startCSHRT_Auto(topN);
+              }, msToNext15);
+            }
+
+            function stopCSHRT_Auto(){
+              if (CSHRT_rotationTimer) clearTimeout(CSHRT_rotationTimer);
+              const currentSyms = Array.from(wsSubs).map(t => t.split(".").pop());
+              if (currentSyms.length) stopCSH_RT(currentSyms);
+              logMessage(`[CSH-RT] Auto-pick stopped.`);
+            }
+            
+            // --- Scanner Bot (V4) ---
             const startScanner = async () => {
                 if (!state.apiKeysValid) { logMessage('API keys không hợp lệ.', true); return; }
                 if (state.scannerIntervalId || state.activeTrade) { logMessage('Bot đang bận, vui lòng dừng trước khi bắt đầu lại.', true); return; }
@@ -902,7 +1070,7 @@
             async function executeScan() {
                  if (state.isScanning || state.activeTrade) return;
                 state.isScanning = true;
-                logMessage(`[Scanner] Bắt đầu quét với thuật toán V4.2.2...`);
+                logMessage(`[Scanner] Bắt đầu quét với thuật toán V4.2.1...`);
                 try {
                     updateScannerStatus(`(B1) Lấy dữ liệu thị trường...`); showLoader(ui.scanner.status.textContent);
                     const instrumentsInfo = await bybitRequest('/v5/market/instruments-info', 'GET', { category: 'spot' }, true);
