@@ -93,7 +93,7 @@
                 </div>
                  <!-- Market Scanner Section -->
                 <div class="bg-gray-700/50 p-6 rounded-xl">
-                    <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bot Giao Dịch Tự Động (V4.2.1)</h2>
+                    <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bot Giao Dịch Tự Động (V4.2.2)</h2>
                     <div class="bg-blue-900 border-l-4 border-blue-500 text-blue-100 p-4 rounded-lg mb-4" role="alert">
                         <p><strong class="font-bold">TP/SL Động (ATR):</strong> Bot tự động đặt Chốt Lời (1.5 x ATR) và Cắt Lỗ (1.0 x ATR) dựa trên biến động của từng cặp tiền.</p>
                     </div>
@@ -125,6 +125,31 @@
         <!-- Trading Plan Cards Container -->
         <div id="scannerResults" class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <!-- Trading Plan Cards will be populated here -->
+        </div>
+        
+        <!-- CSH-RT Bot Section -->
+        <div class="bg-gray-700/50 p-6 rounded-xl mt-6">
+            <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bot CSH-RT (V5.0.0 - Giao dịch Real-Time)</h2>
+            <div class="bg-purple-900 border-l-4 border-purple-500 text-purple-100 p-4 rounded-lg mb-4" role="alert">
+                <p><strong class="font-bold">Cách Hoạt Động:</strong> Bot sẽ theo dõi nến 15m theo thời gian thực qua WebSocket. Nó sẽ cố gắng đặt lệnh Limit Buy ở vùng giá thấp của nến tiếp theo để "thu hoạch" các chênh lệch nhỏ.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div class="md:col-span-2">
+                    <label for="cshSymbols" class="block text-sm font-medium text-gray-300 mb-1">Cặp Giao Dịch (cách nhau bởi dấu phẩy)</label>
+                    <input type="text" id="cshSymbols" value="BTCUSDT,ETHUSDT" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200">
+                </div>
+                <div>
+                    <label for="cshCapital" class="block text-sm font-medium text-gray-300 mb-1">Vốn / Lệnh (USDT)</label>
+                    <input type="number" id="cshCapital" value="5" step="1" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="startCshBtn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition disabled:bg-gray-500" disabled>Bắt đầu</button>
+                    <button id="stopCshBtn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition" disabled>Dừng</button>
+                </div>
+            </div>
+            <div id="cshStatusContainer" class="mt-4 space-y-2">
+                <p class="text-center text-gray-500">Bot CSH-RT đang không hoạt động.</p>
+            </div>
         </div>
 
         <!-- Log Area -->
@@ -170,6 +195,13 @@
                     stopBtn: document.getElementById('stopScannerBtn'),
                     status: document.getElementById('scannerStatus'),
                     results: document.getElementById('scannerResults'),
+                },
+                csh: {
+                    symbolsInput: document.getElementById('cshSymbols'),
+                    capitalInput: document.getElementById('cshCapital'),
+                    startBtn: document.getElementById('startCshBtn'),
+                    stopBtn: document.getElementById('stopCshBtn'),
+                    statusContainer: document.getElementById('cshStatusContainer'),
                 }
             };
 
@@ -193,6 +225,7 @@
             // --- Constants & Config ---
             const CONSTANTS = {
                 BYBIT_API_URL: 'https://api.bybit.com',
+                WS_SPOT_URL: "wss://stream.bybit.com/v5/public/spot",
                 RECV_WINDOW: '10000', 
                 SCANNER_INTERVAL_MS: 120000, 
                 TRADE_MONITOR_INTERVAL_MS: 7000,
@@ -254,7 +287,6 @@
                         trValues.push(tr);
                     }
                     if (trValues.length === 0) return [];
-                    // Using EMA for ATR is a common method (Wilder's Smoothing)
                     return TA.ema(trValues, p);
                 }
             };
@@ -353,6 +385,7 @@
                 ui.apiStatus.textContent = isValid ? 'Hợp lệ' : 'Không hợp lệ';
                 ui.apiStatus.className = `text-xs font-medium px-2.5 py-1 rounded-full ${isValid ? activeClasses : inactiveClasses}`;
                 ui.scanner.startBtn.disabled = !isValid;
+                ui.csh.startBtn.disabled = !isValid;
             }
 
             async function checkApiKeys() {
@@ -374,7 +407,7 @@
                 if (result?.list?.[0]) {
                     const account = result.list[0];
                     const usdtAsset = account.coin.find(c => c.coin === 'USDT');
-                    const availableBalanceStr = usdtAsset?.availableToWithdraw;
+                    const availableBalanceStr = usdtAsset?.walletBalance;
                     state.availableUsdt = availableBalanceStr ? parseFloat(availableBalanceStr) : 0;
                     if (isNaN(state.availableUsdt)) {
                         logMessage(`[Balance Check] Giá trị số dư không hợp lệ nhận được: ${availableBalanceStr}. Đặt lại thành 0.`, true);
@@ -396,7 +429,7 @@
                 }
             }
 
-            // --- Trade Management ---
+            // --- Trade Management (For Scanner Bot) ---
             async function closeActiveTrade(reason) {
                 if (!state.activeTrade) return;
 
@@ -465,7 +498,7 @@
                 state.activeTrade.intervalId = intervalId;
             }
 
-            // --- Auto Trade Execution ---
+            // --- Auto Trade Execution (For Scanner Bot) ---
             async function executeAutoTrades(plans) {
                 if (!state.autoTradeEnabled || plans.length === 0 || state.activeTrade) {
                     if (state.activeTrade) {
@@ -476,8 +509,8 @@
 
                 logMessage("[Auto-Trade] Bắt đầu quy trình vào lệnh...");
 
-                if (state.availableUsdt < CONFIG.MIN_ORDER_VALUE_USDT) {
-                    logMessage(`[Auto-Trade] Số dư khả dụng (${state.availableUsdt.toFixed(2)} USDT) thấp hơn mức tối thiểu (${CONFIG.MIN_ORDER_VALUE_USDT} USDT). Không thể giao dịch.`, true);
+                if (isNaN(state.availableUsdt) || state.availableUsdt < CONFIG.MIN_ORDER_VALUE_USDT) {
+                    logMessage(`[Auto-Trade] Số dư khả dụng (${isNaN(state.availableUsdt) ? 'Không xác định' : state.availableUsdt.toFixed(2)} USDT) thấp hơn mức tối thiểu (${CONFIG.MIN_ORDER_VALUE_USDT} USDT). Không thể giao dịch.`, true);
                     return;
                 }
 
@@ -549,6 +582,16 @@
                     state.autoTradeEnabled = e.target.checked;
                     logMessage(`[Auto-Trade] Tự động giao dịch đã được ${state.autoTradeEnabled ? 'BẬT' : 'TẮT'}.`);
                 });
+
+                ui.csh.startBtn.addEventListener('click', () => {
+                    const symbols = ui.csh.symbolsInput.value.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+                    if (symbols.length > 0) {
+                        startCSH_RT(symbols);
+                    } else {
+                        logMessage('[CSH] Vui lòng nhập ít nhất một cặp giao dịch.', true);
+                    }
+                });
+                ui.csh.stopBtn.addEventListener('click', stopCSH_RT);
 
                 ui.priceChartTab.addEventListener('click', () => {
                     ui.priceChartContainer.classList.remove('hidden');
@@ -630,41 +673,244 @@
                 }];
                 state.pnlChart.update();
             }
+            
+            // --- CSH-RT WebSocket Logic ---
+            const CSH = new Map();
+            let ws = null;
+            let wsSubs = new Set();
+            let wsPing = null;
 
-            function initialize() {
-                const storedApiKey = localStorage.getItem('bybitApiKey');
-                const storedApiSecret = localStorage.getItem('bybitApiSecret');
-                if(storedApiKey && storedApiSecret) {
-                    ui.apiKeyInput.value = storedApiKey;
-                    ui.apiSecretInput.value = storedApiSecret;
-                    state.apiKey = storedApiKey;
-                    state.apiSecret = storedApiSecret;
-                    checkApiKeys();
+            function wsConnect() {
+              if (ws && ws.readyState === WebSocket.OPEN) return;
+              ws = new WebSocket(CONSTANTS.WS_SPOT_URL);
+              ws.onopen = () => {
+                logMessage("[WS] Connected (public spot)");
+                for (const t of wsSubs) wsSend({op:"subscribe", args:[t]});
+                wsPing = setInterval(()=> wsSend({op:"ping"}), 20000);
+              };
+              ws.onclose = () => { logMessage("[WS] Closed", true); if (wsPing) clearInterval(wsPing); setTimeout(wsConnect, 1500); };
+              ws.onerror = (e) => logMessage("[WS] Error " + (e?.message||""), true);
+              ws.onmessage = wsHandleMessage;
+            }
+
+            function wsSend(obj){ if (ws?.readyState===WebSocket.OPEN) ws.send(JSON.stringify(obj)); }
+            function wsSub(topic){ wsSubs.add(topic); wsSend({op:"subscribe", args:[topic]}); }
+            function wsUnsub(topic){ wsSubs.delete(topic); wsSend({op:"unsubscribe", args:[topic]}); }
+            function ensureSym(sym){ if (!CSH.has(sym)) CSH.set(sym, { repriceCount:0 }); return CSH.get(sym); }
+
+            function wsHandleMessage(ev){
+              const msg = JSON.parse(ev.data||"{}");
+              if (!msg.topic || !msg.data) return;
+
+              if (msg.topic.startsWith("kline.")) {
+                const d = Array.isArray(msg.data) ? msg.data[0] : msg.data;
+                const [, interval, sym] = msg.topic.split(".");
+                if (interval !== "15") return; 
+                const st = ensureSym(sym);
+                const O = parseFloat(d.open), H=parseFloat(d.high), L=parseFloat(d.low), C=parseFloat(d.close);
+                if (d.confirm) {
+                  const R = Math.max(1e-12, H - L);
+                  st.lastClosed = {O,H,L,C,R,ts: d.end};
+                  st.entry = L + 0.18 * R;
+                  st.tp    = L + 0.55 * R;
+                  st.candleEndTs = Number(d.end) + 15*60*1000;
+                  st.repriceCount = 0;
+                  logMessage(`[CSH] ${sym} new plan: Entry=${st.entry.toFixed(5)} TP=${st.tp.toFixed(5)}`);
                 } else {
-                    updateApiStatus(false);
+                  st.live = {O,H,L,C};
                 }
-                setupEventListeners();
-                initializeCharts();
-                logMessage('Bot đã sẵn sàng. Vui lòng lưu API key để kích hoạt các tính năng.');
+                updateCshStatusUI();
+                return;
+              }
+
+              if (msg.topic.startsWith("orderbook.")) {
+                const sym = msg.topic.split(".").pop();
+                const st = ensureSym(sym);
+                const ob = Array.isArray(msg.data) ? msg.data[0] : msg.data;
+                const ask = (ob.a?.[0]?.[0]) ?? ob.ask1Price ?? ob.bestAskPrice;
+                const bid = (ob.b?.[0]?.[0]) ?? ob.bid1Price ?? ob.bestBidPrice;
+                if (!ask || !bid) return;
+                st.mid = (parseFloat(ask) + parseFloat(bid))/2;
+                maybePlaceOrReprice(sym);
+                updateCshStatusUI();
+                return;
+              }
+            }
+             
+            async function primeSymbolMeta(sym){
+              const info = await bybitRequest('/v5/market/instruments-info', {category:'spot', symbol:sym}, true);
+              const it = info?.list?.[0];
+              if (!it) return null;
+              const st = ensureSym(sym);
+              st.tickSize   = parseFloat(it.priceFilter?.tickSize ?? "0.00000001");
+              st.lotStep    = parseFloat(it.lotSizeFilter?.basePrecision ?? it.lotSizeFilter?.qtyStep ?? "0.00000001");
+              st.minNotional= parseFloat(it.lotSizeFilter?.minOrderAmt ?? "2");
+              return st;
+            }
+
+            function roundTo(x, step){ return Math.floor(x/step) * step; }
+
+            async function placeLimitMaker(sym, price, quoteSizeUSD){
+                const st = ensureSym(sym);
+                if (!st.tickSize) await primeSymbolMeta(sym); // Ensure meta is loaded
+                if (!st.tickSize) {
+                    logMessage(`[CSH] Không thể lấy thông tin meta cho ${sym}`, true);
+                    return null;
+                }
+
+                const p = roundTo(price, st.tickSize);
+                let qty = (quoteSizeUSD / p);
+                qty = Math.max(st.lotStep, roundTo(qty, st.lotStep));
+
+                if (p * qty < st.minNotional) {
+                    logMessage(`[CSH] ${sym} giá trị lệnh quá nhỏ: ${(p * qty).toFixed(3)} < ${st.minNotional}`, true);
+                    return null;
+                }
+
+                const res = await bybitRequest('/v5/order/create','POST',{
+                    category:'spot', symbol:sym, side:'Buy', orderType:'Limit', timeInForce:'PostOnly', // Use PostOnly for maker
+                    price: p.toFixed(8), qty: qty.toFixed(8)
+                });
+
+                if (res?.orderId) {
+                    st.openOrderId = res.orderId;
+                    st.openOrderPrice = p;
+                    st.repriceCount = 0;
+                    logMessage(`[CSH] Đặt lệnh LIMIT MAKER ${sym} @ ${p.toFixed(5)} SL=${st.sl?.toFixed(5)} TP=${st.tp?.toFixed(5)}`);
+                }
+                return res;
+            }
+
+            async function cancelOrder(sym, orderId){
+                const res = await bybitRequest('/v5/order/cancel','POST',{ category:'spot', symbol:sym, orderId });
+                const st = ensureSym(sym);
+                st.openOrderId = null;
+                if (res?.orderId) logMessage(`[CSH] Hủy lệnh ${sym} ${orderId} thành công`);
             }
             
-             // --- Scanner Logic ---
+            async function maybePlaceOrReprice(sym){
+                const st = CSH.get(sym);
+                if (!st || !st.entry || !st.mid || st.openOrderId) return;
+                
+                if (st.mid <= st.entry * 1.0002) {
+                    const capital = parseFloat(ui.csh.capitalInput.value);
+                    if (isNaN(capital) || capital < CONFIG.MIN_ORDER_VALUE_USDT) {
+                        logMessage(`[CSH] Vốn không hợp lệ: ${capital}. Tối thiểu ${CONFIG.MIN_ORDER_VALUE_USDT} USDT.`, true);
+                        return;
+                    }
+                    await placeLimitMaker(sym, st.entry, capital);
+                    scheduleAutoCancel(sym);
+                }
+            }
+
+            function scheduleAutoCancel(sym){
+                const st = ensureSym(sym);
+                if (!st.candleEndTs) return;
+                const msLeft = st.candleEndTs - Date.now() - 8000; 
+                if (msLeft > 0) {
+                    setTimeout(async ()=>{
+                        if (st.openOrderId) {
+                            logMessage(`[CSH] Tự động hủy lệnh ${sym} chưa khớp trước khi nến đóng.`);
+                            await cancelOrder(sym, st.openOrderId);
+                        }
+                    }, msLeft);
+                }
+            }
+             function updateCshStatusUI() {
+                if (wsSubs.size === 0) {
+                    ui.csh.statusContainer.innerHTML = '<p class="text-center text-gray-500">Bot CSH-RT đang không hoạt động.</p>';
+                    return;
+                }
+
+                let html = '<div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">';
+                for (const [symbol, data] of CSH.entries()) {
+                    if (!wsSubs.has(`kline.15.${symbol}`)) continue;
+                    html += `<div class="bg-gray-900 p-2 rounded-md">
+                        <div class="font-bold text-purple-400">${symbol}</div>
+                        <div>Giá giữa: <span class="text-white">${data.mid?.toFixed(5) || '...'}</span></div>
+                        <div>Entry/TP: <span class="text-green-400">${data.entry?.toFixed(5) || '...'} / ${data.tp?.toFixed(5) || '...'}</span></div>
+                        <div>Trạng thái: <span class="text-yellow-400">${data.openOrderId ? `Đang chờ khớp (${data.openOrderId})` : 'Đang theo dõi'}</span></div>
+                    </div>`;
+                }
+                html += '</div>';
+                ui.csh.statusContainer.innerHTML = html;
+            }
+
+            async function startCSH_RT(symbols) {
+                wsConnect();
+                for (const sym of symbols) {
+                    await primeSymbolMeta(sym);
+                    wsSub(`kline.15.${sym}`);
+                    wsSub(`orderbook.1.${sym}`);
+                }
+                logMessage(`[CSH] Realtime ON: ${symbols.join(", ")}`);
+                ui.csh.startBtn.disabled = true;
+                ui.csh.stopBtn.disabled = false;
+                updateCshStatusUI();
+            }
+
+            function stopCSH_RT() {
+                const symbols = Array.from(wsSubs).map(t => t.split('.').pop());
+                for (const sym of symbols) {
+                    wsUnsub(`kline.15.${sym}`);
+                    wsUnsub(`orderbook.1.${sym}`);
+                    const st = CSH.get(sym);
+                    if (st?.openOrderId) {
+                        cancelOrder(sym, st.openOrderId);
+                    }
+                }
+                logMessage(`[CSH] Realtime OFF: ${symbols.join(", ")}`);
+                wsSubs.clear();
+                if(ws) ws.close();
+                ui.csh.startBtn.disabled = false;
+                ui.csh.stopBtn.disabled = true;
+                updateCshStatusUI();
+            }
+           
+            // --- Scanner Bot ---
+            const startScanner = async () => {
+                if (!state.apiKeysValid) { logMessage('API keys không hợp lệ.', true); return; }
+                if (state.scannerIntervalId || state.activeTrade) { logMessage('Bot đang bận, vui lòng dừng trước khi bắt đầu lại.', true); return; }
+                logMessage("Bắt đầu công cụ quét thị trường...");
+                ui.scanner.startBtn.disabled = true;
+                ui.scanner.stopBtn.disabled = false;
+                
+                await fetchWalletBalance(); 
+                state.balanceUpdateIntervalId = setInterval(fetchWalletBalance, CONSTANTS.BALANCE_UPDATE_INTERVAL_MS);
+
+                executeScan();
+                state.scannerIntervalId = setInterval(executeScan, CONSTANTS.SCANNER_INTERVAL_MS);
+            };
+            const stopScanner = () => {
+                if (state.scannerIntervalId) {
+                    clearInterval(state.scannerIntervalId);
+                    state.scannerIntervalId = null;
+                }
+                if (state.balanceUpdateIntervalId) {
+                    clearInterval(state.balanceUpdateIntervalId);
+                    state.balanceUpdateIntervalId = null;
+                }
+                logMessage("Công cụ quét đã dừng bởi người dùng.");
+                updateScannerStatus("Công cụ quét đang không hoạt động.");
+                ui.scanner.startBtn.disabled = false;
+                ui.scanner.stopBtn.disabled = true;
+
+                 if(state.activeTrade) {
+                    closeActiveTrade("Người dùng yêu cầu dừng bot.");
+                }
+            };
             async function executeScan() {
-                if (state.isScanning || state.activeTrade) return;
+                 if (state.isScanning || state.activeTrade) return;
                 state.isScanning = true;
-                logMessage(`[Scanner] Bắt đầu quét với thuật toán V4.2.1...`);
+                logMessage(`[Scanner] Bắt đầu quét với thuật toán V4.2.2...`);
                 try {
                     updateScannerStatus(`(B1) Lấy dữ liệu thị trường...`); showLoader(ui.scanner.status.textContent);
                     const instrumentsInfo = await bybitRequest('/v5/market/instruments-info', 'GET', { category: 'spot' }, true);
-                    if (!instrumentsInfo || !instrumentsInfo.list) {
-                        throw new Error("Không thể lấy danh sách cặp giao dịch từ Bybit.");
-                    }
+                    if (!instrumentsInfo || !instrumentsInfo.list) { throw new Error("Không thể lấy danh sách cặp giao dịch từ Bybit."); }
                     const allTradablePairs = instrumentsInfo.list.filter(i => i.status === 'Trading' && i.quoteCoin === 'USDT').map(i => i.symbol);
 
                     const allTickersData = await bybitRequest('/v5/market/tickers', 'GET', { category: 'spot' }, true);
-                     if (!allTickersData || !allTickersData.list) {
-                        throw new Error("Không thể lấy dữ liệu tickers từ Bybit.");
-                    }
+                     if (!allTickersData || !allTickersData.list) { throw new Error("Không thể lấy dữ liệu tickers từ Bybit."); }
                     let universe = allTickersData.list.filter(t => allTradablePairs.includes(t.symbol) && parseFloat(t.turnover24h) > CONFIG.MIN_TURNOVER_24H).slice(0, 150);
 
                     updateScannerStatus(`(B2) Lấy dữ liệu chi tiết cho ${universe.length} cặp...`); showLoader(ui.scanner.status.textContent);
@@ -686,12 +932,12 @@
                         }
                     }
                     
-                    updateScannerStatus(`(B3) Chấm điểm ${state.scannedCandidates.size} cặp với logic "Bắt đáy trong Uptrend"...`); showLoader(ui.scanner.status.textContent);
+                    updateScannerStatus(`(B3) Chấm điểm ${state.scannedCandidates.size} cặp...`); showLoader(ui.scanner.status.textContent);
                     let processedCandidates = [];
                     for (const [symbol, cand] of state.scannedCandidates.entries()) {
                         const closes = cand.klines.map(k => parseFloat(k[4]));
                         const lastPrice = closes[closes.length - 1];
-                        if (!lastPrice || closes.length < 52) continue; // Need at least 2 RSI values
+                        if (!lastPrice || closes.length < 52) continue; 
 
                         const ema20 = TA.ema(closes, 20).pop();
                         const ema50 = TA.ema(closes, 50).pop();
@@ -742,7 +988,6 @@
                     hideLoader();
                 }
             }
-
             function displayScanResults(results) {
                  ui.scanner.results.innerHTML = '';
                 if (!results || results.length === 0) {
@@ -785,40 +1030,25 @@
                     });
                 });
             }
-           
-            const startScanner = () => {
-                if (!state.apiKeysValid) { logMessage('API keys không hợp lệ.', true); return; }
-                if (state.scannerIntervalId || state.activeTrade) { logMessage('Bot đang bận, vui lòng dừng trước khi bắt đầu lại.', true); return; }
-                logMessage("Bắt đầu công cụ quét thị trường...");
-                ui.scanner.startBtn.disabled = true;
-                ui.scanner.stopBtn.disabled = false;
-                
-                fetchWalletBalance(); 
-                state.balanceUpdateIntervalId = setInterval(fetchWalletBalance, CONSTANTS.BALANCE_UPDATE_INTERVAL_MS);
-
-                executeScan();
-                state.scannerIntervalId = setInterval(executeScan, CONSTANTS.SCANNER_INTERVAL_MS);
-            };
-            const stopScanner = () => {
-                if (state.scannerIntervalId) {
-                    clearInterval(state.scannerIntervalId);
-                    state.scannerIntervalId = null;
-                }
-                if (state.balanceUpdateIntervalId) {
-                    clearInterval(state.balanceUpdateIntervalId);
-                    state.balanceUpdateIntervalId = null;
-                }
-                logMessage("Công cụ quét đã dừng bởi người dùng.");
-                updateScannerStatus("Công cụ quét đang không hoạt động.");
-                ui.scanner.startBtn.disabled = false;
-                ui.scanner.stopBtn.disabled = true;
-
-                 if(state.activeTrade) {
-                    closeActiveTrade("Người dùng yêu cầu dừng bot.");
-                }
-            };
             
             // --- Start the application ---
+            function initialize() {
+                const storedApiKey = localStorage.getItem('bybitApiKey');
+                const storedApiSecret = localStorage.getItem('bybitApiSecret');
+                if(storedApiKey && storedApiSecret) {
+                    ui.apiKeyInput.value = storedApiKey;
+                    ui.apiSecretInput.value = storedApiSecret;
+                    state.apiKey = storedApiKey;
+                    state.apiSecret = storedApiSecret;
+                    checkApiKeys();
+                } else {
+                    updateApiStatus(false);
+                }
+                setupEventListeners();
+                initializeCharts();
+                logMessage('Bot đã sẵn sàng. Vui lòng lưu API key để kích hoạt các tính năng.');
+            }
+
             initialize();
         });
     </script>
