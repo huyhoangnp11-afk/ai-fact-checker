@@ -96,7 +96,7 @@
                 </div>
                  <!-- Market Scanner Section -->
                 <div class="bg-gray-700/50 p-6 rounded-xl">
-                    <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bot Giao Dịch Theo Xu Hướng (V4)</h2>
+                    <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bot Giao Dịch Theo Xu Hướng (V4.3.0)</h2>
                      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                         <div class="md:col-span-1">
                             <label for="scannerCapital" class="block text-sm font-medium text-gray-300 mb-1">Vốn Tối Đa / Lệnh</label>
@@ -129,9 +129,9 @@
         
         <!-- CSH-RT Bot Section -->
         <div class="bg-gray-700/50 p-6 rounded-xl mt-6">
-            <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bot CSH-RT (V5.1.0 - Auto-Pick & Exit Logic)</h2>
+            <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bot CSH-RT (V5.2.0 - Tích hợp OCO)</h2>
             <div class="bg-purple-900 border-l-4 border-purple-500 text-purple-100 p-4 rounded-lg mb-4" role="alert">
-                <p><strong class="font-bold">Cách Hoạt Động:</strong> Tự động chọn cặp, đặt lệnh Maker và tự động quản lý TP/SL sau khi khớp lệnh.</p>
+                <p><strong class="font-bold">Cách Hoạt Động:</strong> Tự động chọn cặp, đặt lệnh Maker kèm TP/SL (OCO) và tự hủy nếu không khớp trước khi nến đóng.</p>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                 <div>
@@ -458,49 +458,10 @@
                     logMessage(`[Trade Manager] LỖI NGHIÊM TRỌNG: Không thể đặt lệnh bán cho ${tradeToClose.symbol}. Cần can thiệp thủ công!`, true);
                 }
             }
-
-            function startTradeMonitor() {
-                if (!state.activeTrade) return;
-
-                const { symbol, entryPrice, lastAtr } = state.activeTrade;
-
-                if (!lastAtr || lastAtr <= 0) {
-                    logMessage(`[Trade Manager] Lỗi: Không có dữ liệu ATR hợp lệ cho ${symbol}. Không thể đặt TP/SL động.`, true);
-                    closeActiveTrade("Lỗi dữ liệu ATR");
-                    return;
-                }
-                
-                const tpPrice = entryPrice + (lastAtr * CONFIG.ATR_TP_MULTIPLIER);
-                const slPrice = entryPrice - (lastAtr * CONFIG.ATR_SL_MULTIPLIER);
-
-                logMessage(`[Trade Manager] Bắt đầu giám sát ${symbol}. Entry: ${entryPrice.toFixed(4)}, ATR: ${lastAtr.toFixed(4)}, TP: ${tpPrice.toFixed(4)}, SL: ${slPrice.toFixed(4)}.`);
-                
-                const intervalId = setInterval(async () => {
-                    if (!state.activeTrade || state.activeTrade.symbol !== symbol) {
-                        clearInterval(intervalId);
-                        return;
-                    }
-                    const tickerData = await bybitRequest('/v5/market/tickers', 'GET', { category: 'spot', symbol }, true);
-                    if (tickerData?.list?.[0]) {
-                        const currentPrice = parseFloat(tickerData.list[0].lastPrice);
-                        updateScannerStatus(`Đang giám sát ${symbol}: ${currentPrice.toFixed(4)}`);
-                        if (currentPrice >= tpPrice) {
-                            closeActiveTrade(`Đạt Take Profit tại ${currentPrice.toFixed(4)}`);
-                        } else if (currentPrice <= slPrice) {
-                            closeActiveTrade(`Chạm Stop Loss tại ${currentPrice.toFixed(4)}`);
-                        }
-                    }
-                }, CONSTANTS.TRADE_MONITOR_INTERVAL_MS);
-
-                state.activeTrade.intervalId = intervalId;
-            }
-
+            
             // --- Auto Trade Execution (For Scanner Bot) ---
             async function executeAutoTrades(plans) {
                 if (!state.autoTradeEnabled || plans.length === 0 || state.activeTrade) {
-                    if (state.activeTrade) {
-                        updateScannerStatus(`Đang trong giao dịch ${state.activeTrade.symbol}. Tạm dừng quét.`);
-                    }
                     return;
                 }
 
@@ -526,25 +487,30 @@
                 for (const plan of plans) {
                     logMessage(`[Auto-Trade] Thử vào lệnh cho tín hiệu #1: ${plan.symbol} với ${orderQty} USDT.`);
                     
-                    showLoader(`Đang đặt lệnh Mua ${plan.symbol}...`);
+                    showLoader(`Đang đặt lệnh Mua OCO ${plan.symbol}...`);
+
+                    const tickSize = state.scannedCandidates.get(plan.symbol)?.tickSize || 0.00000001;
+                    const lastPrice = parseFloat(plan.lastPrice);
+                    const takeProfitPrice = roundTo(lastPrice + (plan.lastAtr * CONFIG.ATR_TP_MULTIPLIER), tickSize);
+                    const stopLossPrice = roundTo(lastPrice - (plan.lastAtr * CONFIG.ATR_SL_MULTIPLIER), tickSize);
+
                     const orderParams = {
                         category: 'spot', symbol: plan.symbol, side: 'Buy',
-                        orderType: 'Market', qty: orderQty.toString(), marketUnit: 'quoteCoin'
+                        orderType: 'Market', qty: orderQty.toString(), marketUnit: 'quoteCoin',
+                        tpslMode: 'Full',
+                        takeProfit: takeProfitPrice.toFixed(8),
+                        stopLoss: stopLossPrice.toFixed(8)
                     };
                     const result = await placeOrder(orderParams);
                     hideLoader();
 
                     if (result && result.orderId && result.cumExecQty && parseFloat(result.cumExecQty) > 0) {
-                        logMessage(`[Auto-Trade] VÀO LỆNH THÀNH CÔNG cho ${plan.symbol}.`);
+                        logMessage(`[Auto-Trade] VÀO LỆNH OCO THÀNH CÔNG cho ${plan.symbol}. TP=${takeProfitPrice.toFixed(5)}, SL=${stopLossPrice.toFixed(5)}.`);
                         state.activeTrade = {
                             symbol: plan.symbol,
-                            entryPrice: parseFloat(result.avgPrice),
                             quantity: parseFloat(result.cumExecQty),
-                            entryValue: parseFloat(result.cumExecValue),
-                            lastAtr: plan.lastAtr,
-                            intervalId: null,
                         };
-                        startTradeMonitor();
+                        startPositionMonitor(plan.symbol, parseFloat(result.cumExecQty));
                         return;
                     } else {
                         logMessage(`[Auto-Trade] Lệnh cho ${plan.symbol} thất bại hoặc không khớp. Thử tín hiệu tiếp theo...`, true);
@@ -552,6 +518,24 @@
                 }
                 logMessage(`[Auto-Trade] Đã thử tất cả ${plans.length} tín hiệu nhưng không có giao dịch nào thành công.`, true);
             }
+            
+            async function startPositionMonitor(symbol, initialQty) {
+                const baseCoin = symbol.replace('USDT', '');
+                const monitorIntervalId = setInterval(async () => {
+                    const balanceResult = await bybitRequest('/v5/account/wallet-balance', 'GET', { accountType: 'UNIFIED' });
+                    if (balanceResult?.list?.[0]?.coin) {
+                        const coinData = balanceResult.list[0].coin.find(c => c.coin === baseCoin);
+                        const currentQty = coinData ? parseFloat(coinData.walletBalance) : 0;
+                        if (currentQty < initialQty * 0.1) { // If less than 10% remains, consider it closed
+                            logMessage(`[Trade Monitor] Phát hiện lệnh ${symbol} đã đóng.`);
+                            clearInterval(monitorIntervalId);
+                            state.activeTrade = null;
+                            await fetchWalletBalance();
+                        }
+                    }
+                }, CONSTANTS.TRADE_MONITOR_INTERVAL_MS * 2); // Check less frequently
+            }
+
             
             // --- UI Handlers & Initialization ---
             function setupEventListeners() {
@@ -769,17 +753,28 @@
                     logMessage(`[CSH] ${sym} giá trị lệnh quá nhỏ: ${(p * qty).toFixed(3)} < ${st.minNotional}`, true);
                     return null;
                 }
+                
+                const atrPrice = st.lastAtr || (st.lastClosed.R * 0.7); // Fallback ATR
+                const stopLossPrice = roundTo(st.lastClosed.L - (atrPrice * 0.3), st.tickSize);
 
                 const res = await bybitRequest('/v5/order/create','POST',{
-                    category:'spot', symbol:sym, side:'Buy', orderType:'Limit', timeInForce:'PostOnly', // Use PostOnly for maker
-                    price: p.toFixed(8), qty: qty.toFixed(8)
+                    category:'spot', 
+                    symbol:sym, 
+                    side:'Buy', 
+                    orderType:'Limit', 
+                    timeInForce:'PostOnly',
+                    price: p.toFixed(8), 
+                    qty: qty.toFixed(8),
+                    tpslMode: 'Full',
+                    takeProfit: roundTo(st.tp, st.tickSize).toFixed(8),
+                    stopLoss: stopLossPrice.toFixed(8),
                 });
 
                 if (res?.orderId) {
                     st.openOrderId = res.orderId;
                     st.openOrderPrice = p;
                     st.repriceCount = 0;
-                    logMessage(`[CSH] Đặt lệnh LIMIT MAKER ${sym} @ ${p.toFixed(5)}`);
+                    logMessage(`[CSH] Đặt lệnh OCO ${sym} @ ${p.toFixed(5)} | TP=${st.tp.toFixed(5)}, SL=${stopLossPrice.toFixed(5)}`);
                 }
                 return res;
             }
@@ -795,7 +790,6 @@
                 const st = CSH.get(sym);
                 if (!st || !st.entry || !st.mid || st.openOrderId) return;
                 
-                // Entry Trigger
                 if (st.mid <= st.entry * 1.0002) {
                     const capital = parseFloat(ui.csh.capitalInput.value);
                     if (isNaN(capital) || capital < CONFIG.MIN_ORDER_VALUE_USDT) {
@@ -804,15 +798,6 @@
                     }
                     await placeLimitMaker(sym, st.entry, capital);
                     scheduleAutoCancel(sym);
-                }
-                // Re-price Logic
-                if (st.repriceCount < 3 && st.mid < st.openOrderPrice * 0.9995) {
-                    const newP = Math.max(st.entry*(1-0.001), st.openOrderPrice - (st.tickSize||1e-8));
-                    if (newP < st.openOrderPrice) {
-                      await cancelOrder(sym, st.openOrderId);
-                      st.repriceCount++;
-                      await placeLimitMaker(sym, newP, parseFloat(ui.csh.capitalInput.value));
-                    }
                 }
             }
 
@@ -997,7 +982,8 @@
                   const CES = ce.CES_raw - 0.20*pen_cost;
                   const grossPct = c.entry>0 ? ((ce.tp-ce.entry)/ce.entry)*100 : 0;
                   if (CES < 0.65 || grossPct < 2.0*cost) continue;
-                  ranked.push({ symbol: c.symbol, spread_bps: c.spread_bps, atrPct: c.atrPct, CES, grossPct, closes: c.closes });
+                   ensureSym(c.symbol).lastAtr = c.atrPrice;
+                  ranked.push({ symbol: c.symbol, spread_bps: c.spread_bps, atrPct: c.atrPct, CES, grossPct, closes: c.closes, lastAtr: c.atrPrice });
                 }
 
                 ranked.sort((a,b)=> b.CES - a.CES || a.spread_bps - b.spread_bps);
@@ -1085,11 +1071,17 @@
                 }
             };
             async function executeScan() {
-                 if (state.isScanning || state.activeTrade) return;
+                 if (state.isScanning) return;
                 state.isScanning = true;
-                logMessage(`[Scanner] Bắt đầu quét với thuật toán V4.2.1...`);
+                logMessage(`[Scanner] Bắt đầu quét với thuật toán V4.3.0...`);
                 try {
-                    updateScannerStatus(`(B1) Lấy dữ liệu thị trường...`); showLoader(ui.scanner.status.textContent);
+                    if(state.activeTrade) {
+                        updateScannerStatus(`Đang giám sát ${state.activeTrade.symbol}... Vẫn quét nền.`);
+                    } else {
+                        updateScannerStatus(`(B1) Lấy dữ liệu thị trường...`); 
+                        showLoader(ui.scanner.status.textContent);
+                    }
+                    
                     const instrumentsInfo = await bybitRequest('/v5/market/instruments-info', 'GET', { category: 'spot' }, true);
                     if (!instrumentsInfo || !instrumentsInfo.list) { throw new Error("Không thể lấy danh sách cặp giao dịch từ Bybit."); }
                     const allTradablePairs = instrumentsInfo.list.filter(i => i.status === 'Trading' && i.quoteCoin === 'USDT').map(i => i.symbol);
@@ -1098,7 +1090,7 @@
                      if (!allTickersData || !allTickersData.list) { throw new Error("Không thể lấy dữ liệu tickers từ Bybit."); }
                     let universe = allTickersData.list.filter(t => allTradablePairs.includes(t.symbol) && parseFloat(t.turnover24h) > CONFIG.MIN_TURNOVER_24H).slice(0, 150);
 
-                    updateScannerStatus(`(B2) Lấy dữ liệu chi tiết cho ${universe.length} cặp...`); showLoader(ui.scanner.status.textContent);
+                    updateScannerStatus(`(B2) Lấy dữ liệu chi tiết cho ${universe.length} cặp...`);
                     const dataPromises = universe.map(t => Promise.all([
                         bybitRequest('/v5/market/orderbook', 'GET', { category: 'spot', symbol: t.symbol, limit: 1 }, true),
                         bybitRequest('/v5/market/kline', 'GET', { category: 'spot', symbol: t.symbol, interval: '15', limit: 200 }, true)
@@ -1117,7 +1109,7 @@
                         }
                     }
                     
-                    updateScannerStatus(`(B3) Chấm điểm ${state.scannedCandidates.size} cặp...`); showLoader(ui.scanner.status.textContent);
+                    updateScannerStatus(`(B3) Chấm điểm ${state.scannedCandidates.size} cặp...`);
                     let processedCandidates = [];
                     for (const [symbol, cand] of state.scannedCandidates.entries()) {
                         const closes = cand.klines.map(k => parseFloat(k[4]));
@@ -1153,14 +1145,16 @@
                     
                     const topPicks = processedCandidates.slice(0, 3);
                     displayScanResults(topPicks);
-                    if (topPicks.length > 0) {
+                    if (topPicks.length > 0 && !state.activeTrade) { // Only update chart if not in a trade
                         renderPriceChart(topPicks[0].symbol, topPicks[0].klines);
-                    } else {
+                    } else if (topPicks.length === 0) {
                         initializeCharts(); 
                     }
 
                     logMessage(`[Scanner] Quét hoàn tất. Hiển thị ${topPicks.length} tín hiệu tiềm năng.`);
-                    updateScannerStatus(`Quét xong. Cập nhật lần cuối: ${new Date().toLocaleTimeString('vi-VN')}`);
+                    if(!state.activeTrade) {
+                        updateScannerStatus(`Quét xong. Cập nhật lần cuối: ${new Date().toLocaleTimeString('vi-VN')}`);
+                    }
                     
                     await executeAutoTrades(topPicks);
                 
@@ -1170,7 +1164,9 @@
                     displayScanResults([]);
                 } finally {
                     state.isScanning = false;
-                    hideLoader();
+                    if(!state.activeTrade) {
+                        hideLoader();
+                    }
                 }
             }
             function displayScanResults(results) {
@@ -1179,6 +1175,9 @@
                     ui.scanner.results.innerHTML = '<div class="col-span-full text-center text-gray-400">Không có kế hoạch giao dịch nào phù hợp.</div>';
                     return;
                 }
+                let header = state.activeTrade ? `<h3 class="col-span-full text-center text-yellow-400 font-semibold mb-2">Tín hiệu tiềm năng cho lệnh tiếp theo:</h3>` : '';
+                ui.scanner.results.innerHTML = header;
+
                 results.forEach((item, index) => {
                     const capitalDisplay = index === 0 ? `(Ưu tiên #1)` : '(Dự phòng)';
                     const lastPrice = parseFloat(item.lastPrice);
