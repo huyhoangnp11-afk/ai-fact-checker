@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Bybit Browser Bot v4.5 — Autopilot + ALT Hunter</title>
+  <title>Bybit Browser Bot v4.9 — Autopilot + ALT Hunter</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     /* A more refined color palette and modern UI styling */
@@ -58,7 +58,7 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>Bybit Browser Bot v4.5 <span class="tiny">— Autopilot • ALT Hunter</span></h1>
+  <h1>Bybit Browser Bot v4.9 <span class="tiny">— Autopilot • ALT Hunter</span></h1>
   <div class="tabs">
     <div class="tab active" data-tab="live">⚡ Live Bot</div>
     <div class="tab" data-tab="back">⛏ Backtester</div>
@@ -212,7 +212,7 @@
 
 <script>
 // ================================================================================= //
-//                            BYBIT BOT v4.5 SCRIPT START                            //
+//                            BYBIT BOT v4.9 SCRIPT START                            //
 // ================================================================================= //
 
 const $ = id => document.getElementById(id); 
@@ -229,6 +229,19 @@ async function kdf(p,s){const b=await crypto.subtle.importKey('raw',enc.encode(p
 async function seal(p,t){const i=crypto.getRandomValues(new Uint8Array(12)),s=crypto.getRandomValues(new Uint8Array(16)),k=await kdf(p,s),c=await crypto.subtle.encrypt({name:'AES-GCM',iv:i},k,enc.encode(t));return{iv:btoa(String.fromCharCode(...i)),s:btoa(String.fromCharCode(...s)),d:btoa(String.fromCharCode(...new Uint8Array(c)))};}
 async function open(p,b){const i=Uint8Array.from(atob(b.iv),c=>c.charCodeAt(0)),s=Uint8Array.from(atob(b.s),c=>c.charCodeAt(0)),d=Uint8Array.from(atob(b.d),c=>c.charCodeAt(0)),k=await kdf(p,s);return dec.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:i},k,d));}
 async function hmac(s,m){const k=await crypto.subtle.importKey('raw',enc.encode(s),{name:'HMAC',hash:'SHA-256'},!1,['sign']),g=await crypto.subtle.sign('HMAC',k,enc.encode(m));return Array.from(new Uint8Array(g)).map(b=>b.toString(16).padStart(2,'0')).join('');}
+
+// Tạo query string theo thứ tự key (Bybit v5 cần canonical)
+function canonQS(obj={}){ return Object.keys(obj).sort().map(k=>`${k}=${obj[k]}`).join('&'); }
+
+// ---- Private API queue (serialize requests): fix sporadic 10001
+let __privLock = Promise.resolve();
+async function __withPrivLock(fn){
+  const prev = __privLock;
+  let release;
+  __privLock = new Promise(res => (release = res));
+  try { await prev; return await fn(); }
+  finally { release(); }
+}
 
 // ============ SHARED INDICATORS ============
 function sma(a,n){if(a.length<n)return null;let s=0;for(let i=a.length-n;i<a.length;i++)s+=a[i];return s/n;}
@@ -266,25 +279,40 @@ $('saveKeys').onclick=Store.saveKeys;$('loadKeys').onclick=Store.loadKeys;$('cle
 ['orderQuote', 'tf', 'recvWindow', 'proxy', 'autoMode', 'btcFilter', 'useTrailing', 'useBreakeven', 'useOCOEmu', 'symbolList', 'minScore', 'timeStopMin', 'maxLossDay', 'scanSec', 'autoRun', 'simMode', 'autoResetStart'].forEach(id => $(id)?.addEventListener('change', Store.saveCfg));
 Store.loadCfg();
 
-let serverOffset=0, lastSync = 0, ws=null, stopping = false;
+let serverOffset = 0, lastSync = 0, netRTT = 300, ws=null, stopping = false;
 
-async function syncTime(force = false) {
-    if (!force && Date.now() - lastSync < 60_000) return;
-    try {
-        const r = await fetch(api.buildUrl('/v5/market/time'));
-        const j = await r.json();
-        let serverMs = j?.result?.timeNano ? Math.floor(Number(j.result.timeNano) / 1e6) :
-                         j?.result?.timeSecond ? Number(j.result.timeSecond) * 1000 :
-                         j?.result?.time ? Number(j.result.time) :
-                         (Date.parse(r.headers.get('date')) || Date.now());
-        serverOffset = serverMs - Date.now();
-        lastSync = Date.now();
-        logLive(`Time sync complete. Offset: ${serverOffset}ms`, 'ok');
-    } catch (e) {
-        logLive('Time sync failed.', 'warn');
-    }
+async function syncTime(force=false){
+  if (!force && Date.now() - lastSync < 30_000) return; // 30s/lần
+  try{
+    const t0 = Date.now();
+    const r  = await fetch(api.buildUrl('/v5/market/time'));
+    const j  = await r.json();
+    const t1 = Date.now();
+
+    // Server time (ưu tiên timeNano → timeSecond → time → Date header)
+    const srvMs =
+      (j?.result?.timeNano ? Math.floor(Number(j.result.timeNano)/1e6) :
+       j?.result?.timeSecond ? Number(j.result.timeSecond)*1000 :
+       Number(j?.result?.time) || Date.parse(r.headers.get('date')) || t1);
+
+    // kỹ thuật midpoint để giảm lệch 1/2 RTT
+    netRTT = Math.min(5000, Math.max(50, t1 - t0));
+    const mid = (t0 + t1)/2;
+    serverOffset = srvMs - mid;
+    lastSync = t1;
+    logLive(`Time sync complete. Offset=${serverOffset.toFixed(0)}ms, RTT=${netRTT}ms`, 'ok');
+  }catch(e){
+    logLive('Không đồng bộ được thời gian', 'warn');
+  }
 }
-function now() { return Date.now() + serverOffset; }
+function now(){ return Date.now() + serverOffset; }
+
+// recvWindow khuyến nghị = max(user, 2*RTT + 1000ms)
+function suggestedRecvWindow(){
+  const base = +$('recvWindow').value || 5000;
+  return Math.max(base, 2*netRTT + 1000);
+}
+
 
 async function getUniverseLiveAlt(){
   const list = await api.tickers();
@@ -306,40 +334,63 @@ async function getUniverseLiveAlt(){
   return out.length ? out : cands.slice(0, 30).map(x => x.symbol);
 }
 
+let __cancelLock = false, __cancelTimer = null;
 const api={
-    sign: async(method, path, qs={}, body=null) => {
-        await syncTime();
-        const attempt = async () => {
-            const apiKey = $('apiKey').value.trim(), apiSecret = $('apiSecret').value.trim();
-            if(!apiKey||!apiSecret) throw new Error('API Key/Secret missing');
-            const rw = String(+$('recvWindow').value || 5000);
-            const t = String(now());
-            const bodyStr = (method==='POST'&&body)? JSON.stringify(body):'';
-            const prehash = (method==='GET') ? `${t}${apiKey}${rw}${new URLSearchParams(qs).toString()}` : `${t}${apiKey}${rw}${bodyStr}`;
-            const sign = await hmac(apiSecret, prehash);
-            const headers = { 'X-BAPI-API-KEY': apiKey, 'X-BAPI-TIMESTAMP': t, 'X-BAPI-RECV-WINDOW': rw, 'X-BAPI-SIGN': sign, 'Content-Type': 'application/json' };
-            const resp = await fetch(api.buildUrl(path, method === 'GET' ? qs : {}), { method, headers, body: bodyStr || undefined });
-            if(resp.status===403 && !$('proxy').value.trim()){ $('corsWarn').style.display='block'; }
-            const data = await resp.json().catch(()=>({retCode:-1, retMsg:'Non-JSON response'}));
-            if(!resp.ok || data.retCode !== 0) {
-                const err = new Error(`HTTP ${resp.status} – ${data.retMsg||'Unknown Error'} (${data.retCode})`);
-                err.retCode = data.retCode; err.msg = data.retMsg; throw err;
+    sign: async (method, path, qs={}, body=null) => {
+        return __withPrivLock(async () => {
+            await syncTime();
+            const apiKey = $('apiKey').value.trim();
+            const apiSecret = $('apiSecret').value.trim();
+            if(!apiKey || !apiSecret) throw new Error('Thiếu API');
+
+            async function attempt(rwVal){
+                const rw = String(rwVal);
+                const ts = String(now());
+                let url, payloadStr = '', qSorted = {};
+
+                if(method === 'GET'){
+                    qSorted = Object.fromEntries(Object.keys(qs||{}).sort().map(k=>[k, qs[k]]));
+                    payloadStr = canonQS(qSorted);
+                    url = api.buildUrl(path, qSorted);
+                }else{
+                    payloadStr = JSON.stringify(body||{});
+                    url = api.buildUrl(path, {});
+                }
+
+                const prehash = `${ts}${apiKey}${rw}${payloadStr}`;
+                const sign = await hmac(apiSecret, prehash);
+                const headers = {
+                    'X-BAPI-API-KEY': apiKey,
+                    'X-BAPI-TIMESTAMP': ts,
+                    'X-BAPI-RECV-WINDOW': rw,
+                    'X-BAPI-SIGN': sign,
+                    'X-BAPI-SIGN-TYPE': '2'
+                };
+                if(method==='POST') headers['Content-Type']='application/json';
+
+                const resp = await fetch(url, {method, headers, body: method==='POST'? payloadStr: undefined});
+                if(resp.status===403){ $('corsWarn').style.display='block'; }
+                const data = await resp.json().catch(()=>({retCode:-1,retMsg:'Non-JSON'}));
+                if(!resp.ok || data.retCode!==0){
+                    const err = new Error(`HTTP ${resp.status} – ${data.retMsg||'ERR'} (${data.retCode})`);
+                    err.retCode = data.retCode; err.msg = data.retMsg; throw err;
+                }
+                return data.result;
             }
-            return data.result;
-        };
-        try {
-            return await attempt();
-        } catch(e) {
-            const m = (e.message || '') + ' ' + (e.msg || '');
-            if (e.retCode === 10001 || /req_timestamp invalid/i.test(m)) {
-                logLive('Timestamp error (10001), re-syncing and retrying...', 'warn');
-                await syncTime(true);
-                try { return await attempt(); } catch(e2) { throw e2; }
+
+            try{
+                return await attempt(suggestedRecvWindow());
+            }catch(e){
+                if(e.retCode===10001 || e.retCode===10002 || /recvWindow|timestamp/i.test(e.msg||'')){
+                    logLive(`API Error (${e.retCode}), retrying with force sync...`, 'warn');
+                    await syncTime(true);
+                    return await attempt(suggestedRecvWindow()+5000);
+                }
+                throw e;
             }
-            throw e;
-        }
+        });
     },
-    pub:async(p,q={})=>{const r=await fetch(api.buildUrl(p,q));r.status===403&&!$('proxy').value.trim()&&($('corsWarn').style.display='block');return r.json();},
+    pub:async(p,q={})=>{const r=await api.buildUrl(p,q); const resp = await fetch(r); if(resp.status===403 && !$('proxy').value.trim()){$('corsWarn').style.display='block';} return resp.json();},
     klines:async(s,i='5',l=200)=>{const j=await api.pub('/v5/market/kline',{category:'spot',symbol:s,interval:i,limit:l});if(j.retCode!==0)throw new Error(j.retMsg);return j.result.list.map(r=>({t:+r[0],o:+r[1],h:+r[2],l:+r[3],c:+r[4],v:+r[5]})).reverse();},
     tickers:async()=>{const j=await api.pub('/v5/market/tickers',{category:'spot'});if(j.retCode!==0)throw new Error(j.retMsg);return j.result.list;},
     instruments:async s=>{const j=await api.pub('/v5/market/instruments-info',{category:'spot',symbol:s});if(j.retCode!==0)throw new Error(j.retMsg);return j.result.list[0];},
@@ -359,9 +410,21 @@ const api={
         return api.sign('POST','/v5/order/create',{},{category:'spot',symbol,side:'Sell',orderType:'Market',qty:String(qty),triggerPrice:String(snappedPrice.toFixed(8)),triggerDirection:1,orderFilter:'StopOrder'});
     },
     realtimeOrders:async(s)=>api.sign('GET','/v5/order/realtime',{category:'spot',symbol:s}),
-    cancelAll:async s=>{ if(stopping) return; try{await api.sign('POST','/v5/order/cancel-all',{},{category:'spot',symbol:s});}catch(e){logLive('Cancel all failed: '+e.message,'warn');}},
+    cancelAll: async (symbol) => {
+        if(__cancelLock || stopping) return;
+        __cancelLock = true;
+        clearTimeout(__cancelTimer);
+        try{
+            await syncTime(true);
+            await api.sign('POST','/v5/order/cancel-all',{}, {category:'spot', symbol});
+        }catch(e){
+            logLive('Cancel all fail: '+e.message, 'warn');
+        }finally{
+            __cancelTimer = setTimeout(()=>{ __cancelLock=false; }, 800); // 800ms
+        }
+    },
     wsUrl:()=>$('useTestnet').checked?'wss://stream-testnet.bybit.com/v5/private':'wss://stream.bybit.com/v5/private',
-    buildUrl:(p,q)=>{const x=$('proxy').value.trim(),u=($('useTestnet').checked?'https://api-testnet.bybit.com':'https://api.bybit.com')+p+(q&&Object.keys(q).length?'?'+new URLSearchParams(q):'');return(x?x.replace(/\/$/,'')+'/':'')+u;}
+    buildUrl:(p,q)=>{const x=$('proxy').value.trim(),u=($('useTestnet').checked?'https://api-testnet.bybit.com':'https://api.bybit.com')+p+(q&&Object.keys(q).length?'?'+canonQS(q):'');return(x?x.replace(/\/$/,'')+'/':'')+u;}
 };
 
 const journal={today:()=>new Date().toISOString().slice(0,10),get:()=>{const j=localStorage.getItem('bb4_state');return j?JSON.parse(j):{date:journal.today(),loss:0,pnl:0,trades:[]};},set:s=>{localStorage.setItem('bb4_state',JSON.stringify(s));$('lossStreak').textContent=s.loss;$('pnlDay').textContent=s.pnl.toFixed(2);journal.render(s.trades);},ensureToday:()=>{let s=journal.get();s.date!==journal.today()&&(s={date:journal.today(),loss:0,pnl:0,trades:[]},journal.set(s));},push:t=>{const s=journal.get();s.trades.unshift(t);t.pnl!==void 0&&(s.pnl+=t.pnl);t.pnl<0?s.loss+=1:t.pnl>0&&(s.loss=0);journal.set(s);},render:l=>{const b=$('journalLive').querySelector('tbody');b.innerHTML='';l.slice(0,200).forEach(r=>{const e=document.createElement('tr');e.innerHTML=`<td>${new Date(r.ts).toLocaleTimeString()}</td><td>${r.sym}</td><td>${r.entry?.toFixed?.(6)||'-'}</td><td>${r.tp?.toFixed?.(6)||'-'}</td><td>${r.sl?.toFixed?.(6)||'-'}</td><td>${r.exit?.toFixed?.(6)||'-'}</td><td class="${r.pnl>0?'ok':r.pnl<0?'bad':''}">${r.pnl?.toFixed?.(2)||'-'}</td><td>${r.note||''}</td>`,b.appendChild(e);});}};
