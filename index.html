@@ -303,7 +303,7 @@
                 WS_SPOT_URL: "wss://stream.bybit.com/v5/public/spot",
                 RECV_WINDOW: '10000', 
                 SCANNER_INTERVAL_MS: 120000, 
-                TRADE_MONITOR_INTERVAL_MS: 7000,
+                TRADE_MONITOR_INTERVAL_MS: 10000, // Increased interval for checking trade status
                 BALANCE_UPDATE_INTERVAL_MS: 60000,
             };
             const CONFIG = {
@@ -521,106 +521,78 @@
             // --- Trade Management (For Scanner Bot) ---
             async function closeActiveTrade(reason) {
                 if (!state.activeTrade) return;
-
-                const tradeToClose = { ...state.activeTrade }; 
-                state.activeTrade = null; 
+                const tradeToClose = { ...state.activeTrade };
+                state.activeTrade = null;
                 
-                // If TP/SL are on exchange, we need to cancel them
-                if(tradeToClose.tpOrderId || tradeToClose.slOrderId) {
-                    logMessage(`[Trade Manager] Hủy các lệnh TP/SL cho ${tradeToClose.symbol}.`);
-                    await bybitRequest('/v5/order/cancel-all', 'POST', { category: 'spot', symbol: tradeToClose.symbol });
-                }
+                logMessage(`[Trade Manager] Đóng lệnh ${tradeToClose.symbol} vì: ${reason}.`);
+                // Always cancel any open TP/SL orders when a trade is closed for any reason.
+                logMessage(`[Trade Manager] Hủy các lệnh TP/SL còn lại cho ${tradeToClose.symbol}.`);
+                await bybitRequest('/v5/order/cancel-all', 'POST', { category: 'spot', symbol: tradeToClose.symbol });
 
-                logMessage(`[Trade Manager] Đóng lệnh ${tradeToClose.symbol} vì: ${reason}.`, false);
-                
-                if (reason.includes("Đạt Take Profit") || reason.includes("Chạm Stop Loss")) {
-                    logMessage("Bot đã sẵn sàng tìm kiếm tín hiệu giao dịch tiếp theo.", false);
-                    await fetchWalletBalance();
-                    return;
-                }
-
-                // Manual close or other reasons require a market sell
-                showLoader(`Đang đặt lệnh Bán ${tradeToClose.symbol}...`);
-                const orderParams = {
-                    category: 'spot',
-                    symbol: tradeToClose.symbol,
-                    side: 'Sell',
-                    orderType: 'Market',
-                    qty: tradeToClose.quantity.toString(),
-                };
-                const sellResult = await placeOrder(orderParams);
-                hideLoader();
-
-                if (sellResult && sellResult.orderId) {
-                    const entryValue = parseFloat(tradeToClose.entryValue);
-                    const exitValue = parseFloat(sellResult.cumExecValue);
-                    const profit = (exitValue - entryValue).toFixed(2);
-                    logMessage(`[Trade Manager] Bán thành công ${tradeToClose.quantity} ${tradeToClose.symbol}. Lợi nhuận ước tính: ${profit} USDT.`);
-                    logMessage("Bot đã sẵn sàng tìm kiếm tín hiệu giao dịch tiếp theo.", false);
-                    await fetchWalletBalance();
-                } else {
-                    logMessage(`[Trade Manager] LỖI NGHIÊM TRỌNG: Không thể đặt lệnh bán cho ${tradeToClose.symbol}. Cần can thiệp thủ công!`, true);
-                }
+                await fetchWalletBalance();
+                logMessage("Bot đã sẵn sàng tìm kiếm tín hiệu giao dịch tiếp theo.", false);
+                updateScannerStatus('Sẵn sàng quét.');
             }
             
-            async function placeTPSLOrders(symbol, quantity, entryPrice, lastAtr) {
-                 if (!lastAtr || lastAtr <= 0) {
+            async function placeTPSLOrders(symbol, quantity, entryPrice, lastAtr, tickSize) {
+                if (!lastAtr || lastAtr <= 0) {
                     logMessage(`[Trade Manager] Lỗi: Không có dữ liệu ATR hợp lệ cho ${symbol}. Không thể đặt TP/SL.`, true);
                     return { tpOrderId: null, slOrderId: null };
                 }
+                
+                const roundPrice = (price) => {
+                    const precision = Math.max(0, (tickSize.split('.')[1] || '').length);
+                    return parseFloat(price.toFixed(precision));
+                }
 
-                const tpPrice = (entryPrice + (lastAtr * CONFIG.ATR_TP_MULTIPLIER)).toFixed(5);
-                const slPrice = (entryPrice - (lastAtr * CONFIG.ATR_SL_MULTIPLIER)).toFixed(5);
+                const tpPrice = roundPrice(entryPrice + (lastAtr * CONFIG.ATR_TP_MULTIPLIER));
+                const slPrice = roundPrice(entryPrice - (lastAtr * CONFIG.ATR_SL_MULTIPLIER));
 
                 logMessage(`[Trade Manager] Đang đặt TP/SL cho ${symbol}. TP: ${tpPrice}, SL: ${slPrice}`);
 
-                const tpParams = {
-                    category: 'spot',
-                    symbol: symbol,
-                    side: 'Sell',
-                    orderType: 'Limit',
-                    qty: quantity.toString(),
-                    price: tpPrice,
-                    timeInForce: 'GTC',
-                };
-                const tpResult = await bybitRequest('/v5/order/create', 'POST', tpParams);
-                if (!tpResult?.orderId) {
-                    logMessage(`[Trade Manager] LỖI: Không thể đặt lệnh Take Profit cho ${symbol}.`, true);
-                    closeActiveTrade("Lỗi đặt TP");
-                    return { tpOrderId: null, slOrderId: null };
-                }
-                 logMessage(`[Trade Manager] Đặt lệnh Take Profit thành công. Order ID: ${tpResult.orderId}`);
+                const orderBatch = [
+                    {
+                        category: 'spot',
+                        symbol: symbol,
+                        side: 'Sell',
+                        orderType: 'Limit',
+                        qty: quantity.toString(),
+                        price: tpPrice.toString(),
+                        timeInForce: 'GTC',
+                    },
+                    {
+                        category: 'spot',
+                        symbol: symbol,
+                        side: 'Sell',
+                        orderType: 'Market',
+                        qty: quantity.toString(),
+                        triggerPrice: slPrice.toString(),
+                        triggerDirection: 2, // 2 for falling price
+                    }
+                ];
 
-                const slParams = {
-                    category: 'spot',
-                    symbol: symbol,
-                    side: 'Sell',
-                    orderType: 'Market',
-                    qty: quantity.toString(),
-                    triggerPrice: slPrice,
-                    triggerDirection: 'Falling',
-                    tpslMode: 'Partial',
-                    slOrderType: 'Market'
-                };
-                const slResult = await bybitRequest('/v5/order/create', 'POST', slParams);
-                 if (!slResult?.orderId) {
-                    logMessage(`[Trade Manager] LỖI: Không thể đặt lệnh Stop Loss cho ${symbol}. Hủy lệnh TP và đóng giao dịch.`, true);
-                    await bybitRequest('/v5/order/cancel', 'POST', { category: 'spot', symbol: symbol, orderId: tpResult.orderId });
-                    closeActiveTrade("Lỗi đặt SL");
-                    return { tpOrderId: null, slOrderId: null };
-                }
-                logMessage(`[Trade Manager] Đặt lệnh Stop Loss thành công. Order ID: ${slResult.orderId}`);
+                const batchResult = await bybitRequest('/v5/order/create-batch', 'POST', { category: 'spot', request: orderBatch });
+                
+                if (batchResult && batchResult.list && batchResult.list.length === 2) {
+                    const tpResult = batchResult.list[0];
+                    const slResult = batchResult.list[1];
 
-                return { tpOrderId: tpResult.orderId, slOrderId: slResult.orderId };
+                    if (tpResult.orderId && slResult.orderId) {
+                        logMessage(`[Trade Manager] Đặt TP/SL thành công. TP ID: ${tpResult.orderId}, SL ID: ${slResult.orderId}`);
+                        return { tpOrderId: tpResult.orderId, slOrderId: slResult.orderId };
+                    }
+                }
+                
+                logMessage(`[Trade Manager] LỖI: Không thể đặt đồng thời TP/SL. Hủy tất cả lệnh cho ${symbol} và đóng giao dịch.`, true);
+                await bybitRequest('/v5/order/cancel-all', 'POST', { category: 'spot', symbol: symbol });
+                closeActiveTrade("Lỗi đặt TP/SL");
+                return { tpOrderId: null, slOrderId: null };
             }
 
 
             // --- Auto Trade Execution (For Scanner Bot) ---
             async function executeAutoTrades(plans) {
                 if (!state.autoTradeEnabled || plans.length === 0 || state.activeTrade) {
-                    if (state.activeTrade) {
-                        updateScannerStatus(`Đang trong giao dịch ${state.activeTrade.symbol}. Tạm dừng quét.`);
-                    }
                     return;
                 }
 
@@ -660,7 +632,16 @@
                         const entryPrice = parseFloat(result.avgPrice);
                         const quantity = parseFloat(result.cumExecQty);
                         
-                        const { tpOrderId, slOrderId } = await placeTPSLOrders(plan.symbol, quantity, entryPrice, plan.lastAtr);
+                        // We need tickSize for accurate TP/SL pricing
+                        const instrumentsInfo = await bybitRequest('/v5/market/instruments-info', 'GET', { category: 'spot', symbol: plan.symbol }, true);
+                        const tickSize = instrumentsInfo?.list?.[0]?.priceFilter?.tickSize;
+                        if (!tickSize) {
+                           logMessage(`Lỗi: không thể lấy tickSize cho ${plan.symbol}. Đóng giao dịch để đảm bảo an toàn.`, true);
+                           closeActiveTrade("Lỗi lấy thông tin cặp giao dịch");
+                           return;
+                        }
+
+                        const { tpOrderId, slOrderId } = await placeTPSLOrders(plan.symbol, quantity, entryPrice, plan.lastAtr, tickSize);
 
                         if(tpOrderId && slOrderId) {
                              state.activeTrade = {
@@ -1271,8 +1252,29 @@
                 }
             };
             async function executeScan() {
-                 if (state.isScanning || state.activeTrade) return;
+                 if (state.isScanning) return;
                 state.isScanning = true;
+                
+                if (state.activeTrade) {
+                    updateScannerStatus(`Đang giám sát ${state.activeTrade.symbol}...`);
+                    const orders = await bybitRequest('/v5/order/history', 'GET', { category: 'spot', symbol: state.activeTrade.symbol, limit: 2 });
+                    if (orders && orders.list) {
+                        const tpOrder = orders.list.find(o => o.orderId === state.activeTrade.tpOrderId);
+                        const slOrder = orders.list.find(o => o.orderId === state.activeTrade.slOrderId);
+
+                        if (tpOrder && tpOrder.orderStatus === 'Filled') {
+                            closeActiveTrade(`Đạt Take Profit tại ${tpOrder.avgPrice}`);
+                        } else if (slOrder && slOrder.orderStatus === 'Filled') {
+                            closeActiveTrade(`Chạm Stop Loss tại ${slOrder.avgPrice}`);
+                        } else if ((tpOrder && tpOrder.orderStatus === 'Cancelled') || (slOrder && slOrder.orderStatus === 'Cancelled')) {
+                            // If one is cancelled, assume the other filled or something went wrong. Close position.
+                            closeActiveTrade("Lệnh TP/SL bị hủy, đóng giao dịch thủ công.");
+                        }
+                    }
+                    state.isScanning = false;
+                    return;
+                }
+
                 logMessage(`[Scanner] Bắt đầu quét với thuật toán V4...`);
                 try {
                     updateScannerStatus(`(B1) Lấy dữ liệu thị trường...`); showLoader(ui.scanner.status.textContent);
