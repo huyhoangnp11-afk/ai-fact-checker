@@ -3,34 +3,62 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Bybit Browser Bot v4 — Autopilot Live + Backtest</title>
+  <title>Bybit Browser Bot v4.4 — Equity Curve + Autopilot</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    :root{--bg:#0b1220;--card:#0e1726;--line:#1f2a44;--text:#e5e7eb;--muted:#93a4bf;--ok:#22c55e;--bad:#ef4444;--warn:#f59e0b}
-    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial}
-    .wrap{max-width:1240px;margin:24px auto;padding:0 16px}
-    h1{margin:0 0 8px;font-size:22px}
-    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+    /* A more refined color palette and modern UI styling */
+    :root{
+      --bg:#0d1117;
+      --card:#161b22;
+      --line:#30363d;
+      --text:#c9d1d9;
+      --muted:#8b949e;
+      --ok:#56d364;
+      --bad:#f85149;
+      --warn:#d29922;
+      --accent:#58a6ff;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji"}
+    .wrap{max-width:1280px;margin:24px auto;padding:0 20px}
+    h1{margin:0 0 12px;font-size:24px; font-weight: 500;}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
     .col-3{grid-column:span 3}.col-4{grid-column:span 4}.col-5{grid-column:span 5}.col-6{grid-column:span 6}.col-7{grid-column:span 7}.col-8{grid-column:span 8}.col-12{grid-column:span 12}
-    label{display:block;color:var(--muted);font-size:12px;margin:6px 0 4px}
-    input,select,button,textarea{width:100%;background:#0b1422;border:1px solid #1d2b4b;color:var(--text);border-radius:10px;padding:10px}
-    input[type="checkbox"]{width:auto}
-    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .pill{display:inline-flex;gap:8px;align-items:center;padding:7px 10px;border-radius:999px;background:#0b1422;border:1px solid #1d2b4b;color:var(--text)}
-    .tiny{font-size:11px;color:#8ea0c2}.mono{font-family:ui-monospace,Menlo,Consolas,monospace}
-    .ok{color:#86efac}.bad{color:#fecaca}.warn{color:#fde68a}
-    #logLive,#logBack{height:210px;overflow:auto;background:#07101c;border:1px solid #14213b;border-radius:10px;padding:10px;white-space:pre-wrap}
-    table{width:100%;border-collapse:collapse} th,td{border-bottom:1px solid #14213b;padding:6px 8px;text-align:left}
-    .tabs{display:flex;gap:8px;margin:8px 0 16px}
-    .tab{padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:#0c1629;cursor:pointer}
-    .tab.active{background:#13223b;border-color:#23406d}
+    @media (max-width: 992px) { .col-3, .col-4, .col-5 { grid-column: span 6; } }
+    @media (max-width: 768px) { .col-3, .col-4, .col-5, .col-6, .col-7, .col-8 { grid-column: span 12; } }
+    label{display:block;color:var(--muted);font-size:12px;margin:8px 0 4px; font-weight: 500;}
+    input,select,textarea{width:100%;background:#0d1117;border:1px solid var(--line);color:var(--text);border-radius:8px;padding:10px; transition: border-color 0.2s ease, box-shadow 0.2s ease;}
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2);}
+    input[type="checkbox"]{width:auto; accent-color: var(--accent);}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .pill{display:inline-flex;gap:8px;align-items:center;padding:7px 12px;border-radius:999px;background:#0d1117;border:1px solid var(--line);color:var(--text); cursor:pointer; font-size: 13px;}
+    .tiny{font-size:12px;color:var(--muted); opacity: 0.9;}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+    .ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+    #logLive,#logBack{height:220px;overflow:auto;background:#010409;border:1px solid var(--line);border-radius:8px;padding:12px;white-space:pre-wrap; font-size: 13px; line-height: 1.6;}
+    table{width:100%;border-collapse:collapse;margin-top:8px;} th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left; font-size: 13px;} th {color: var(--muted); font-weight: 500;}
+    .tabs{display:flex;gap:8px;margin:16px 0; border-bottom: 1px solid var(--line);}
+    .tab{padding:10px 16px;border:1px solid transparent; border-bottom: 2px solid transparent; border-radius:8px 8px 0 0; color: var(--muted); cursor:pointer; transition: all 0.2s ease; margin-bottom: -1px;}
+    .tab:hover { background: var(--card); color: var(--text); }
+    .tab.active{background:var(--card); color:var(--text); border-bottom-color:var(--accent);}
     .tabview{display:none}.tabview.active{display:block}
-    .btn{cursor:pointer}
+    .btn{
+        width:auto; padding: 10px 16px; font-weight: 500; cursor: pointer; border-radius: 8px;
+        background: #21262d; border: 1px solid var(--line); color: var(--text);
+        transition: all 0.2s ease;
+    }
+    .btn:hover:not(:disabled){background:#30363d; border-color: #8b949e;}
+    .btn:disabled { opacity: 0.6; cursor: not-allowed;}
+    button#start, button#B_run, button#autopilot { background: #238636; border-color: #38a24a; color: white; }
+    button#start:hover:not(:disabled), button#B_run:hover:not(:disabled), button#autopilot:hover:not(:disabled) { background: #2ea043; }
+    button#stop { background: #da3633; border-color: #e5534b; color: white;}
+    button#stop:hover:not(:disabled) { background: #f04747; }
   </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Bybit Browser Bot v4 <span class="tiny">— Autopilot • Live Trading + Backtester</span></h1>
+  <h1>Bybit Browser Bot v4.4 <span class="tiny">— Equity Curve • Autopilot • ALT Hunter</span></h1>
   <div class="tabs">
     <div class="tab active" data-tab="live">⚡ Live Bot</div>
     <div class="tab" data-tab="back">⛏ Backtester</div>
@@ -41,69 +69,69 @@
   <section class="tabview active" id="tab-live">
     <div class="grid">
       <div class="card col-4">
-        <b>1) API & Bảo mật</b>
+        <b>1) API & Security</b>
         <label>API Key</label><input id="apiKey" placeholder="BYBITxxxx"/>
         <label>API Secret</label><input id="apiSecret" type="password" placeholder="••••••"/>
-        <label>Passphrase mã hoá</label><input id="passphrase" type="password" placeholder="ví dụ: batman-2002"/>
-        <div class="row" style="margin-top:8px">
-          <button id="saveKeys" class="btn">Lưu</button>
-          <button id="loadKeys" class="btn">Giải mã & nạp</button>
-          <button id="clearKeys" class="btn">Xoá</button>
+        <label>Encryption Passphrase</label><input id="passphrase" type="password" placeholder="e.g., batman-2002"/>
+        <div class="row" style="margin-top:12px">
+          <button id="saveKeys" class="btn">Save</button>
+          <button id="loadKeys" class="btn">Load</button>
+          <button id="clearKeys" class="btn">Clear</button>
         </div>
-        <div class="row" style="margin-top:8px">
+        <div class="row" style="margin-top:12px">
           <label class="pill"><input id="useTestnet" type="checkbox" checked> Testnet</label>
           <label class="pill"><input id="simMode" type="checkbox"> SIM mode</label>
-          <label class="pill"><input id="autoRun" type="checkbox"> Auto‑run khi mở trang</label>
+          <label class="pill"><input id="autoRun" type="checkbox"> Auto‑run</label>
         </div>
-        <div class="tiny" style="margin-top:8px">⚠️ API chỉ bật Spot trade, tắt Withdraw. Secret được AES‑GCM hoá bằng passphrase và lưu localStorage.</div>
-        <div class="tiny warn" id="corsWarn" style="display:none;margin-top:6px">Nếu lỗi CORS → dùng Testnet hoặc Proxy riêng.</div>
+        <div class="tiny" style="margin-top:12px">⚠️ Spot trading only. Secrets are AES‑GCM encrypted with your passphrase and saved in local storage.</div>
+        <div class="tiny warn" id="corsWarn" style="display:none;margin-top:6px">CORS error detected → Use Testnet or a private Proxy.</div>
       </div>
 
       <div class="card col-8">
-        <b>2) Chiến lược & tự động hoá (Live)</b>
+        <b>2) Strategy & Automation (Live)</b>
         <div class="grid" style="margin-top:6px">
-          <div class="col-3"><label>USDT mỗi lệnh</label><input id="orderQuote" type="number" min="5" step="0.1" value="8"/></div>
-          <div class="col-3"><label>Khung nến</label><select id="tf"><option value="1">1m</option><option value="3">3m</option><option value="5" selected>5m</option><option value="15">15m</option></select></div>
+          <div class="col-3"><label>USDT per Trade</label><input id="orderQuote" type="number" min="5" step="0.1" value="8"/></div>
+          <div class="col-3"><label>Candle Timeframe</label><select id="tf"><option value="1">1m</option><option value="3">3m</option><option value="5" selected>5m</option><option value="15">15m</option></select></div>
           <div class="col-3"><label>Recv Window (ms)</label><input id="recvWindow" type="number" value="5000"/></div>
-          <div class="col-3"><label>Proxy (tuỳ chọn)</label><input id="proxy" placeholder="https://your-worker.workers.dev"/></div>
+          <div class="col-3"><label>Proxy (optional)</label><input id="proxy" placeholder="https://your-worker.workers.dev"/></div>
           <div class="col-12 row">
-            <label class="pill"><input id="autoMode" type="checkbox"> Mua tự động</label>
-            <label class="pill"><input id="btcFilter" type="checkbox" checked> BTC 5m uptrend</label>
+            <label class="pill"><input id="autoMode" type="checkbox"> Auto Buy</label>
+            <label class="pill"><input id="btcFilter" type="checkbox" checked> BTC 5m Uptrend Filter</label>
             <label class="pill"><input id="useTrailing" type="checkbox" checked> Trailing SL</label>
-            <label class="pill"><input id="useBreakeven" type="checkbox" checked> BE‑lock</label>
-            <label class="pill"><input id="useOCOEmu" type="checkbox" checked> OCO mô phỏng</label>
+            <label class="pill"><input id="useBreakeven" type="checkbox" checked> Breakeven Lock</label>
+            <label class="pill"><input id="useOCOEmu" type="checkbox" checked> Emulated OCO</label>
           </div>
-          <div class="col-12"><label>Danh sách symbol (CSV)</label><input id="symbolList" placeholder="Để trống = bot tự chọn top xu hướng"/></div>
-          <div class="col-3"><label>Min điểm tín hiệu (>=)</label><input id="minScore" type="number" value="5"/></div>
-          <div class="col-3"><label>Time‑stop (phút)</label><input id="timeStopMin" type="number" value="15"/></div>
-          <div class="col-3"><label>Max thua liên tiếp/ngày</label><input id="maxLossDay" type="number" value="2"/></div>
-          <div class="col-3"><label>Chu kỳ quét (s)</label><input id="scanSec" type="number" value="20"/></div>
+          <div class="col-12"><label>Symbol List (CSV, empty = ALT Hunter)</label><input id="symbolList" placeholder="Leave empty for auto-selection of trending ALTs"/></div>
+          <div class="col-3"><label>Min Signal Score (>=)</label><input id="minScore" type="number" value="5"/></div>
+          <div class="col-3"><label>Time‑stop (minutes)</label><input id="timeStopMin" type="number" value="15"/></div>
+          <div class="col-3"><label>Max Daily Losses</label><input id="maxLossDay" type="number" value="2"/></div>
+          <div class="col-3"><label>Base Scan Interval (s)</label><input id="scanSec" type="number" value="20"/></div>
         </div>
-        <div class="grid" style="margin-top:8px">
+        <div class="grid" style="margin-top:12px">
           <div class="col-12" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px">
-            <div><div class="tiny">Trạng thái</div><div id="status" class="ok">Nhàn rỗi</div></div>
-            <div><div class="tiny">Theo dõi</div><div id="watching">—</div></div>
-            <div><div class="tiny">Tín hiệu</div><div id="signal">—</div></div>
-            <div><div class="tiny">Cập nhật</div><div id="lastUpdate">—</div></div>
-            <div><div class="tiny">Lỗ/Ngày</div><div id="lossStreak">0</div></div>
-            <div><div class="tiny">PnL/Ngày</div><div id="pnlDay">0.00</div></div>
+            <div><div class="tiny">Status</div><div id="status" class="ok">Idle</div></div>
+            <div><div class="tiny">Watching</div><div id="watching">—</div></div>
+            <div><div class="tiny">Signal</div><div id="signal">—</div></div>
+            <div><div class="tiny">Last Update</div><div id="lastUpdate">—</div></div>
+            <div><div class="tiny">Daily Losses</div><div id="lossStreak">0</div></div>
+            <div><div class="tiny">Daily PnL</div><div id="pnlDay">0.00</div></div>
           </div>
         </div>
-        <div class="row" style="margin-top:10px">
-          <button id="start" class="btn">▶ Bắt đầu</button>
-          <button id="stop" class="btn">■ Dừng</button>
-          <button id="resetDay" class="btn">⟲ Reset phiên</button>
-          <label class="pill" style="margin-left:auto;"><input id="autoResetStart" type="checkbox" checked> Tự reset phiên khi bắt đầu</label>
+        <div class="row" style="margin-top:12px">
+          <button id="start" class="btn">▶ Start</button>
+          <button id="stop" class="btn">■ Stop</button>
+          <button id="resetDay" class="btn">⟲ Reset Session</button>
+          <label class="pill" style="margin-left:auto;"><input id="autoResetStart" type="checkbox" checked> Auto-reset on start</label>
         </div>
       </div>
 
       <div class="card col-12">
-        <b>Nhật ký Live</b>
+        <b>Live Log</b>
         <div id="logLive"></div>
       </div>
       <div class="card col-12">
-        <b>Journal & Hiệu suất (Live)</b>
-        <table id="journalLive"><thead><tr><th>Thời gian</th><th>Symbol</th><th>Entry</th><th>TP</th><th>SL</th><th>Exit</th><th>KQ/PnL</th><th>Ghi chú</th></tr></thead><tbody></tbody></table>
+        <b>Journal & Performance (Live)</b>
+        <table id="journalLive"><thead><tr><th>Time</th><th>Symbol</th><th>Entry</th><th>TP</th><th>SL</th><th>Exit</th><th>Result/PnL</th><th>Notes</th></tr></thead><tbody></tbody></table>
       </div>
     </div>
   </section>
@@ -111,30 +139,30 @@
   <section class="tabview" id="tab-back">
     <div class="grid">
       <div class="card col-5">
-        <b>Backtester – Cấu hình dữ liệu</b>
+        <b>Backtester – Data Configuration</b>
         <div class="grid" style="margin-top:6px">
-          <div class="col-4"><label>Khung nến</label><select id="B_tf"><option value="1">1m</option><option value="3">3m</option><option value="5" selected>5m</option><option value="15">15m</option></select></div>
-          <div class="col-4"><label>Nhìn lại (số nến)</label><input id="B_lookback" type="number" value="1000" /></div>
-          <div class="col-4"><label>Top coin theo turnover</label><input id="B_topN" type="number" value="12" /></div>
-          <div class="col-12"><label>Danh sách symbol (CSV, để trống = lấy top)</label><input id="B_symbolList" placeholder="BTCUSDT,ETHUSDT,SOLUSDT"/></div>
+          <div class="col-4"><label>Candle Timeframe</label><select id="B_tf"><option value="1">1m</option><option value="3">3m</option><option value="5" selected>5m</option><option value="15">15m</option></select></div>
+          <div class="col-4"><label>Lookback (candles)</label><input id="B_lookback" type="number" value="1000" /></div>
+          <div class="col-4"><label>Top N Coins by Turnover</label><input id="B_topN" type="number" value="12" /></div>
+          <div class="col-12"><label>Symbol List (CSV, empty = top N)</label><input id="B_symbolList" placeholder="BTCUSDT,ETHUSDT,SOLUSDT"/></div>
         </div>
         <div class="row" style="margin-top:8px">
-          <label class="pill"><input id="B_btcFilter" type="checkbox" checked> BTC 5m uptrend</label>
-          <label class="pill"><input id="B_pessimistic" type="checkbox" checked> Ưu tiên giả định xấu (SL trước)</label>
+          <label class="pill"><input id="B_btcFilter" type="checkbox" checked> BTC 5m Uptrend Filter</label>
+          <label class="pill"><input id="B_pessimistic" type="checkbox" checked> Pessimistic fills (SL first)</label>
         </div>
       </div>
       <div class="card col-7">
-        <b>Backtester – Chiến lược & phí</b>
+        <b>Backtester – Strategy & Fees</b>
         <div class="grid" style="margin-top:6px">
-          <div class="col-3"><label>Min điểm</label><input id="B_minScore" type="number" value="5"/></div>
+          <div class="col-3"><label>Min Score</label><input id="B_minScore" type="number" value="5"/></div>
           <div class="col-3"><label>TP = k×ATR</label><input id="B_tpK" type="number" step="0.1" value="1.2"/></div>
           <div class="col-3"><label>SL = k×ATR</label><input id="B_slK" type="number" step="0.1" value="0.8"/></div>
-          <div class="col-3"><label>Time‑stop (phút)</label><input id="B_timeStopMin" type="number" value="15"/></div>
+          <div class="col-3"><label>Time‑stop (min)</label><input id="B_timeStopMin" type="number" value="15"/></div>
           <div class="col-3"><label>USDT/Trade</label><input id="B_quote" type="number" step="0.1" value="8"/></div>
-          <div class="col-3"><label>Phí taker (%)</label><input id="B_feePct" type="number" step="0.01" value="0.10"/></div>
+          <div class="col-3"><label>Taker Fee (%)</label><input id="B_feePct" type="number" step="0.01" value="0.10"/></div>
           <div class="col-3"><label>Slippage (bps)</label><input id="B_slipBps" type="number" step="0.1" value="2"/></div>
-          <div class="col-3 row"><label class="pill"><input id="B_useBreakeven" type="checkbox" checked> BE‑lock</label></div>
-          <div class="col-9 row"><label class="pill"><input id="B_useTrailing" type="checkbox" checked> Trailing sau TP</label></div>
+          <div class="col-3 row"><label class="pill"><input id="B_useBreakeven" type="checkbox" checked> BE Lock</label></div>
+          <div class="col-9 row"><label class="pill"><input id="B_useTrailing" type="checkbox" checked> Trailing after TP</label></div>
         </div>
         <div class="row" style="margin-top:8px">
           <button id="B_run" class="btn">▶ Backtest</button>
@@ -145,8 +173,12 @@
       <div class="card col-12"><div id="logBack"></div></div>
       <div class="card col-12"><div id="B_summary" class="mono"></div></div>
       <div class="card col-12">
+        <b>Equity Curve</b>
+        <canvas id="pnlChart" style="margin-top: 10px;"></canvas>
+      </div>
+      <div class="card col-12">
         <b>Journal (Backtest)</b>
-        <table id="journalBack"><thead><tr><th>Thời gian</th><th>Symbol</th><th>Entry</th><th>TP</th><th>SL</th><th>Exit</th><th>PnL($)</th><th>Ghi chú</th></tr></thead><tbody></tbody></table>
+        <table id="journalBack"><thead><tr><th>Time</th><th>Symbol</th><th>Entry</th><th>TP</th><th>SL</th><th>Exit</th><th>PnL($)</th><th>Notes</th></tr></thead><tbody></tbody></table>
       </div>
       <div class="card col-12">
         <b>Result by Symbol (Backtest)</b>
@@ -157,26 +189,34 @@
 
   <section class="tabview" id="tab-help">
     <div class="card col-12">
-      <b>Hướng dẫn & Autopilot</b>
+      <b>User Guide & Autopilot</b>
       <ul>
-        <li><b>Autopilot (🚀):</b> Nhấn nút "Autopilot: Optimize → Start" ở tab Backtester. Bot sẽ:
+        <li><b>Autopilot (🚀):</b> Press the "Autopilot: Optimize → Start" button in the Backtester tab. The bot will:
           <ol>
-            <li>Chạy <b>Grid Search</b> để tìm cặp TP/SL × ATR tốt nhất.</li>
-            <li>Tự động <b>copy</b> các tham số tối ưu sang tab Live Bot.</li>
-            <li>Nếu có API đã lưu, bot sẽ <b>hỏi passphrase</b>, giải mã và nạp. Nếu thất bại hoặc không có API, bot sẽ tự động chạy ở chế độ <b>SIM mode</b>.</li>
-            <li>Bật <b>Mua tự động</b> và <b>khởi động</b> bot. (Nếu không ở SIM mode, bot sẽ tự kết nối WebSocket private để theo dõi lệnh khớp nhanh hơn).</li>
+            <li>Run a <b>Grid Search</b> to find the best TP/SL multipliers (k×ATR).</li>
+            <li>Automatically <b>copy</b> the optimal parameters to the Live Bot tab.</li>
+            <li>If you have saved API keys, it will <b>prompt for your passphrase</b>, decrypt, and load them. If this fails or no keys are saved, it will automatically run in <b>SIM mode</b>.</li>
+            <li>Enable <b>Auto Buy</b> and <b>start</b> the bot. (If not in SIM mode, it will connect to the private WebSocket for faster fill detection).</li>
           </ol>
         </li>
-        <li><b>Reset phiên:</b> Tùy chọn "Tự reset phiên khi bắt đầu" (mặc định bật) sẽ xóa PnL và loss streak ngày cũ mỗi khi bạn nhấn Start.</li>
-        <li><b>Quy trình thủ công:</b> 1️⃣ Backtest → 2️⃣ Tinh chỉnh cấu hình Live → 3️⃣ Nạp API (nếu trade thật) → 4️⃣ Start.</li>
-        <li>⚠️ <b>Lưu ý:</b> Luôn chạy SIM/Testnet trước. Không dùng API có quyền withdraw. Nếu vướng CORS, dùng proxy riêng (Cloudflare Worker).</li>
+        <li><b>ALT Hunter:</b> When the symbol list is empty, the bot prioritizes high-liquidity, low-priced ALT coins suitable for your trade size. During BTC downtrends, it seeks ALTs showing relative strength against BTC.</li>
+        <li><b>Smart Scan:</b> The bot automatically scans faster (2-4s) near candle closes and slows down to the base interval mid-candle to optimize performance and reduce API load.</li>
+        <li><b>Timestamp Guard (10001):</b> The bot periodically syncs its clock with Bybit's servers and will automatically retry once if it encounters a timestamp-related API error.</li>
+        <li><b>Session Reset:</b> The "Auto-reset on start" option (enabled by default) clears the previous session's PnL and loss streak each time you press Start.</li>
+        <li><b>Manual Workflow:</b> 1️⃣ Backtest → 2️⃣ Fine-tune Live settings → 3️⃣ Load API keys (for real trading) → 4️⃣ Start.</li>
+        <li>⚠️ <b>Disclaimer:</b> Always test in SIM/Testnet mode first. Use at your own risk. Do not use API keys with withdrawal permissions. For CORS issues, use a private proxy like a Cloudflare Worker.</li>
       </ul>
     </div>
   </section>
 </div>
 
 <script>
+// ================================================================================= //
+//                            BYBIT BOT v4.4 SCRIPT START                            //
+// ================================================================================= //
+
 const $ = id => document.getElementById(id); 
+
 // ============ TAB SWITCH ============
 const tabs=[...document.querySelectorAll('.tab')]; const views={live:$('tab-live'), back:$('tab-back'), help:$('tab-help')};
 tabs.forEach(t=>t.onclick=()=>{ tabs.forEach(x=>x.classList.remove('active')); t.classList.add('active'); Object.values(views).forEach(v=>v.classList.remove('active')); views[t.dataset.tab].classList.add('active'); });
@@ -197,46 +237,575 @@ function trArr(H,L,C){const o=[];let pc=C[0];for(let i=0;i<H.length;i++)o.push(M
 function median(a){const b=[...a].sort((x,y)=>x-y),m=Math.floor(b.length/2);return b.length%2?b[m]:(b[m-1]+b[m])/2;}
 function pullbackScore(kl){const C=kl.map(k=>k.c),H=kl.map(k=>k.h),L=kl.map(k=>k.l),ema20=sma(C,20),ema50=sma(C,50);if(ema20==null||ema50==null)return{score:0};const last=C[C.length-1],prev=C[C.length-2],r=rsi(C,14)||0;let s=0;ema20>ema50&&(s+=2);last>ema20&&(s+=1);r>52&&(s+=1);(prev<ema20&&last>ema20)&&(s+=2);const tr=trArr(H,L,C).slice(-30),atr=median(tr);return{score:s,atr,last};}
 
+function tickOf(info){ return +(info?.priceFilter?.tickSize || 0.0000001); }
+function stepOf(info){ return +(info?.lotSizeFilter?.qtyStep || info?.lotSizeFilter?.basePrecision || 0.0000001); }
+function roundTick(p,tick){ return Math.round(p/tick)*tick; }
+function floorStep(x, step){ return Math.floor(x/step)*step; }
+
+async function computeOrderQtyLive(symbol, quoteAmt){
+  const info = await api.instruments(symbol);
+  const ls   = info.lotSizeFilter || {};
+  const minAmt = +ls.minOrderAmt || 5;
+  const step   = stepOf(info);
+
+  const kl = await api.klines(symbol, $('tf').value, 2);
+  const price = kl[kl.length-1].c;
+  const quote = Math.max(quoteAmt, minAmt);
+
+  let qty = quote/price;
+  qty = floorStep(qty, step);
+
+  return { qty:+qty.toFixed(8), step, price:+price, minAmt };
+}
+
 // ============ LIVE BOT ============
-const Store={saveKeys:async()=>{const k=$('apiKey').value.trim(),s=$('apiSecret').value.trim(),p=$('passphrase').value;if(!k||!s||!p)return logLive('Thiếu API/Secret/Pass','error');const b=await seal(p,s);localStorage.setItem('bb4_key',k);localStorage.setItem('bb4_sec',JSON.stringify(b));localStorage.setItem('bb4_testnet',$('useTestnet').checked?'1':'0');logLive('Đã mã hoá & lưu API','ok');},loadKeys:async()=>{try{const p=$('passphrase').value;if(!p)return logLive('Vui lòng nhập passphrase','warn');const k=localStorage.getItem('bb4_key'),b=localStorage.getItem('bb4_sec');if(!k||!b)return logLive('Chưa có khoá đã lưu','warn');const s=await open(p,JSON.parse(b));$('apiKey').value=k;$('apiSecret').value=s;$('useTestnet').checked=localStorage.getItem('bb4_testnet')==='1';logLive('Đã giải mã API Secret','ok');return!0;}catch(e){return logLive('Giải mã thất bại: '+e.message,'error'),!1;}},clear:()=>{localStorage.removeItem('bb4_key');localStorage.removeItem('bb4_sec');logLive('Đã xoá API khỏi trình duyệt','ok');},saveCfg:()=>{const c={q:+$('orderQuote').value,tf:$('tf').value,rw:+$('recvWindow').value,p:$('proxy').value.trim(),am:$('autoMode').checked,bf:$('btcFilter').checked,ut:$('useTrailing').checked,ub:$('useBreakeven').checked,uo:$('useOCOEmu').checked,sl:$('symbolList').value,ms:+$('minScore').value,ts:+$('timeStopMin').value,ml:+$('maxLossDay').value,ss:+$('scanSec').value,ar:$('autoRun').checked,sm:$('simMode').checked,ars:$('autoResetStart').checked};localStorage.setItem('bb4_cfg',JSON.stringify(c));},loadCfg:()=>{const j=localStorage.getItem('bb4_cfg');if(!j)return;const c=JSON.parse(j);$('orderQuote').value=c.q??8;$('tf').value=c.tf??'5';$('recvWindow').value=c.rw??5000;$('proxy').value=c.p??'';$('autoMode').checked=!!c.am;$('btcFilter').checked=!!c.bf;$('useTrailing').checked=!!c.ut;$('useBreakeven').checked=!!c.ub;$('useOCOEmu').checked=!!c.uo;$('symbolList').value=c.sl??'';$('minScore').value=c.ms??5;$('timeStopMin').value=c.ts??15;$('maxLossDay').value=c.ml??2;$('scanSec').value=c.ss??20;$('autoRun').checked=!!c.ar;$('simMode').checked=!!c.sm;$('autoResetStart').checked=c.ars===void 0||!!c.ars;}};
+const Store={saveKeys:async()=>{const k=$('apiKey').value.trim(),s=$('apiSecret').value.trim(),p=$('passphrase').value;if(!k||!s||!p)return logLive('Missing API Key, Secret, or Passphrase','error');const b=await seal(p,s);localStorage.setItem('bb4_key',k);localStorage.setItem('bb4_sec',JSON.stringify(b));localStorage.setItem('bb4_testnet',$('useTestnet').checked?'1':'0');logLive('API Keys encrypted & saved.','ok');},loadKeys:async()=>{try{const p=$('passphrase').value;if(!p)return logLive('Please enter passphrase to load keys','warn');const k=localStorage.getItem('bb4_key'),b=localStorage.getItem('bb4_sec');if(!k||!b)return logLive('No saved keys found','warn');const s=await open(p,JSON.parse(b));$('apiKey').value=k;$('apiSecret').value=s;$('useTestnet').checked=localStorage.getItem('bb4_testnet')==='1';logLive('API Secret decrypted and loaded.','ok');return!0;}catch(e){return logLive('Decryption failed: '+e.message,'error'),!1;}},clear:()=>{localStorage.removeItem('bb4_key');localStorage.removeItem('bb4_sec');logLive('Cleared API keys from browser storage.','ok');},saveCfg:()=>{const c={q:+$('orderQuote').value,tf:$('tf').value,rw:+$('recvWindow').value,p:$('proxy').value.trim(),am:$('autoMode').checked,bf:$('btcFilter').checked,ut:$('useTrailing').checked,ub:$('useBreakeven').checked,uo:$('useOCOEmu').checked,sl:$('symbolList').value,ms:+$('minScore').value,ts:+$('timeStopMin').value,ml:+$('maxLossDay').value,ss:+$('scanSec').value,ar:$('autoRun').checked,sm:$('simMode').checked,ars:$('autoResetStart').checked};localStorage.setItem('bb4_cfg',JSON.stringify(c));},loadCfg:()=>{const j=localStorage.getItem('bb4_cfg');if(!j)return;const c=JSON.parse(j);$('orderQuote').value=c.q??8;$('tf').value=c.tf??'5';$('recvWindow').value=c.rw??5000;$('proxy').value=c.p??'';$('autoMode').checked=!!c.am;$('btcFilter').checked=!!c.bf;$('useTrailing').checked=!!c.ut;$('useBreakeven').checked=!!c.ub;$('useOCOEmu').checked=!!c.uo;$('symbolList').value=c.sl??'';$('minScore').value=c.ms??5;$('timeStopMin').value=c.ts??15;$('maxLossDay').value=c.ml??2;$('scanSec').value=c.ss??20;$('autoRun').checked=!!c.ar;$('simMode').checked=!!c.sm;$('autoResetStart').checked=c.ars===void 0||!!c.ars;}};
 $('saveKeys').onclick=Store.saveKeys;$('loadKeys').onclick=Store.loadKeys;$('clearKeys').onclick=Store.clear;
 ['orderQuote', 'tf', 'recvWindow', 'proxy', 'autoMode', 'btcFilter', 'useTrailing', 'useBreakeven', 'useOCOEmu', 'symbolList', 'minScore', 'timeStopMin', 'maxLossDay', 'scanSec', 'autoRun', 'simMode', 'autoResetStart'].forEach(id => $(id)?.addEventListener('change', Store.saveCfg));
 Store.loadCfg();
 
-let srvOff=0,ws=null;
-const api={time:async()=>{try{const r=await fetch(api.buildUrl('/v5/market/time')),j=await r.json();srvOff=Number(j.result.timeNano)/1e6-Date.now();logLive(`Δt=${Math.round(srvOff)}ms`,'ok');}catch(e){logLive('Lỗi đồng bộ thời gian','warn');}},sign:async(m,p,q={},b=null)=>{const k=$('apiKey').value.trim(),s=$('apiSecret').value.trim();if(!k||!s)throw new Error('Thiếu API');const w=String(+$('recvWindow').value||5000),t=String(Date.now()+srvOff),o=m==='POST'&&b?JSON.stringify(b):'',u=m==='GET'?`${t}${k}${w}${new URLSearchParams(q)}`:`${t}${k}${w}${o}`,g=await hmac(s,u),h={'X-BAPI-API-KEY':k,'X-BAPI-TIMESTAMP':t,'X-BAPI-RECV-WINDOW':w,'X-BAPI-SIGN':g,'Content-Type':'application/json'},r=await fetch(api.buildUrl(p,m==='GET'?q:{}),{method:m,headers:h,body:o||void 0});r.status===403&&!$('proxy').value.trim()&&($('corsWarn').style.display='block');const d=await r.json().catch(()=>({retCode:-1,retMsg:'Non-JSON'}));if(!r.ok||d.retCode!==0)throw new Error(`HTTP ${r.status} – ${d.retMsg||'ERR'} (${d.retCode})`);return d.result;},pub:async(p,q={})=>{const r=await fetch(api.buildUrl(p,q));r.status===403&&!$('proxy').value.trim()&&($('corsWarn').style.display='block');return r.json();},klines:async(s,i='5',l=200)=>{const j=await api.pub('/v5/market/kline',{category:'spot',symbol:s,interval:i,limit:l});if(j.retCode!==0)throw new Error(j.retMsg);return j.result.list.map(r=>({t:+r[0],o:+r[1],h:+r[2],l:+r[3],c:+r[4],v:+r[5]})).reverse();},tickers:async()=>{const j=await api.pub('/v5/market/tickers',{category:'spot'});if(j.retCode!==0)throw new Error(j.retMsg);return j.result.list;},instruments:async s=>{const j=await api.pub('/v5/market/instruments-info',{category:'spot',symbol:s});if(j.retCode!==0)throw new Error(j.retMsg);return j.result.list[0];},getUniverse:async()=>{const l=await api.tickers(),a=l.filter(x=>x.symbol.endsWith('USDT')).map(x=>({symbol:x.symbol,chg24:+x.price24hPcnt||0,vol24:+x.turnover24h||0})).filter(x=>x.vol24>1e7);return a.sort((a,b)=>b.chg24-a.chg24),a.slice(0,40).map(x=>x.symbol);},btcOk:async()=>{try{const k=await api.klines('BTCUSDT',$('tf').value,100),C=k.map(k=>k.c);return sma(C,20)>sma(C,50)&&rsi(C,14)>48;}catch{return!0;}},buy:async(s,q)=>api.sign('POST','/v5/order/create',{},{category:'spot',symbol:s,side:'Buy',orderType:'Market',marketUnit:'quoteCoin',qty:String(q),orderLinkId:'buy_'+s+'_'+Date.now()}),sl:async(s,y,p)=>api.sign('POST','/v5/order/create',{},{category:'spot',symbol:s,side:'Sell',orderType:'Market',qty:String(y),triggerPrice:String(p),triggerDirection:2}),tp:async(s,y,p)=>api.sign('POST','/v5/order/create',{},{category:'spot',symbol:s,side:'Sell',orderType:'Market',qty:String(y),triggerPrice:String(p),triggerDirection:1}),cancelAll:async s=>{try{await api.sign('POST','/v5/order/cancel-all',{},{category:'spot',symbol:s});}catch(e){logLive('Cancel all fail: '+e.message,'warn');}},wsUrl:()=>$('useTestnet').checked?'wss://stream-testnet.bybit.com/v5/private':'wss://stream.bybit.com/v5/private',buildUrl:(p,q)=>{const x=$('proxy').value.trim(),u=($('useTestnet').checked?'https://api-testnet.bybit.com':'https://api.bybit.com')+p+(q&&Object.keys(q).length?'?'+new URLSearchParams(q):'');return(x?x.replace(/\/$/,'')+'/':'')+u;}};
+let serverOffset=0, lastSync = 0, ws=null, stopping = false;
 
-const journal={today:()=>new Date().toISOString().slice(0,10),get:()=>{const j=localStorage.getItem('bb4_state');return j?JSON.parse(j):{date:journal.today(),loss:0,pnl:0,trades:[]};},set:s=>{localStorage.setItem('bb4_state',JSON.stringify(s));$('lossStreak').textContent=s.loss;$('pnlDay').textContent=s.pnl.toFixed(2);journal.render(s.trades);},ensureToday:()=>{let s=journal.get();s.date!==journal.today()&&(s={date:journal.today(),loss:0,pnl:0,trades:[]},journal.set(s));},push:t=>{const s=journal.get();s.trades.unshift(t);t.pnl!==void 0&&(s.pnl+=t.pnl);t.pnl<0?s.loss+=1:t.pnl>0&&(s.loss=0);journal.set(s);},render:l=>{const b=$('journalLive').querySelector('tbody');b.innerHTML='';l.slice(0,200).forEach(r=>{const e=document.createElement('tr');e.innerHTML=`<td>${new Date(r.ts).toLocaleTimeString()}</td><td>${r.sym}</td><td>${r.entry?.toFixed?.(6)||'-'}</td><td>${r.tp?.toFixed?.(6)||'-'}</td><td>${r.sl?.toFixed?.(6)||'-'}</td><td>${r.exit?.toFixed?.(6)||'-'}</td><td>${r.pnl?.toFixed?.(2)||r.note||'-'}</td><td>${r.note||''}</td>`,b.appendChild(e);});}};
-$('resetDay').onclick=()=>{journal.set({date:journal.today(),loss:0,pnl:0,trades:[]});logLive('Đã reset phiên','ok');};
+async function syncTime(force = false) {
+    if (!force && Date.now() - lastSync < 60_000) return;
+    try {
+        const r = await fetch(api.buildUrl('/v5/market/time'));
+        const j = await r.json();
+        let serverMs = j?.result?.timeNano ? Math.floor(Number(j.result.timeNano) / 1e6) :
+                         j?.result?.timeSecond ? Number(j.result.timeSecond) * 1000 :
+                         j?.result?.time ? Number(j.result.time) :
+                         (Date.parse(r.headers.get('date')) || Date.now());
+        serverOffset = serverMs - Date.now();
+        lastSync = Date.now();
+        logLive(`Time sync complete. Offset: ${serverOffset}ms`, 'ok');
+    } catch (e) {
+        logLive('Time sync failed.', 'warn');
+    }
+}
+function now() { return Date.now() + serverOffset; }
+
+async function getUniverseLiveAlt(){
+  const list = await api.tickers();
+  const EX = new Set(['BTCUSDT','ETHUSDT','USDCUSDT','FDUSDUSDT','TUSDUSDT']);
+  let cands = list
+    .filter(x => x.symbol.endsWith('USDT') && !EX.has(x.symbol))
+    .filter(x => +x.turnover24h > 50_000_000)
+    .filter(x => +x.lastPrice < 10);
+  const quote = +$('orderQuote').value || 8;
+  const out = [];
+  for (const it of cands.slice(0, 80)) {
+    try {
+      const info = await api.instruments(it.symbol);
+      const minAmt = +(info.lotSizeFilter?.minOrderAmt || 5);
+      if (minAmt <= quote) out.push(it.symbol);
+      if (out.length >= 30) break;
+    } catch {}
+  }
+  return out.length ? out : cands.slice(0, 30).map(x => x.symbol);
+}
+
+const api={
+    sign: async(method, path, qs={}, body=null) => {
+        await syncTime();
+        const attempt = async () => {
+            const apiKey = $('apiKey').value.trim(), apiSecret = $('apiSecret').value.trim();
+            if(!apiKey||!apiSecret) throw new Error('API Key/Secret missing');
+            const rw = String(+$('recvWindow').value || 5000);
+            const t = String(now());
+            const bodyStr = (method==='POST'&&body)? JSON.stringify(body):'';
+            const prehash = (method==='GET') ? `${t}${apiKey}${rw}${new URLSearchParams(qs).toString()}` : `${t}${apiKey}${rw}${bodyStr}`;
+            const sign = await hmac(apiSecret, prehash);
+            const headers = { 'X-BAPI-API-KEY': apiKey, 'X-BAPI-TIMESTAMP': t, 'X-BAPI-RECV-WINDOW': rw, 'X-BAPI-SIGN': sign, 'Content-Type': 'application/json' };
+            const resp = await fetch(api.buildUrl(path, method === 'GET' ? qs : {}), { method, headers, body: bodyStr || undefined });
+            if(resp.status===403 && !$('proxy').value.trim()){ $('corsWarn').style.display='block'; }
+            const data = await resp.json().catch(()=>({retCode:-1, retMsg:'Non-JSON response'}));
+            if(!resp.ok || data.retCode !== 0) {
+                const err = new Error(`HTTP ${resp.status} – ${data.retMsg||'Unknown Error'} (${data.retCode})`);
+                err.retCode = data.retCode; err.msg = data.retMsg; throw err;
+            }
+            return data.result;
+        };
+        try {
+            return await attempt();
+        } catch(e) {
+            const m = (e.message || '') + ' ' + (e.msg || '');
+            if (e.retCode === 10001 || /req_timestamp invalid/i.test(m)) {
+                logLive('Timestamp error (10001), re-syncing and retrying...', 'warn');
+                await syncTime(true);
+                try { return await attempt(); } catch(e2) { throw e2; }
+            }
+            throw e;
+        }
+    },
+    pub:async(p,q={})=>{const r=await fetch(api.buildUrl(p,q));r.status===403&&!$('proxy').value.trim()&&($('corsWarn').style.display='block');return r.json();},
+    klines:async(s,i='5',l=200)=>{const j=await api.pub('/v5/market/kline',{category:'spot',symbol:s,interval:i,limit:l});if(j.retCode!==0)throw new Error(j.retMsg);return j.result.list.map(r=>({t:+r[0],o:+r[1],h:+r[2],l:+r[3],c:+r[4],v:+r[5]})).reverse();},
+    tickers:async()=>{const j=await api.pub('/v5/market/tickers',{category:'spot'});if(j.retCode!==0)throw new Error(j.retMsg);return j.result.list;},
+    instruments:async s=>{const j=await api.pub('/v5/market/instruments-info',{category:'spot',symbol:s});if(j.retCode!==0)throw new Error(j.retMsg);return j.result.list[0];},
+    getUniverse:async()=>{const l=await api.tickers(),a=l.filter(x=>x.symbol.endsWith('USDT')).map(x=>({symbol:x.symbol,chg24:+x.price24hPcnt||0,vol24:+x.turnover24h||0})).filter(x=>x.vol24>1e7);return a.sort((a,b)=>b.chg24-a.chg24),a.slice(0,40).map(x=>x.symbol);},
+    btcOk:async()=>{try{const k=await api.klines('BTCUSDT',$('tf').value,100),C=k.map(k=>k.c);return sma(C,20)>sma(C,50)&&rsi(C,14)>48;}catch{return!0;}},
+    buy:async(s,q)=>api.sign('POST','/v5/order/create',{},{category:'spot',symbol:s,side:'Buy',orderType:'Market',marketUnit:'quoteCoin',qty:String(q),orderLinkId:'buy_'+s+'_'+Date.now()}),
+    sl:async(symbol,qty,triggerPrice)=>api.sign('POST','/v5/order/create',{},{category:'spot',symbol,side:'Sell',orderType:'Market',qty:String(qty),triggerPrice:String(triggerPrice),triggerDirection:2,orderFilter:'StopOrder'}),
+    tp:async(symbol,qty,triggerPrice)=>api.sign('POST','/v5/order/create',{},{category:'spot',symbol,side:'Sell',orderType:'Market',qty:String(qty),triggerPrice:String(triggerPrice),triggerDirection:1,orderFilter:'StopOrder'}),
+    realtimeOrders:async(s)=>api.sign('GET','/v5/order/realtime',{category:'spot',symbol:s}),
+    cancelAll:async s=>{ if(stopping) return; try{await api.sign('POST','/v5/order/cancel-all',{},{category:'spot',symbol:s});}catch(e){logLive('Cancel all failed: '+e.message,'warn');}},
+    wsUrl:()=>$('useTestnet').checked?'wss://stream-testnet.bybit.com/v5/private':'wss://stream.bybit.com/v5/private',
+    buildUrl:(p,q)=>{const x=$('proxy').value.trim(),u=($('useTestnet').checked?'https://api-testnet.bybit.com':'https://api.bybit.com')+p+(q&&Object.keys(q).length?'?'+new URLSearchParams(q):'');return(x?x.replace(/\/$/,'')+'/':'')+u;}
+};
+
+const journal={today:()=>new Date().toISOString().slice(0,10),get:()=>{const j=localStorage.getItem('bb4_state');return j?JSON.parse(j):{date:journal.today(),loss:0,pnl:0,trades:[]};},set:s=>{localStorage.setItem('bb4_state',JSON.stringify(s));$('lossStreak').textContent=s.loss;$('pnlDay').textContent=s.pnl.toFixed(2);journal.render(s.trades);},ensureToday:()=>{let s=journal.get();s.date!==journal.today()&&(s={date:journal.today(),loss:0,pnl:0,trades:[]},journal.set(s));},push:t=>{const s=journal.get();s.trades.unshift(t);t.pnl!==void 0&&(s.pnl+=t.pnl);t.pnl<0?s.loss+=1:t.pnl>0&&(s.loss=0);journal.set(s);},render:l=>{const b=$('journalLive').querySelector('tbody');b.innerHTML='';l.slice(0,200).forEach(r=>{const e=document.createElement('tr');e.innerHTML=`<td>${new Date(r.ts).toLocaleTimeString()}</td><td>${r.sym}</td><td>${r.entry?.toFixed?.(6)||'-'}</td><td>${r.tp?.toFixed?.(6)||'-'}</td><td>${r.sl?.toFixed?.(6)||'-'}</td><td>${r.exit?.toFixed?.(6)||'-'}</td><td class="${r.pnl>0?'ok':r.pnl<0?'bad':''}">${r.pnl?.toFixed?.(2)||'-'}</td><td>${r.note||''}</td>`,b.appendChild(e);});}};
+$('resetDay').onclick=()=>{journal.set({date:journal.today(),loss:0,pnl:0,trades:[]});logLive('Session has been reset.','ok');};
 journal.ensureToday();journal.set(journal.get());
 
-let run=false,tmr=null,inPos=false,cur={};
+let run=false,inPos=false,cur={},schedTimer=null;
 function calcTPSL(e,a,t,s){const p=e+t*a,l=Math.max(e-s*a,1e-9);return{tp:+p.toFixed(8),sl:+l.toFixed(8),rr:+(p-e)/(e-l||1e-9)};}
-async function step(){$('lastUpdate').textContent=new Date().toLocaleTimeString();journal.ensureToday();const s=journal.get();if(s.loss>=+$('maxLossDay').value)return $('status').textContent='Tạm dừng (circuit breaker)';try{if(inPos)return;let syms=$('symbolList').value.trim()?$('symbolList').value.toUpperCase().split(',').map(s=>s.trim()).filter(Boolean):await api.getUniverse();$('watching').textContent=syms.slice(0,6).join(',')+(syms.length>6?' ...':'');if($('btcFilter').checked){const ok=await api.btcOk();if(!ok)return logLive('BTC trend xấu → bỏ lượt','warn');}let best=null;for(const sym of syms)try{const kl=await api.klines(sym,$('tf').value,200),s=pullbackScore(kl);(!best||s.score>best.meta?.score)&&(best={sym,meta:s,last:s.last,atr:s.atr});}catch(e){}
-$('signal').textContent=best?`${best.sym} • điểm ${best.meta.score} • RSI ${best.meta.rsi?.toFixed(1)||'-'}`:'—';if(!$('autoMode').checked||!best||best.meta.score<+$('minScore').value)return;const tpsl=calcTPSL(best.last,best.atr||best.last*.005,1.2,.8);if(tpsl.rr<1.2)return logLive(`Bỏ: R:R ${tpsl.rr}<1.2`,'warn');const q=+$('orderQuote').value||8,{qty}=await api.instruments(best.sym).then(info=>{const ls=info.lotSizeFilter||{},mA=+ls.minOrderAmt||5,sS=+ls.qtyStep||1/10**(+ls.basePrecision||8),pP=+ls.pricePrecision||8;let qt=Math.max(q,mA),y=qt/best.last;y=Math.floor(y/sS)*sS;return{qty:+y.toFixed(8)};});if(qty<=0)return logLive('Không tính được qty hợp lệ','warn');inPos=!0;cur={sym:best.sym,entry:best.last,tp:tpsl.tp,sl:tpsl.sl,ts:Date.now(),qty,quote:q,atr:best.atr||best.last*.005};if($('simMode').checked)return $('status').textContent='[SIM] Trong vị thế',logLive(`[SIM] BUY ${best.sym} ~${best.last} TP=${tpsl.tp} SL=${tpsl.sl}`,'ok'),simMonitor();$('status').textContent='Mua...';const b=await api.buy(best.sym,q);logLive(`Đã BUY market ${best.sym} (id=${b.orderId})`,'ok');$('status').textContent='Trong vị thế';await api.cancelAll(best.sym);await api.tp(best.sym,qty,tpsl.tp);await api.sl(best.sym,qty,tpsl.sl);logLive('Đã đặt OCO mô phỏng (TP/SL)','ok');monitor();}catch(e){logLive('Lỗi step: '+(e.message||e),'error'),inPos=!1;}}
+async function step(){
+    $('lastUpdate').textContent=new Date().toLocaleTimeString();
+    journal.ensureToday();
+    const s=journal.get();
+    if(s.loss>=+$('maxLossDay').value) return $('status').textContent='Paused (Circuit Breaker)';
+    try{
+        if(inPos) return;
+        
+        let symbols = $('symbolList').value.trim() ? $('symbolList').value.toUpperCase().split(',').map(s=>s.trim()).filter(Boolean) : await getUniverseLiveAlt();
+        $('watching').textContent=symbols.slice(0,6).join(',')+(symbols.length>6?' ...':'');
+        
+        let btcOk = true;
+        if ($('btcFilter').checked) btcOk = await api.btcOk();
+        let dynMin = +$('minScore').value;
+        let btcROC = 0;
+        if (!btcOk) {
+            try {
+                const kb = await api.klines('BTCUSDT', $('tf').value, 20);
+                if (kb.length >= 10) btcROC = (kb.at(-1).c - kb.at(-10).c) / kb.at(-10).c;
+            } catch(e) { logLive('Failed to get BTC klines for RS comparison', 'warn'); }
+            dynMin += 1;
+        }
+
+        let best=null;
+        for(const sym of symbols) {
+            try {
+                const kl=await api.klines(sym,$('tf').value,200);
+                const s=pullbackScore(kl);
+                if (!btcOk && kl.length >= 10) {
+                    const C = kl.map(k=>k.c);
+                    const roc = (C.at(-1) - C.at(-10)) / C.at(-10);
+                    if (roc - btcROC > 0.01) s.score += 1;
+                    else s.score -= 1;
+                }
+                if(!best||s.score>best.meta?.score) best={sym,meta:s,last:s.last,atr:s.atr};
+            } catch(e){}
+        }
+
+        $('signal').textContent=best?`${best.sym} • Score ${best.meta.score}`: '—';
+        if(!best || !$('autoMode').checked || best.meta.score < dynMin) return;
+
+        const {tp:B_tpK, sl:B_slK} = {tp:+$('B_tpK').value, sl:+$('B_slK').value};
+        const tpsl=calcTPSL(best.last,best.atr||best.last*.005,B_tpK||1.2,B_slK||0.8);
+        
+        const info = await api.instruments(best.sym);
+        const tick = tickOf(info);
+        tpsl.tp = +roundTick(tpsl.tp, tick).toFixed(8);
+        tpsl.sl = +roundTick(tpsl.sl, tick).toFixed(8);
+
+        if(tpsl.rr<1.2) return logLive(`Skipping ${best.sym}: R:R ${tpsl.rr.toFixed(2)}<1.2`,'warn');
+        
+        const q=+$('orderQuote').value||8;
+        const { qty, step } = await computeOrderQtyLive(best.sym, q);
+        
+        if(qty<=0) return logLive('Could not calculate a valid order quantity','warn');
+        
+        inPos=!0;
+        cur={sym:best.sym,entry:best.last,tp:tpsl.tp,sl:tpsl.sl,ts:Date.now(),qty,quote:q,atr:best.atr||best.last*.005};
+        if($('simMode').checked) return $('status').textContent='[SIM] In Position',logLive(`[SIM] BUY ${best.sym} ~${best.last.toFixed(6)} TP=${tpsl.tp.toFixed(6)} SL=${tpsl.sl.toFixed(6)}`,'ok'),simMonitor();
+        
+        $('status').textContent='Buying...';
+        const b=await api.buy(best.sym,q);
+        logLive(`Market BUY ${best.sym} placed (id=${b.orderId})`,'ok');
+        $('status').textContent='In Position';
+        await api.cancelAll(best.sym);
+        
+        let filledQty = 0;
+        try {
+          const orderHistory = await api.realtimeOrders(best.sym);
+          const execution = orderHistory?.list?.find(o => o.orderId === b.orderId);
+          filledQty = +(execution?.cumExecQty || 0);
+        } catch(e){}
+        let sellQty = filledQty > 0 ? filledQty : qty;
+        sellQty = Math.max(step, floorStep(sellQty * 0.98, step));
+        cur.sellQty = sellQty;
+
+        if($('useOCOEmu').checked){
+            await api.tp(best.sym, sellQty, tpsl.tp);
+            await api.sl(best.sym, sellQty, tpsl.sl);
+            logLive(`Emulated OCO (TP/SL) orders placed with qty=${sellQty}`,'ok');
+        }
+        monitor();
+    } catch(e) {
+        logLive('Step error: '+(e.message||e),'error');
+        inPos=!1;
+    }
+}
 
 let monTmr=null;
-async function monitor(){if(ws)return;clearInterval(monTmr);const tS=+$('timeStopMin').value*60*1e3,st=Date.now();monTmr=setInterval(async()=>{try{const kl=await api.klines(cur.sym,'1',2),px=kl[kl.length-1].c;if(Date.now()-st>tS){const p=(px-cur.entry)*cur.qty;logLive('Time‑stop → Market Exit','warn');journal.push({ts:Date.now(),sym:cur.sym,entry:cur.entry,tp:cur.tp,sl:cur.sl,exit:px,pnl:p,note:'Time-stop'});await api.buy(cur.sym,cur.quote);await gracefulExit();return;}
-let nS=cur.sl,m=!1;if($('useBreakeven').checked&&!cur.beLocked&&px>=cur.entry+.6*cur.atr){nS=Math.max(cur.sl,cur.entry-.1*cur.atr);if(nS>cur.sl)cur.beLocked=!0,logLive(`BE‑lock: nâng SL → ${nS.toFixed(6)}`,'ok'),m=!0;}
-if($('useTrailing').checked&&px>=cur.tp){nS=Math.max(nS,px-.6*cur.atr);if(nS>cur.sl)logLive(`Trailing SL → ${nS.toFixed(6)}`,'ok'),m=!0;}
-if(m)cur.sl=nS,await api.cancelAll(cur.sym),await api.tp(cur.sym,cur.qty,cur.tp),await api.sl(cur.sym,cur.qty,cur.sl);}catch(e){logLive('Lỗi theo dõi: '+e.message,'warn');}},5e3);}
-async function gracefulExit(){clearInterval(monTmr);inPos=!1;$('status').textContent='Nhàn rỗi';if(cur.sym) await api.cancelAll(cur.sym);cur={};ws&&(ws.close(),ws=null);}
-let simTmr=null;function simMonitor(){clearInterval(simTmr);const tS=+$('timeStopMin').value*60*1e3,st=Date.now();let p=cur.entry;simTmr=setInterval(()=>{const d=(Math.random()-.48)*cur.atr*.2;p+=d;const checkExit=(e,n)=>{clearInterval(simTmr);inPos=!1;$('status').textContent='Nhàn rỗi';const l=(e-cur.entry)*cur.qty;logLive(`[SIM] ${n} @ ${e.toFixed(6)}`,'ok');journal.push({ts:Date.now(),sym:cur.sym,entry:cur.entry,tp:cur.tp,sl:cur.sl,exit:e,pnl:l,note:'SIM '+n});};if(p>=cur.tp)return checkExit(cur.tp,'TP hit');if(p<=cur.sl)return checkExit(cur.sl,'SL hit');if(Date.now()-st>tS)return checkExit(p,'Time-stop');if($('useBreakeven').checked&&!cur.beLocked&&p>=cur.entry+.6*cur.atr)cur.sl=Math.max(cur.sl,cur.entry-.1*cur.atr),cur.beLocked=!0;if($('useTrailing').checked&&p>cur.tp)cur.sl=Math.max(cur.sl,p-.6*cur.atr);},1500);}
+async function monitor(){if(ws && $('useOCOEmu').checked)return;clearInterval(monTmr);const tS=+$('timeStopMin').value*60*1e3,st=Date.now();monTmr=setInterval(async()=>{try{const kl=await api.klines(cur.sym,'1',2),px=kl[kl.length-1].c;if(Date.now()-st>tS){logLive('Time‑stop triggered → Exiting market','warn');const sellRes = await api.buy(cur.sym, cur.quote); const p=(+sellRes.avgPrice-cur.entry)*cur.qty; journal.push({ts:Date.now(),sym:cur.sym,entry:cur.entry,tp:cur.tp,sl:cur.sl,exit:px,pnl:p,note:'Time-stop'});await gracefulExit();return;}
+let nS=cur.sl, m=!1;
+let isTrailingUpdate = false;
 
-async function startBot(){if(run)return;$('autoResetStart').checked&&$('resetDay').click();run=!0;await api.time();if(!$('simMode').checked){const t=Date.now()+srvOff+5e3,s=await hmac('GET/realtime'+t,$('apiSecret').value.trim());ws=new WebSocket(api.wsUrl());ws.onopen=()=>{ws.send(JSON.stringify({op:'auth',args:[$('apiKey').value.trim(),t,s]}));ws.send(JSON.stringify({op:'subscribe',args:['order']}));logLive('Private WS connected.','ok');};ws.onmessage=e=>{const j=JSON.parse(e.data);if(j.topic==='order'){const d=j.data[0];if(cur && cur.sym && d.symbol===cur.sym&&d.side==='Sell'&&d.orderStatus==='Filled'){const p=(+d.avgPrice-cur.entry)*cur.qty;logLive(`✅ WS: TP/SL khớp @ ${d.avgPrice} → PnL: ${p.toFixed(2)}`,'ok');journal.push({ts:Date.now(),sym:cur.sym,entry:cur.entry,tp:cur.tp,sl:cur.sl,exit:+d.avgPrice,pnl:p,note:'WS Exit'});gracefulExit();}}};ws.onerror=e=>logLive('WS Error','error');ws.onclose=()=>logLive('WS Closed','warn');}
-const sec=+$('scanSec').value||20;tmr=setInterval(step,sec*1e3);step();$('status').textContent='Đang quét...';logLive('Bắt đầu','ok');}
-function stopBot(){run=!1;clearInterval(tmr);gracefulExit();$('status').textContent='Nhàn rỗi';logLive('Dừng','warn');}
-$('start').onclick=startBot;$('stop').onclick=stopBot;window.addEventListener('load',()=>{if($('autoRun').checked)$('start').click();});
+if($('useBreakeven').checked&&!cur.beLocked&&px>=cur.entry+.6*cur.atr){
+    nS=Math.max(cur.sl,cur.entry-.1*cur.atr);
+    if(nS>cur.sl)cur.beLocked=!0,logLive(`BE‑lock: adjusting SL → ${nS.toFixed(6)}`,'ok'),m=!0;
+}
+if($('useTrailing').checked&&px>=cur.tp){
+    nS=Math.max(nS,px-.6*cur.atr);
+    if(nS>cur.sl){
+        logLive(`Trailing SL → ${nS.toFixed(6)}`,'ok');
+        isTrailingUpdate = true; // Flag this as a trailing update
+        m=!0;
+    }
+}
+if(m && $('useOCOEmu').checked) {
+    cur.sl = nS;
+    if(isTrailingUpdate) {
+        cur.tp = cur.tp * 1.05; // Move TP only on trailing
+    }
+    await api.cancelAll(cur.sym);
+    const qtyToUse = cur.sellQty || cur.qty;
+    await api.tp(cur.sym, qtyToUse, cur.tp);
+    await api.sl(cur.sym, qtyToUse, cur.sl);
+}
+}catch(e){logLive('Monitoring error: '+e.message,'warn');}},5e3);}
+async function gracefulExit(){clearInterval(monTmr);inPos=!1;$('status').textContent='Idle';if(cur.sym && !$('simMode').checked) await api.cancelAll(cur.sym);cur={};ws&&(ws.close(),ws=null);}
+let simTmr=null;function simMonitor(){clearInterval(simTmr);const tS=+$('timeStopMin').value*60*1e3,st=Date.now();let p=cur.entry;simTmr=setInterval(()=>{const d=(Math.random()-.48)*cur.atr*.2;p+=d;const checkExit=(e,n)=>{clearInterval(simTmr);inPos=!1;$('status').textContent='Idle';const l=(e-cur.entry)*cur.qty;logLive(`[SIM] ${n} @ ${e.toFixed(6)} → PnL: ${l.toFixed(2)}$`,'ok');journal.push({ts:Date.now(),sym:cur.sym,entry:cur.entry,tp:cur.tp,sl:cur.sl,exit:e,pnl:l,note:'SIM '+n});};if(p>=cur.tp)return checkExit(cur.tp,'TP hit');if(p<=cur.sl)return checkExit(cur.sl,'SL hit');if(Date.now()-st>tS)return checkExit(p,'Time-stop');if($('useBreakeven').checked&&!cur.beLocked&&p>=cur.entry+.6*cur.atr){cur.sl=Math.max(cur.sl,cur.entry-.1*cur.atr);cur.beLocked=!0;logLive('[SIM] BE Lock: SL -> '+cur.sl.toFixed(6), 'ok')}if($('useTrailing').checked&&p>cur.tp){cur.sl=Math.max(cur.sl,p-.6*cur.atr);logLive('[SIM] Trailing SL -> '+cur.sl.toFixed(6), 'ok')}},1500);}
+
+function tfSeconds(){ return ({'1':60,'3':180,'5':300,'15':900}[$('tf').value] || 300); }
+function nextCandleDelayMs(){
+    const n = now();
+    const tf = tfSeconds() * 1000;
+    const next = Math.ceil(n / tf) * tf;
+    const delta = next - n;
+    const base = (+$('scanSec').value || 20) * 1000;
+    let wait = base;
+    if (delta < 12000) wait = Math.min(wait, 4000);
+    if (delta < 5000)  wait = Math.min(wait, 2000);
+    if ($('tf').value === '1' && delta < 15000) wait = Math.min(wait, 3000);
+    return Math.max(1500, wait);
+}
+async function scheduler(){
+    if(!run) return;
+    await step();
+    schedTimer = setTimeout(scheduler, nextCandleDelayMs());
+}
+
+async function startBot(){
+    if(run) return;
+    $('autoResetStart').checked && $('resetDay').click();
+    
+    // Check for API keys BEFORE starting if not in SIM mode
+    if (!$('simMode').checked) {
+        const apiKey = $('apiKey').value.trim();
+        const apiSecret = $('apiSecret').value.trim();
+        if (!apiKey || !apiSecret) {
+            logLive('API Key/Secret is missing. Please enter your passphrase and click "Load" before starting.', 'error');
+            return; // Stop execution if keys are missing
+        }
+    }
+
+    run = true;
+    await syncTime(true);
+
+    if (!$('simMode').checked) {
+        try {
+            const apiKey = $('apiKey').value.trim();
+            const apiSecret = $('apiSecret').value.trim();
+            const t = now() + 5e3;
+            const s = await hmac(apiSecret, 'GET/realtime' + t);
+            ws = new WebSocket(api.wsUrl());
+            ws.onopen = () => {
+                ws.send(JSON.stringify({ op: 'auth', args: [apiKey, t, s] }));
+                ws.send(JSON.stringify({ op: 'subscribe', args: ['order'] }));
+                logLive('Private WS connected.', 'ok');
+            };
+            ws.onmessage = e => {
+                const j = JSON.parse(e.data);
+                if (j.topic === 'order') {
+                    const d = j.data[0];
+                    if (cur && cur.sym && d.symbol === cur.sym && d.side === 'Sell' && (d.orderStatus === 'Filled' || d.orderStatus === 'PartiallyFilled')) {
+                        const p = (+d.avgPrice - cur.entry) * cur.qty;
+                        logLive(`✅ WS: TP/SL filled @ ${d.avgPrice} → PnL: ${p.toFixed(2)}$`, p > 0 ? 'ok' : 'bad');
+                        journal.push({ ts: Date.now(), sym: cur.sym, entry: cur.entry, tp: cur.tp, sl: cur.sl, exit: +d.avgPrice, pnl: p, note: 'WS Fill' });
+                        gracefulExit();
+                    }
+                }
+            };
+            ws.onclose = () => { if (run) logLive('Private WS closed.', 'warn'); ws = null; };
+            ws.onerror = e => { logLive('Private WS error.', 'error'); ws = null; };
+        } catch (e) {
+            logLive('Could not connect to WS: ' + e.message, 'error');
+            run = false; // Stop if WS connection fails
+            $('status').textContent = 'Error';
+            return;
+        }
+    }
+    $('status').textContent = 'Running...';
+    scheduler();
+    logLive('Bot started.', 'ok');
+}
+
+async function stopBot(){if(!run)return;stopping=!0;run=!1;clearTimeout(schedTimer);clearInterval(monTmr);clearInterval(simTmr);if(inPos)await gracefulExit();if(ws){ws.close();ws=null;}$('status').textContent='Stopped';logLive('Bot stopped.','warn');stopping=!1;}
+
+$('start').onclick=startBot;
+$('stop').onclick=stopBot;
+window.addEventListener('DOMContentLoaded', () => { if ($('autoRun').checked) startBot(); });
 
 // ============ BACKTESTER ============
-const Backtester={api:{pub:async(p,q={})=>{const u='https://api.bybit.com'+p+(Object.keys(q).length?'?'+new URLSearchParams(q):''),r=await fetch(u);return r.json();},tickers:async()=>{const j=await Backtester.api.pub('/v5/market/tickers',{category:'spot'});if(j.retCode!==0)throw new Error(j.retMsg);return j.result.list;},klines:async(s,i='5',l=1e3)=>{const j=await Backtester.api.pub('/v5/market/kline',{category:'spot',symbol:s,interval:i,limit:l});if(j.retCode!==0)throw new Error(j.retMsg);return j.result.list.map(r=>({t:+r[0],o:+r[1],h:+r[2],l:+r[3],c:+r[4],v:+r[5]})).reverse();},getUniverse:async n=>{const l=await Backtester.api.tickers(),a=l.filter(x=>x.symbol.endsWith('USDT')).map(x=>({symbol:x.symbol,chg24:+x.price24hPcnt||0,vol24:+x.turnover24h||0})).filter(x=>x.vol24>1e7);return a.sort((a,b)=>b.chg24-a.chg24),a.slice(0,n).map(x=>x.symbol);},btcOk:async t=>{try{const k=await Backtester.api.klines('BTCUSDT',t,200),C=k.map(k=>k.c);return sma(C,20)>sma(C,50)&&rsi(C,14)>48;}catch(e){return!0;}}},exitInBar:(b,e,t,s,p)=>{const hT=b.h>=t,hS=b.l<=s;return hT&&hS?{hit:p?'sl':'tp'}:hT?{hit:'tp'}:hS?{hit:'sl'}:{hit:null};},render:r=>{const s=r.summary;$('B_summary').innerHTML=`Tổng lệnh: ${s.trades} | Win%: ${s.winRate}% | PnL($): ${s.pnl} | MaxDD($): ${s.maxDD} | Avg R: ${s.avgR} | PF: ${s.pf}`;const tb=$('journalBack').querySelector('tbody');tb.innerHTML='';r.trades.slice(-200).reverse().forEach(t=>{const e=document.createElement('tr');e.innerHTML=`<td>${new Date(t.ts).toLocaleString()}</td><td>${t.sym}</td><td>${t.entry.toFixed(6)}</td><td>${t.tp.toFixed(6)}</td><td>${t.sl.toFixed(6)}</td><td>${t.exit?.toFixed(6)||'-'}</td><td>${t.pnl.toFixed(2)}</td><td>${t.note||''}</td>`,tb.appendChild(e);});const sb=$('bySymBack').querySelector('tbody');sb.innerHTML='';Object.entries(s.bySym).sort((a,b)=>b[1].p-a[1].p).forEach(([sym,v])=>{const e=document.createElement('tr'),w=v.tr?(v.w/v.tr*100).toFixed(1):'0.0',a=v.rc?(v.r/v.rc).toFixed(2):'0.00';e.innerHTML=`<td>${sym}</td><td>${v.tr}</td><td>${w}%</td><td>${v.p.toFixed(2)}</td><td>${a}</td>`,sb.appendChild(e);});},summarize:d=>{const n=d.length;let w=0,p=0,m=0,e=0,k=0,rS=0,rC=0;const by={};for(const t of d){p+=t.pnl,e+=t.pnl,k=Math.max(k,e),m=Math.min(m,e-k);const r=(t.exit-t.entry)/(t.entry-t.sl);isFinite(r)&&(rS+=r,rC++);const y=t.sym;by[y]=by[y]||{tr:0,w:0,p:0,r:0,rc:0},by[y].tr++,by[y].p+=t.pnl,t.pnl>0&&by[y].w++,isFinite(r)&&(by[y].r+=r,by[y].rc++),t.pnl>0&&w++;}const wR=n?w/n*100:0,aR=rC?rS/rC:0,lS=d.filter(t=>t.pnl<0).reduce((a,b)=>a+b.pnl,0),pF=p>0?d.filter(t=>t.pnl>0).reduce((a,b)=>a+b.pnl,0)/Math.abs(lS||1):0;return{trades:n,winRate:+wR.toFixed(1),pnl:+p.toFixed(2),maxDD:+m.toFixed(2),avgR:+aR.toFixed(2),pf:+pF.toFixed(2),bySym:by};},run:async()=>{logBack('Bắt đầu backtest','ok');$('B_summary').textContent='Đang chạy...';const c={tf:$('B_tf').value,L:+$('B_lookback').value,ms:+$('B_minScore').value,tk:+$('B_tpK').value,sk:+$('B_slK').value,ts:+$('B_timeStopMin').value,q:+$('B_quote').value,f:+$('B_feePct').value/100,p:+$('B_slipBps').value/1e4,be:$('B_useBreakeven').checked,tr:$('B_useTrailing').checked,pe:$('B_pessimistic').checked};let syms=$('B_symbolList').value.trim()?$('B_symbolList').value.toUpperCase().split(',').map(s=>s.trim()).filter(Boolean):await Backtester.api.getUniverse(+$('B_topN').value);if($('B_btcFilter').checked){const ok=await Backtester.api.btcOk(c.tf);if(!ok)return logBack('BTC filter: trend xấu','warn'),Backtester.render({trades:[],summary:{trades:0,winRate:0,pnl:0,maxDD:0,avgR:0,pf:0,bySym:{}}});}
-let trades=[];for(const s of syms)try{const kl=await Backtester.api.klines(s,c.tf,c.L);if(kl.length<200)continue;let inPos=!1,e=0,t=0,l=0,a=0,eI=0;for(let i=60;i<kl.length;i++){const h=kl.slice(0,i);if(!inPos){const sc=pullbackScore(h);if(sc.score>=c.ms){e=kl[i].o,a=sc.atr||e*.005,t=e+c.tk*a,l=Math.max(1e-9,e-c.sk*a),eI=i,inPos=!0;continue;}}else{const b=kl[i];if(c.be){const bl=e+.6*a;b.h>=bl&&(l=Math.max(l,e-.1*a));}if(c.tr&&b.h>=t){const tS=b.c-.6*a;tS>l&&(l=tS);}const hit=Backtester.exitInBar(b,e,t,l,c.pe);if(hit.hit){const x=hit.hit==='tp'?t:l,g=(x-e)/e*c.q,f=(c.f+c.p)*2*c.q;trades.push({ts:b.t,sym:s,entry:e,tp:t,sl:l,exit:x,pnl:+(g-f).toFixed(4),note:hit.hit.toUpperCase()});inPos=!1;continue;}const bH=i-eI,mPB=+c.tf.replace('m','');if(bH*mPB>=c.ts){const x=b.c,g=(x-e)/e*c.q,f=(c.f+c.p)*2*c.q;trades.push({ts:b.t,sym:s,entry:e,tp:t,sl:l,exit:x,pnl:+(g-f).toFixed(4),note:'TIME'});inPos=!1;continue;}}}}catch(e){logBack(`Lỗi backtest ${s}: ${e.message}`,'warn');}
-const sum=Backtester.summarize(trades);Backtester.render({trades,summary:sum});logBack('Hoàn tất backtest','ok');return sum;},grid:async()=>{const bTP=+$('B_tpK').value,bSL=+$('B_slK').value,tps=[bTP-.2,bTP,bTP+.2].filter(x=>x>.2),sls=[bSL-.2,bSL,bSL+.2].filter(x=>x>.2);let best=null;for(const t of tps)for(const s of sls){$('B_tpK').value=t;$('B_slK').value=s;logBack(`Test tp=${t.toFixed(1)} sl=${s.toFixed(1)}`,'warn');const res=await Backtester.run();if(res){const p=res.pnl;(!best||p>best.pnl)&&(best={tp:t,sl:s,pnl:p});}} if(best) {$('B_summary').textContent=`Best → TP=${best.tp.toFixed(1)}×ATR, SL=${best.sl.toFixed(1)}×ATR | PnL≈${best.pnl}`;} return best;}};
-$('B_run').onclick=Backtester.run;$('B_grid').onclick=Backtester.grid;
-$('autopilot').onclick=async()=>{logBack('Autopilot starting...','ok');const best=await Backtester.grid();if(best){$('B_tpK').value=best.tp;$('B_slK').value=best.sl;$('minScore').value=$('B_minScore').value;$('timeStopMin').value=$('B_timeStopMin').value;logLive(`Autopilot: Đã copy cấu hình tối ưu từ backtest. (TP=${best.tp}, SL=${best.sl})`,'ok');}
-const hasApi=localStorage.getItem('bb4_key');let pass,apiLoaded=!1;hasApi&&(pass=prompt('Nhập passphrase để chạy Live/Testnet (bỏ qua để chạy SIM)'));if(pass){$('passphrase').value=pass;apiLoaded=await Store.loadKeys();}
-if(!apiLoaded){logLive('Autopilot: Không có API/passphrase. Chạy SIM mode.','warn');$('simMode').checked=!0;}$('autoMode').checked=!0;startBot();tabs[0].click();};
+let pnlChartInstance = null;
+
+async function getUniverseBacktest(){
+    const n = +$('B_topN').value || 12;
+    const list = await api.tickers();
+    return list.filter(x=>x.symbol.endsWith('USDT'))
+        .sort((a,b)=>+b.turnover24h - +a.turnover24h)
+        .slice(0, n)
+        .map(x=>x.symbol);
+}
+
+async function runBacktest(cfg) {
+    const {B_tf, B_lookback, B_symbolList, B_topN, B_btcFilter, B_pessimistic, B_minScore, B_tpK, B_slK, B_timeStopMin, B_quote, B_feePct, B_slipBps, B_useBreakeven, B_useTrailing} = cfg;
+    
+    logBack('Starting backtest...');
+    const symbols = B_symbolList ? B_symbolList.toUpperCase().split(',').map(s=>s.trim()).filter(Boolean) : await getUniverseBacktest();
+    logBack(`Testing on ${symbols.length} symbols: ${symbols.slice(0,8).join(',')}...`);
+
+    const klinesData = {};
+    const btcKlines = B_btcFilter ? await api.klines('BTCUSDT', B_tf, B_lookback + 200).catch(() => null) : null;
+    if (B_btcFilter && !btcKlines) logBack('Could not fetch BTC data, skipping filter.', 'warn');
+
+    for (const sym of symbols) {
+        try { klinesData[sym] = await api.klines(sym, B_tf, B_lookback + 200); } 
+        catch (e) { logBack(`Error fetching klines for ${sym}: ${e.message}`, 'warn'); }
+    }
+
+    let trades = [], inPos = false, pos = {};
+    const tfMs = ({'1':60,'3':180,'5':300,'15':900}[B_tf] || 300) * 1000;
+
+    for (let i = 200; i < B_lookback + 200; i++) {
+        if (!inPos) {
+            let btcOk = true;
+            if (B_btcFilter && btcKlines && btcKlines.length > i) {
+                const btcSlice = btcKlines.slice(0, i).map(k=>k.c);
+                btcOk = sma(btcSlice, 20) > sma(btcSlice, 50) && rsi(btcSlice, 14) > 48;
+            }
+
+            let best = null;
+            for (const sym of symbols) {
+                if (!klinesData[sym] || klinesData[sym].length <= i) continue;
+                const kl = klinesData[sym].slice(0, i);
+                const sig = pullbackScore(kl);
+                if (sig.score > (best?.meta?.score || 0)) best = { sym, meta: sig, candle: kl[kl.length-1] };
+            }
+            
+            if (best && best.meta.score >= B_minScore && btcOk) {
+                const entryPrice = best.candle.c * (1 + (B_slipBps / 10000));
+                const fee = B_quote * (B_feePct / 100);
+                const {tp, sl} = calcTPSL(entryPrice, best.meta.atr, B_tpK, B_slK);
+                inPos = true;
+                pos = { 
+                    sym: best.sym, entry: entryPrice, tp, sl, initialSl: sl, atr: best.meta.atr,
+                    startIdx: i, ts: best.candle.t, beLocked: false, quote: B_quote, fee
+                };
+            }
+        } else {
+            const candle = klinesData[pos.sym]?.[i];
+            if (!candle) { inPos=false; continue; }
+            const {h, l, c} = candle;
+            let exitPrice = null, note = '';
+
+            const slHit = l <= pos.sl;
+            const tpHit = h >= pos.tp;
+
+            if(B_pessimistic && slHit && tpHit) { exitPrice = pos.sl; note = 'SL hit (Pessimistic)'; }
+            else if (slHit) { exitPrice = pos.sl; note = 'SL hit'; }
+            else if (tpHit) { exitPrice = pos.tp; note = 'TP hit'; }
+            else if ((candle.t - pos.ts) / tfMs > B_timeStopMin) { exitPrice = c; note = 'Time-stop'; }
+
+            if (exitPrice) {
+                exitPrice *= (1 - (B_slipBps / 10000));
+                const pnl = (exitPrice - pos.entry) / pos.entry * pos.quote - (pos.fee * 2);
+                trades.push({ ...pos, exit: exitPrice, pnl, note });
+                inPos = false;
+                pos = {};
+            } else {
+                if (B_useBreakeven && !pos.beLocked && h >= pos.entry + 0.6 * pos.atr) {
+                    pos.sl = Math.max(pos.sl, pos.entry - 0.1 * pos.atr);
+                    pos.beLocked = true;
+                }
+                if (B_useTrailing && h >= pos.tp) {
+                    pos.sl = Math.max(pos.sl, c - 0.6 * pos.atr);
+                }
+            }
+        }
+    }
+    
+    // Render results
+    const journalBody = $('journalBack').querySelector('tbody');
+    journalBody.innerHTML = '';
+    trades.forEach(r => {
+        const e=document.createElement('tr');
+        e.innerHTML=`<td>${new Date(r.ts).toLocaleString()}</td><td>${r.sym}</td><td>${r.entry?.toFixed(6)}</td><td>${r.tp?.toFixed(6)}</td><td>${r.initialSl?.toFixed(6)}</td><td>${r.exit?.toFixed(6)}</td><td class="${r.pnl>0?'ok':r.pnl<0?'bad':''}">${r.pnl?.toFixed(2)}</td><td>${r.note||''}</td>`;
+        journalBody.appendChild(e);
+    });
+
+    const totalTrades = trades.length;
+    const wins = trades.filter(t => t.pnl > 0).length;
+    const winRate = totalTrades ? (wins / totalTrades * 100) : 0;
+    const totalPnl = trades.reduce((sum, t) => sum + t.pnl, 0);
+    const avgPnl = totalTrades ? totalPnl / totalTrades : 0;
+    const profitFactor = Math.abs(trades.filter(t=>t.pnl>0).reduce((s,t)=>s+t.pnl,0) / (trades.filter(t=>t.pnl<0).reduce((s,t)=>s+t.pnl,0)||1));
+    const summary = `Trades: ${totalTrades} | Win: ${winRate.toFixed(1)}% | PnL: ${totalPnl.toFixed(2)}$ (${(totalPnl/B_quote*100/totalTrades).toFixed(2)}% avg) | Profit Factor: ${profitFactor.toFixed(2)} | Avg. PnL/Trade: ${avgPnl.toFixed(2)}$`;
+    $('B_summary').textContent = summary;
+    logBack('Backtest complete!', 'ok');
+
+    // RENDER EQUITY CURVE CHART
+    if (pnlChartInstance) pnlChartInstance.destroy();
+    if (trades.length > 0) {
+        const pnlHistory = trades.slice().reverse().reduce((acc, trade) => {
+            const lastPnl = acc.length > 0 ? acc[acc.length - 1].y : 0;
+            acc.push({ x: trade.ts, y: lastPnl + trade.pnl });
+            return acc;
+        }, []);
+
+        const ctx = $('pnlChart').getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(88, 166, 255, 0.5)');
+        gradient.addColorStop(1, 'rgba(88, 166, 255, 0)');
+
+        pnlChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'Cumulative PnL ($)',
+                    data: pnlHistory,
+                    borderColor: 'rgba(88, 166, 255, 1)',
+                    backgroundColor: gradient,
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.1,
+                    fill: true,
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { type: 'time', time: { unit: 'day' }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: 'var(--muted)' } },
+                    y: { grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: 'var(--muted)', callback: (v) => `$${v}` } }
+                },
+                plugins: { legend: { labels: { color: 'var(--text)' } } }
+            }
+        });
+    }
+
+    const bySym = {};
+    trades.forEach(t => {
+        if (!bySym[t.sym]) bySym[t.sym] = { trades: 0, wins: 0, pnl: 0, R: [] };
+        bySym[t.sym].trades++;
+        if (t.pnl > 0) bySym[t.sym].wins++;
+        bySym[t.sym].pnl += t.pnl;
+        const R = (t.entry - t.initialSl) || 1e-9;
+        bySym[t.sym].R.push(t.pnl / (R / t.entry * t.quote));
+    });
+    const bySymBody = $('bySymBack').querySelector('tbody');
+    bySymBody.innerHTML = '';
+    Object.entries(bySym).sort((a,b)=>b[1].pnl - a[1].pnl).forEach(([sym, data]) => {
+        const e=document.createElement('tr');
+        const avgR = data.R.reduce((s,v)=>s+v,0)/data.R.length;
+        e.innerHTML=`<td>${sym}</td><td>${data.trades}</td><td>${(data.wins/data.trades*100).toFixed(1)}%</td><td class="${data.pnl>0?'ok':'bad'}">${data.pnl.toFixed(2)}</td><td>${avgR.toFixed(2)}</td>`;
+        bySymBody.appendChild(e);
+    });
+
+    return { totalPnl, totalTrades, winRate };
+}
+
+async function gridSearch() {
+    logBack('Starting Grid Search...');
+    $('B_grid').disabled = true; $('autopilot').disabled = true; $('B_run').disabled = true;
+    const baseCfg = {
+        B_tf: $('B_tf').value, B_lookback: +$('B_lookback').value, B_symbolList: $('B_symbolList').value, 
+        B_topN: +$('B_topN').value, B_btcFilter: $('B_btcFilter').checked, B_pessimistic: $('B_pessimistic').checked, 
+        B_minScore: +$('B_minScore').value, B_timeStopMin: +$('B_timeStopMin').value, B_quote: +$('B_quote').value, 
+        B_feePct: +$('B_feePct').value, B_slipBps: +$('B_slipBps').value, 
+        B_useBreakeven: $('B_useBreakeven').checked, B_useTrailing: $('B_useTrailing').checked
+    };
+
+    const tpRange = [1.0, 1.2, 1.5, 1.8, 2.0];
+    const slRange = [0.6, 0.8, 1.0, 1.2];
+    let bestResult = { totalPnl: -Infinity }, bestParams = {};
+
+    for (const tp of tpRange) {
+        for (const sl of slRange) {
+            logBack(`Testing TP/SL: ${tp} / ${sl}`);
+            const cfg = { ...baseCfg, B_tpK: tp, B_slK: sl };
+            const result = await runBacktest(cfg);
+            if (result.totalPnl > bestResult.totalPnl && result.totalTrades > 5) {
+                bestResult = result;
+                bestParams = { tp, sl };
+            }
+        }
+    }
+    
+    if (bestResult.totalPnl > -Infinity) {
+        logBack(`Grid Search done. Best TP=${bestParams.tp}, SL=${bestParams.sl} → PnL=${bestResult.totalPnl.toFixed(2)}`, 'ok');
+        $('B_tpK').value = bestParams.tp;
+        $('B_slK').value = bestParams.sl;
+    } else {
+        logBack('Grid Search did not find a profitable result.', 'warn');
+    }
+    $('B_grid').disabled = false; $('autopilot').disabled = false; $('B_run').disabled = false;
+    return bestParams;
+}
+
+async function runAutopilot() {
+    logBack('🚀 AUTOPILOT initiating...');
+    tabs.find(t=>t.dataset.tab==='back').click();
+    const bestParams = await gridSearch();
+    if (!bestParams.tp) return logBack('Autopilot stopped: no optimal parameters found', 'error');
+
+    logLive('🚀 AUTOPILOT: Applying optimal parameters and starting bot...');
+    $('B_tpK').value = bestParams.tp;
+    $('B_slK').value = bestParams.sl;
+    $('autoMode').checked = true;
+    Store.saveCfg();
+
+    tabs.find(t=>t.dataset.tab==='live').click();
+    const pass = prompt("Enter passphrase to load API keys (or leave blank for SIM mode):");
+    let loaded = false;
+    if (pass) {
+        $('passphrase').value = pass;
+        loaded = await Store.loadKeys();
+    }
+    
+    if (loaded) {
+        $('simMode').checked = false;
+        logLive('API keys loaded, starting live trading...', 'ok');
+    } else {
+        $('simMode').checked = true;
+        logLive('API keys not loaded, starting in SIM mode...', 'warn');
+    }
+    Store.saveCfg();
+    startBot();
+}
+
+$('B_run').onclick = () => runBacktest({
+    B_tf: $('B_tf').value, B_lookback: +$('B_lookback').value, B_symbolList: $('B_symbolList').value, 
+    B_topN: +$('B_topN').value, B_btcFilter: $('B_btcFilter').checked, B_pessimistic: $('B_pessimistic').checked, 
+    B_minScore: +$('B_minScore').value, B_tpK: +$('B_tpK').value, B_slK: +$('B_slK').value, 
+    B_timeStopMin: +$('B_timeStopMin').value, B_quote: +$('B_quote').value, B_feePct: +$('B_feePct').value, 
+    B_slipBps: +$('B_slipBps').value, B_useBreakeven: $('B_useBreakeven').checked, B_useTrailing: $('B_useTrailing').checked
+});
+$('B_grid').onclick = gridSearch;
+$('autopilot').onclick = runAutopilot;
 </script>
 </body>
 </html>
+
+
 
