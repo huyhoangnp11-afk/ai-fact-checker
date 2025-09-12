@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bybit Trading Bot</title>
+    <title>Quantum Edge</title>
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- CryptoJS for API signature generation -->
@@ -15,7 +15,7 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
         .log-area { font-family: 'Courier New', Courier, monospace; white-space: pre-wrap; word-break: break-all; }
-        .loader { border-top-color: #3498db; -webkit-animation: spin 1s linear infinite; animation: spin 1s linear infinite; }
+        .loader { border-top-color: #0d9488; -webkit-animation: spin 1s linear infinite; animation: spin 1s linear infinite; }
         @-webkit-keyframes spin {
             0% { -webkit-transform: rotate(0deg); }
             100% { -webkit-transform: rotate(360deg); }
@@ -26,134 +26,201 @@
         }
         .tab-active {
             border-bottom-width: 2px;
-            border-color: #0891B2; /* cyan-500 */
-            color: #ffffff;
+            border-color: #0d9488; /* teal-600 */
+            color: #0f766e; /* teal-700 */
+        }
+        .regime-trend {
+            background-color: #CCFBF1; /* bg-teal-100 */
+            color: #134E4A; /* text-teal-800 */
+        }
+        /* Custom scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
         }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-200 min-h-screen flex items-center justify-center p-4">
-    <div class="w-full max-w-7xl mx-auto bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 space-y-6">
+<body class="bg-gray-100 text-gray-900 min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-7xl mx-auto bg-white rounded-2xl shadow-lg p-6 md:p-8 space-y-6">
         
-        <header class="text-center">
-            <h1 class="text-3xl font-bold text-white">Bybit Trading Bot</h1>
-            <p class="text-gray-400 mt-2">Giao dịch tự động và quản lý tài khoản Bybit của bạn.</p>
+        <header class="text-center relative">
+             <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-teal-500 to-cyan-600">Quantum Edge</h1>
+            <p class="text-gray-600 mt-2">Nền tảng giao dịch thuật toán cho tài khoản Bybit của bạn.</p>
         </header>
 
         <!-- Main Grid Layout -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
-            <!-- Left Column: Settings, Account -->
+            <!-- Left Column: Controls -->
             <div class="lg:col-span-1 space-y-6">
-                <div class="bg-gray-700/50 p-6 rounded-xl">
-                     <div class="flex items-center justify-between border-b border-gray-600 pb-3 mb-4">
-                        <h2 class="text-xl font-semibold">Cài đặt API</h2>
+                 <!-- Control Panel -->
+                <div class="bg-gray-50 border border-gray-200 p-6 rounded-xl shadow-sm">
+                    <div class="flex items-center justify-between border-b border-gray-200 pb-3 mb-4">
+                        <h2 class="text-xl font-semibold">Bảng Điều Khiển</h2>
                         <span id="apiStatus" class="text-xs font-medium px-2.5 py-1 rounded-full">&nbsp;</span>
                     </div>
-                    <div class="space-y-4">
-                        <div>
-                            <label for="apiKey" class="block text-sm font-medium text-gray-300 mb-1">API Key</label>
-                            <input type="password" id="apiKey" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-2 focus:ring-blue-500">
+                    <div class="flex items-center gap-4">
+                        <button id="openApiModalBtn" class="flex items-center justify-center gap-2 w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition-transform transform hover:scale-105">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l4.257-4.257A6 6 0 1118 8zm-6-4a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd" /></svg>
+                            <span>API</span>
+                        </button>
+                        <button id="openAccountModalBtn" class="flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-transform transform hover:scale-105">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>
+                            <span>Tài Khoản</span>
+                        </button>
+                    </div>
+                </div>
+                
+                 <!-- Market Scanner Section -->
+                <div class="bg-gray-50 border border-gray-200 p-6 rounded-xl shadow-sm">
+                    <div id="scannerHeader" class="flex items-center justify-between cursor-pointer group">
+                        <div class="flex items-center gap-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                            <h2 class="text-xl font-semibold text-gray-800">Bot Theo Xu Hướng</h2>
                         </div>
-                        <div>
-                            <label for="apiSecret" class="block text-sm font-medium text-gray-300 mb-1">API Secret</label>
-                            <input type="password" id="apiSecret" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-2 focus:ring-blue-500">
-                        </div>
-                         <div class="flex items-center justify-between">
-                            <button id="saveApi" class="w-2/3 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition transform hover:scale-105">Lưu API Key</button>
-                            <div class="flex items-center space-x-2 text-sm">
-                               <label for="showApiKeys" class="text-gray-400">Hiện</label>
-                               <input type="checkbox" id="showApiKeys" class="form-checkbox h-5 w-5 text-blue-500 bg-gray-900 border-gray-600 rounded focus:ring-blue-500">
+                        <svg id="scannerChevron" class="w-6 h-6 transition-transform transform rotate-180 text-gray-500 group-hover:text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                    <div id="scannerContent" class="mt-4 border-t border-gray-200 pt-4 transition-all duration-300 hidden">
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                            <div class="md:col-span-2">
+                                <label for="scannerCapital" class="block text-sm font-medium text-gray-700 mb-1">Vốn / Lệnh (USDT)</label>
+                                <input type="number" id="scannerCapital" value="8" step="1" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                            </div>
+                            <div class="md:col-span-2 flex items-center justify-between">
+                                 <label for="autoTradeToggle" class="flex items-center cursor-pointer">
+                                     <div class="relative">
+                                         <input type="checkbox" id="autoTradeToggle" class="sr-only peer">
+                                         <div class="block bg-gray-300 w-14 h-8 rounded-full peer-checked:bg-green-500"></div>
+                                         <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform transform peer-checked:translate-x-full"></div>
+                                     </div>
+                                     <span class="ml-3 text-sm font-medium text-gray-700">Tự động</span>
+                                </label>
+                                <div class="flex gap-2">
+                                    <button id="startScannerBtn" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg transition disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>Bắt đầu</button>
+                                    <button id="stopScannerBtn" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition" disabled>Dừng</button>
+                                </div>
                             </div>
                         </div>
+                        <div id="scannerStatus" class="mt-4 bg-gray-100 p-3 rounded-lg text-sm text-center">Công cụ quét đang không hoạt động.</div>
                     </div>
                 </div>
 
-                <div class="bg-gray-700/50 p-6 rounded-xl">
-                    <h2 class="text-xl font-semibold mb-3 border-b border-gray-600 pb-3">Thông tin tài khoản</h2>
-                    <div id="balanceInfo" class="bg-gray-900 p-4 rounded-lg text-sm min-h-[120px]">
-                        Vui lòng xác thực API để xem số dư...
+                <!-- CSH-RT Bot Section -->
+                <div class="bg-gray-50 border border-gray-200 p-6 rounded-xl shadow-sm">
+                    <div id="cshHeader" class="flex items-center justify-between cursor-pointer group">
+                        <div class="flex items-center gap-3">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                             <h2 class="text-xl font-semibold text-gray-800">Bot CSH-RT</h2>
+                        </div>
+                         <svg id="cshChevron" class="w-6 h-6 transition-transform transform rotate-180 text-gray-500 group-hover:text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                    <div id="cshContent" class="mt-4 border-t border-gray-200 pt-4 transition-all duration-300 hidden">
+                        <div class="bg-purple-100 border-l-4 border-purple-500 text-purple-800 p-4 rounded-lg mb-4" role="alert">
+                            <p><strong class="font-bold">Cách Hoạt Động:</strong> Tự động chọn cặp, đặt lệnh Maker và quản lý TP/SL.</p>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                            <div>
+                                <label for="cshCapital" class="block text-sm font-medium text-gray-700 mb-1">Vốn / Lệnh (USDT)</label>
+                                <input type="number" id="cshCapital" value="5" step="1" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                            </div>
+                            <div class="md:col-span-2 grid grid-cols-2 gap-2">
+                                <button id="startCshBtn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>Bắt đầu Auto-Pick</button>
+                                <button id="stopCshBtn" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition" disabled>Dừng</button>
+                            </div>
+                        </div>
+                        <div id="cshStatusContainer" class="mt-4 space-y-2">
+                            <p class="text-center text-gray-500">Bot CSH-RT đang không hoạt động.</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Column: Dashboard & Scanner -->
-            <div class="lg:col-span-2 space-y-6">
-                 <!-- Trading Dashboard -->
-                <div class="bg-gray-700/50 p-6 rounded-xl">
-                    <div class="flex justify-between items-center border-b border-gray-600 mb-4">
+            <!-- Middle Column: Charts & Logs -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- Trading Dashboard -->
+                <div class="bg-gray-50 border border-gray-200 p-6 rounded-xl shadow-sm h-full flex flex-col">
+                    <div class="flex justify-between items-center border-b border-gray-200 mb-4">
                         <div class="flex">
                             <button id="priceChartTab" class="py-2 px-4 font-semibold tab-active">Biểu Đồ Giá</button>
-                            <button id="pnlChartTab" class="py-2 px-4 text-gray-400 font-semibold">Lịch Sử PNL</button>
+                            <button id="pnlChartTab" class="py-2 px-4 text-gray-500 hover:text-gray-700 font-semibold">Lịch Sử PNL</button>
                         </div>
-                        <button id="clearPnlHistoryBtn" class="py-1 px-2 text-xs bg-red-800 hover:bg-red-700 rounded-md hidden">Xóa Lịch Sử</button>
+                        <button id="clearPnlHistoryBtn" class="py-1 px-2 text-xs bg-red-600 hover:bg-red-700 text-white rounded-md hidden">Xóa</button>
                     </div>
-                    <div id="priceChartContainer" class="bg-gray-900 rounded-lg p-4 h-64">
+                    <div id="priceChartContainer" class="bg-white rounded-lg p-2 h-52">
                         <canvas id="priceChart"></canvas>
                     </div>
-                     <div id="pnlChartContainer" class="bg-gray-900 rounded-lg p-4 h-64 hidden">
+                     <div id="pnlChartContainer" class="bg-white rounded-lg p-2 h-52 hidden">
                         <canvas id="pnlChart"></canvas>
                     </div>
-                </div>
-                 <!-- Market Scanner Section -->
-                <div class="bg-gray-700/50 p-6 rounded-xl">
-                    <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bot Giao Dịch Theo Xu Hướng (V4)</h2>
-                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                        <div class="md:col-span-1">
-                            <label for="scannerCapital" class="block text-sm font-medium text-gray-300 mb-1">Vốn Tối Đa / Lệnh</label>
-                            <input type="number" id="scannerCapital" value="8" step="1" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200">
-                        </div>
-                        <div class="md:col-span-1 flex items-end pb-1">
-                             <label for="autoTradeToggle" class="flex items-center cursor-pointer">
-                                <div class="relative">
-                                    <input type="checkbox" id="autoTradeToggle" class="sr-only peer">
-                                    <div class="block bg-gray-600 w-14 h-8 rounded-full peer-checked:bg-green-600"></div>
-                                    <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform transform peer-checked:translate-x-full"></div>
-                                </div>
-                                <span class="ml-3 text-sm font-medium text-gray-300">Tự động</span>
-                            </label>
-                        </div>
-                        <div class="md:col-span-1 grid grid-cols-2 gap-2">
-                            <button id="startScannerBtn" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition disabled:bg-gray-500" disabled>Bắt đầu</button>
-                            <button id="stopScannerBtn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition" disabled>Dừng</button>
-                        </div>
+                    <!-- Log Area -->
+                    <div class="mt-6 flex flex-col flex-grow">
+                        <h2 class="text-xl font-semibold mb-2 border-b border-gray-200 pb-3">Nhật ký hoạt động</h2>
+                        <div id="log" class="log-area custom-scrollbar bg-gray-800 flex-grow overflow-y-auto p-3 rounded-lg text-xs text-gray-300"></div>
                     </div>
-                    <div id="scannerStatus" class="mt-4 bg-gray-900 p-3 rounded-lg text-sm text-center">Công cụ quét đang không hoạt động.</div>
+                </div>
+            </div>
+            
+            <!-- Right Column: Scanner Results -->
+            <div class="lg:col-span-1 space-y-6">
+                <div class="bg-gray-50 border border-gray-200 p-6 rounded-xl shadow-sm h-full flex flex-col">
+                    <h2 class="text-xl font-semibold border-b border-gray-200 pb-3 mb-4">Tín hiệu Giao dịch</h2>
+                    <div id="scannerResults" class="grid grid-cols-1 gap-4 overflow-y-auto flex-grow custom-scrollbar pr-2">
+                        <!-- Trading Plan Cards will be populated here -->
+                         <div class="col-span-full text-center text-gray-500 pt-10">Đang chờ tín hiệu từ bot quét...</div>
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Trading Plan Cards Container -->
-        <div id="scannerResults" class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Trading Plan Cards will be populated here -->
-        </div>
-        
-        <!-- CSH-RT Bot Section -->
-        <div class="bg-gray-700/50 p-6 rounded-xl mt-6">
-            <h2 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">Bot CSH-RT (V5.1.0 - Auto-Pick & Exit Logic)</h2>
-            <div class="bg-purple-900 border-l-4 border-purple-500 text-purple-100 p-4 rounded-lg mb-4" role="alert">
-                <p><strong class="font-bold">Cách Hoạt Động:</strong> Tự động chọn cặp, đặt lệnh Maker và tự động quản lý TP/SL sau khi khớp lệnh.</p>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+    <!-- API Settings Modal -->
+    <div id="apiModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-40 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 space-y-6 w-full max-w-md relative">
+            <button id="closeApiModalBtn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <h2 class="text-2xl font-bold text-gray-900 border-b border-gray-200 pb-3">Cài đặt API</h2>
+            <div class="space-y-4">
                 <div>
-                    <label for="cshCapital" class="block text-sm font-medium text-gray-300 mb-1">Vốn / Lệnh (USDT)</label>
-                    <input type="number" id="cshCapital" value="5" step="1" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-gray-200">
+                    <label for="modalApiKey" class="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+                    <input type="password" id="modalApiKey" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
                 </div>
-                <div class="md:col-span-2 grid grid-cols-2 gap-2">
-                    <button id="startCshBtn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition disabled:bg-gray-500" disabled>Bắt đầu Auto-Pick</button>
-                    <button id="stopCshBtn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition" disabled>Dừng</button>
+                <div>
+                    <label for="modalApiSecret" class="block text-sm font-medium text-gray-700 mb-1">API Secret</label>
+                    <input type="password" id="modalApiSecret" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                </div>
+                 <div class="flex items-center justify-between pt-2">
+                    <button id="saveApiBtn" class="w-2/3 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition transform hover:scale-105">Lưu & Xác thực</button>
+                    <div class="flex items-center space-x-2 text-sm">
+                        <label for="showApiKeys" class="text-gray-600">Hiện</label>
+                        <input type="checkbox" id="showApiKeys" class="form-checkbox h-5 w-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
+                    </div>
                 </div>
             </div>
-            <div id="cshStatusContainer" class="mt-4 space-y-2">
-                <p class="text-center text-gray-500">Bot CSH-RT đang không hoạt động.</p>
+        </div>
+    </div>
+
+    <!-- Account Info Modal -->
+    <div id="accountModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-40 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 space-y-6 w-full max-w-md relative">
+            <button id="closeAccountModalBtn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <h2 class="text-2xl font-bold text-gray-900 border-b border-gray-200 pb-3">Thông tin tài khoản</h2>
+            <div id="balanceInfoModal" class="bg-gray-100 p-4 rounded-lg text-sm min-h-[200px]">
+                Vui lòng xác thực API để xem số dư...
             </div>
         </div>
-
-        <!-- Log Area -->
-        <div class="bg-gray-900/70 p-4 rounded-xl mt-6">
-            <h2 class="text-lg font-semibold mb-2">Nhật ký hoạt động</h2>
-            <div id="log" class="log-area bg-black h-64 overflow-y-auto p-3 rounded-lg text-xs text-gray-400"></div>
-        </div>
-
     </div>
 
     <!-- Loading Spinner Modal -->
@@ -169,12 +236,12 @@
         document.addEventListener('DOMContentLoaded', () => {
             // --- DOM Elements ---
             const ui = {
-                apiKeyInput: document.getElementById('apiKey'),
-                apiSecretInput: document.getElementById('apiSecret'),
-                saveApiBtn: document.getElementById('saveApi'),
+                modalApiKeyInput: document.getElementById('modalApiKey'),
+                modalApiSecretInput: document.getElementById('modalApiSecret'),
+                saveApiBtn: document.getElementById('saveApiBtn'),
                 showApiKeysCheckbox: document.getElementById('showApiKeys'),
                 apiStatus: document.getElementById('apiStatus'),
-                balanceInfoDiv: document.getElementById('balanceInfo'),
+                balanceInfoModal: document.getElementById('balanceInfoModal'),
                 logDiv: document.getElementById('log'),
                 loaderModal: document.getElementById('loaderModal'),
                 loaderText: document.getElementById('loaderText'),
@@ -185,6 +252,12 @@
                 priceChartContainer: document.getElementById('priceChartContainer'),
                 pnlChartContainer: document.getElementById('pnlChartContainer'),
                 clearPnlHistoryBtn: document.getElementById('clearPnlHistoryBtn'),
+                openApiModalBtn: document.getElementById('openApiModalBtn'),
+                apiModal: document.getElementById('apiModal'),
+                closeApiModalBtn: document.getElementById('closeApiModalBtn'),
+                openAccountModalBtn: document.getElementById('openAccountModalBtn'),
+                accountModal: document.getElementById('accountModal'),
+                closeAccountModalBtn: document.getElementById('closeAccountModalBtn'),
                 scanner: {
                     capital: document.getElementById('scannerCapital'),
                     autoTradeToggle: document.getElementById('autoTradeToggle'),
@@ -192,12 +265,18 @@
                     stopBtn: document.getElementById('stopScannerBtn'),
                     status: document.getElementById('scannerStatus'),
                     results: document.getElementById('scannerResults'),
+                    header: document.getElementById('scannerHeader'),
+                    content: document.getElementById('scannerContent'),
+                    chevron: document.getElementById('scannerChevron'),
                 },
                 csh: {
                     capitalInput: document.getElementById('cshCapital'),
                     startBtn: document.getElementById('startCshBtn'),
                     stopBtn: document.getElementById('stopCshBtn'),
                     statusContainer: document.getElementById('cshStatusContainer'),
+                    header: document.getElementById('cshHeader'),
+                    content: document.getElementById('cshContent'),
+                    chevron: document.getElementById('cshChevron'),
                 }
             };
 
@@ -245,35 +324,41 @@
                 },
                 rsi: (d, p) => {
                     if (!d || d.length < p + 1) return [];
-                    let gains = 0, losses = 0;
-                    for (let i = 1; i <= p; i++) {
+                    let gains = [];
+                    let losses = [];
+                    for (let i = 1; i < d.length; i++) {
                         const diff = d[i] - d[i - 1];
-                        if (diff > 0) gains += diff;
-                        else losses -= diff;
+                        gains.push(diff > 0 ? diff : 0);
+                        losses.push(diff < 0 ? -diff : 0);
                     }
-                    let avgGain = gains / p;
-                    let avgLoss = losses / p;
-                    if (avgLoss === 0) return Array(d.length - p).fill(100);
 
-                    let rsiValues = [100 - (100 / (1 + (avgGain / avgLoss)))];
+                    if (gains.length < p) return [];
+                    
+                    let avgGain = gains.slice(0, p).reduce((a, b) => a + b, 0) / p;
+                    let avgLoss = losses.slice(0, p).reduce((a, b) => a + b, 0) / p;
 
-                    for (let i = p + 1; i < d.length; i++) {
-                        const diff = d[i] - d[i - 1];
-                        let gain = 0, loss = 0;
-                        if (diff > 0) gain = diff;
-                        else loss = -diff;
-                        avgGain = (avgGain * (p - 1) + gain) / p;
-                        avgLoss = (avgLoss * (p - 1) + loss) / p;
+                    let rsiValues = [];
+                    if (avgLoss === 0) {
+                        rsiValues.push(100);
+                    } else {
+                        const rs = avgGain / avgLoss;
+                        rsiValues.push(100 - (100 / (1 + rs)));
+                    }
+
+                    for (let i = p; i < gains.length; i++) {
+                        avgGain = (avgGain * (p - 1) + gains[i]) / p;
+                        avgLoss = (avgLoss * (p - 1) + losses[i]) / p;
                         if (avgLoss === 0) {
-                           rsiValues.push(100);
+                            rsiValues.push(100);
                         } else {
-                           rsiValues.push(100 - (100 / (1 + (avgGain / avgLoss))));
+                            const rs = avgGain / avgLoss;
+                            rsiValues.push(100 - (100 / (1 + rs)));
                         }
                     }
                     return rsiValues;
                 },
                 atr: (k, p) => {
-                    if (!k || k.length < p) return [];
+                    if (!k || k.length < p + 1) return [];
                     let trValues = [];
                     for (let i = 1; i < k.length; i++) {
                         const high = parseFloat(k[i][2]);
@@ -282,7 +367,7 @@
                         const tr = Math.max(high - low, Math.abs(high - prevClose), Math.abs(low - prevClose));
                         trValues.push(tr);
                     }
-                    if (trValues.length === 0) return [];
+                    if (trValues.length < p) return [];
                     return TA.ema(trValues, p);
                 }
             };
@@ -315,6 +400,7 @@
                     const nsStr = j.result?.timeNano;
                     return nsStr ? (BigInt(nsStr) / 1000000n).toString() : (BigInt(j.result.timeSecond) * 1000n).toString();
                 } catch (e) {
+                    logMessage("Không thể lấy thời gian máy chủ Bybit, sử dụng thời gian hệ thống. Sai lệch có thể gây ra lỗi.", true);
                     return Date.now().toString();
                 }
             }
@@ -322,7 +408,7 @@
             async function bybitRequest(endpoint, method, params = {}, isPublic = false) {
                 const isValidationCall = endpoint === '/v5/user/query-api';
                 if (!isPublic && !state.apiKeysValid && !isValidationCall) {
-                    if (endpoint.includes('/v5/market/tickers')) return null;
+                    if (endpoint.includes('/v5/market/')) return null;
                     logMessage('API Keys không hợp lệ hoặc chưa được lưu.', true);
                     return null;
                 }
@@ -348,6 +434,7 @@
                     const response = await fetch(url, { method, headers, body });
                     const data = await response.json();
                     if (data.retCode !== 0) {
+                        if (isValidationCall) return data;
                         if (data.retMsg.includes("Not supported symbols") || data.retMsg.includes("Instrument not found")) return null;
                         throw new Error(`Bybit API Error: ${data.retMsg} (Code: ${data.retCode})`);
                     }
@@ -356,7 +443,7 @@
                     if (!isValidationCall) { 
                         logMessage(error.message, true);
                     }
-                    return null;
+                    return isValidationCall ? { retCode: -1, retMsg: error.message } : null;
                 }
             }
             
@@ -374,11 +461,12 @@
                 return null;
             }
 
-            function updateApiStatus(isValid) {
+            function updateApiStatus(isValid, message = '') {
                 state.apiKeysValid = isValid;
-                const activeClasses = 'bg-green-900 text-green-300';
-                const inactiveClasses = 'bg-red-900 text-red-300';
+                const activeClasses = 'bg-green-100 text-green-800';
+                const inactiveClasses = 'bg-red-100 text-red-800';
                 ui.apiStatus.textContent = isValid ? 'Hợp lệ' : 'Không hợp lệ';
+                ui.apiStatus.title = message; // Add tooltip with error message
                 ui.apiStatus.className = `text-xs font-medium px-2.5 py-1 rounded-full ${isValid ? activeClasses : inactiveClasses}`;
                 ui.scanner.startBtn.disabled = !isValid;
                 ui.csh.startBtn.disabled = !isValid;
@@ -386,20 +474,24 @@
 
             async function checkApiKeys() {
                 if (!state.apiKey || !state.apiSecret) {
-                    updateApiStatus(false); return;
+                    updateApiStatus(false, 'API Key hoặc Secret rỗng.'); return;
                 }
                 const result = await bybitRequest('/v5/user/query-api', 'GET', {});
-                updateApiStatus(!!result);
-                if(!!result) {
+                const isValid = result?.retCode === 0;
+                updateApiStatus(isValid, isValid ? 'Xác thực thành công' : result?.retMsg);
+
+                if(isValid) {
                     logMessage('Xác thực API Key thành công.');
                     await fetchWalletBalance();
                 } else {
-                     logMessage('API Keys không hợp lệ.', true)
+                    logMessage(`API Keys không hợp lệ: ${result?.retMsg || 'Không thể kết nối.'}`, true);
                 }
             }
             
             async function fetchWalletBalance() {
+                if(!state.apiKeysValid) return;
                 const result = await bybitRequest('/v5/account/wallet-balance', 'GET', { accountType: 'UNIFIED' });
+                const displayDiv = ui.balanceInfoModal;
                 if (result?.list?.[0]) {
                     const account = result.list[0];
                     const usdtAsset = account.coin.find(c => c.coin === 'USDT');
@@ -417,12 +509,12 @@
                         renderPnlChart();
                     }
 
-                    let balanceHTML = `<p><strong>Tổng vốn (USD):</strong> ${totalEquity.toFixed(2)}</p><p><strong>USDT Khả dụng:</strong> <span class="font-bold text-yellow-300">${state.availableUsdt.toFixed(2)}</span></p><hr class="my-2 border-gray-600"><ul class="space-y-1 max-h-40 overflow-y-auto">`;
+                    let balanceHTML = `<p><strong>Tổng vốn (USD):</strong> ${totalEquity.toFixed(2)}</p><p><strong>USDT Khả dụng:</strong> <span class="font-bold text-teal-600">${state.availableUsdt.toFixed(2)}</span></p><hr class="my-2 border-gray-200"><ul class="space-y-1 max-h-40 overflow-y-auto custom-scrollbar">`;
                     account.coin.forEach(c => { if (parseFloat(c.walletBalance) > 0.00001) balanceHTML += `<li><strong>${c.coin}:</strong> ${parseFloat(c.walletBalance).toFixed(5)}</li>`; });
                     balanceHTML += '</ul>';
-                    ui.balanceInfoDiv.innerHTML = balanceHTML;
+                    displayDiv.innerHTML = balanceHTML;
                 } else {
-                    ui.balanceInfoDiv.textContent = "Không thể lấy dữ liệu số dư.";
+                    displayDiv.textContent = "Không thể lấy dữ liệu số dư.";
                 }
             }
 
@@ -432,10 +524,22 @@
 
                 const tradeToClose = { ...state.activeTrade }; 
                 state.activeTrade = null; 
-                clearInterval(tradeToClose.intervalId);
+                
+                // If TP/SL are on exchange, we need to cancel them
+                if(tradeToClose.tpOrderId || tradeToClose.slOrderId) {
+                    logMessage(`[Trade Manager] Hủy các lệnh TP/SL cho ${tradeToClose.symbol}.`);
+                    await bybitRequest('/v5/order/cancel-all', 'POST', { category: 'spot', symbol: tradeToClose.symbol });
+                }
 
                 logMessage(`[Trade Manager] Đóng lệnh ${tradeToClose.symbol} vì: ${reason}.`, false);
                 
+                if (reason.includes("Đạt Take Profit") || reason.includes("Chạm Stop Loss")) {
+                    logMessage("Bot đã sẵn sàng tìm kiếm tín hiệu giao dịch tiếp theo.", false);
+                    await fetchWalletBalance();
+                    return;
+                }
+
+                // Manual close or other reasons require a market sell
                 showLoader(`Đang đặt lệnh Bán ${tradeToClose.symbol}...`);
                 const orderParams = {
                     category: 'spot',
@@ -458,42 +562,58 @@
                     logMessage(`[Trade Manager] LỖI NGHIÊM TRỌNG: Không thể đặt lệnh bán cho ${tradeToClose.symbol}. Cần can thiệp thủ công!`, true);
                 }
             }
-
-            function startTradeMonitor() {
-                if (!state.activeTrade) return;
-
-                const { symbol, entryPrice, lastAtr } = state.activeTrade;
-
-                if (!lastAtr || lastAtr <= 0) {
-                    logMessage(`[Trade Manager] Lỗi: Không có dữ liệu ATR hợp lệ cho ${symbol}. Không thể đặt TP/SL động.`, true);
-                    closeActiveTrade("Lỗi dữ liệu ATR");
-                    return;
+            
+            async function placeTPSLOrders(symbol, quantity, entryPrice, lastAtr) {
+                 if (!lastAtr || lastAtr <= 0) {
+                    logMessage(`[Trade Manager] Lỗi: Không có dữ liệu ATR hợp lệ cho ${symbol}. Không thể đặt TP/SL.`, true);
+                    return { tpOrderId: null, slOrderId: null };
                 }
-                
-                const tpPrice = entryPrice + (lastAtr * CONFIG.ATR_TP_MULTIPLIER);
-                const slPrice = entryPrice - (lastAtr * CONFIG.ATR_SL_MULTIPLIER);
 
-                logMessage(`[Trade Manager] Bắt đầu giám sát ${symbol}. Entry: ${entryPrice.toFixed(4)}, ATR: ${lastAtr.toFixed(4)}, TP: ${tpPrice.toFixed(4)}, SL: ${slPrice.toFixed(4)}.`);
-                
-                const intervalId = setInterval(async () => {
-                    if (!state.activeTrade || state.activeTrade.symbol !== symbol) {
-                        clearInterval(intervalId);
-                        return;
-                    }
-                    const tickerData = await bybitRequest('/v5/market/tickers', 'GET', { category: 'spot', symbol }, true);
-                    if (tickerData?.list?.[0]) {
-                        const currentPrice = parseFloat(tickerData.list[0].lastPrice);
-                        updateScannerStatus(`Đang giám sát ${symbol}: ${currentPrice.toFixed(4)}`);
-                        if (currentPrice >= tpPrice) {
-                            closeActiveTrade(`Đạt Take Profit tại ${currentPrice.toFixed(4)}`);
-                        } else if (currentPrice <= slPrice) {
-                            closeActiveTrade(`Chạm Stop Loss tại ${currentPrice.toFixed(4)}`);
-                        }
-                    }
-                }, CONSTANTS.TRADE_MONITOR_INTERVAL_MS);
+                const tpPrice = (entryPrice + (lastAtr * CONFIG.ATR_TP_MULTIPLIER)).toFixed(5);
+                const slPrice = (entryPrice - (lastAtr * CONFIG.ATR_SL_MULTIPLIER)).toFixed(5);
 
-                state.activeTrade.intervalId = intervalId;
+                logMessage(`[Trade Manager] Đang đặt TP/SL cho ${symbol}. TP: ${tpPrice}, SL: ${slPrice}`);
+
+                const tpParams = {
+                    category: 'spot',
+                    symbol: symbol,
+                    side: 'Sell',
+                    orderType: 'Limit',
+                    qty: quantity.toString(),
+                    price: tpPrice,
+                    timeInForce: 'GTC',
+                };
+                const tpResult = await bybitRequest('/v5/order/create', 'POST', tpParams);
+                if (!tpResult?.orderId) {
+                    logMessage(`[Trade Manager] LỖI: Không thể đặt lệnh Take Profit cho ${symbol}.`, true);
+                    closeActiveTrade("Lỗi đặt TP");
+                    return { tpOrderId: null, slOrderId: null };
+                }
+                 logMessage(`[Trade Manager] Đặt lệnh Take Profit thành công. Order ID: ${tpResult.orderId}`);
+
+                const slParams = {
+                    category: 'spot',
+                    symbol: symbol,
+                    side: 'Sell',
+                    orderType: 'Market',
+                    qty: quantity.toString(),
+                    triggerPrice: slPrice,
+                    triggerDirection: 'Falling',
+                    tpslMode: 'Partial',
+                    slOrderType: 'Market'
+                };
+                const slResult = await bybitRequest('/v5/order/create', 'POST', slParams);
+                 if (!slResult?.orderId) {
+                    logMessage(`[Trade Manager] LỖI: Không thể đặt lệnh Stop Loss cho ${symbol}. Hủy lệnh TP và đóng giao dịch.`, true);
+                    await bybitRequest('/v5/order/cancel', 'POST', { category: 'spot', symbol: symbol, orderId: tpResult.orderId });
+                    closeActiveTrade("Lỗi đặt SL");
+                    return { tpOrderId: null, slOrderId: null };
+                }
+                logMessage(`[Trade Manager] Đặt lệnh Stop Loss thành công. Order ID: ${slResult.orderId}`);
+
+                return { tpOrderId: tpResult.orderId, slOrderId: slResult.orderId };
             }
+
 
             // --- Auto Trade Execution (For Scanner Bot) ---
             async function executeAutoTrades(plans) {
@@ -536,16 +656,26 @@
 
                     if (result && result.orderId && result.cumExecQty && parseFloat(result.cumExecQty) > 0) {
                         logMessage(`[Auto-Trade] VÀO LỆNH THÀNH CÔNG cho ${plan.symbol}.`);
-                        state.activeTrade = {
-                            symbol: plan.symbol,
-                            entryPrice: parseFloat(result.avgPrice),
-                            quantity: parseFloat(result.cumExecQty),
-                            entryValue: parseFloat(result.cumExecValue),
-                            lastAtr: plan.lastAtr,
-                            intervalId: null,
-                        };
-                        startTradeMonitor();
-                        return;
+                        
+                        const entryPrice = parseFloat(result.avgPrice);
+                        const quantity = parseFloat(result.cumExecQty);
+                        
+                        const { tpOrderId, slOrderId } = await placeTPSLOrders(plan.symbol, quantity, entryPrice, plan.lastAtr);
+
+                        if(tpOrderId && slOrderId) {
+                             state.activeTrade = {
+                                symbol: plan.symbol,
+                                entryPrice: entryPrice,
+                                quantity: quantity,
+                                entryValue: parseFloat(result.cumExecValue),
+                                lastAtr: plan.lastAtr,
+                                tpOrderId: tpOrderId,
+                                slOrderId: slOrderId,
+                            };
+                            updateScannerStatus(`Đang trong giao dịch ${state.activeTrade.symbol}.`);
+                        }
+                        
+                        return; // Exit after first successful trade
                     } else {
                         logMessage(`[Auto-Trade] Lệnh cho ${plan.symbol} thất bại hoặc không khớp. Thử tín hiệu tiếp theo...`, true);
                     }
@@ -555,21 +685,24 @@
             
             // --- UI Handlers & Initialization ---
             function setupEventListeners() {
-                ui.saveApiBtn.addEventListener('click', () => {
-                    state.apiKey = ui.apiKeyInput.value.trim();
-                    state.apiSecret = ui.apiSecretInput.value.trim();
+                ui.saveApiBtn.addEventListener('click', async () => {
+                    state.apiKey = ui.modalApiKeyInput.value.trim();
+                    state.apiSecret = ui.modalApiSecretInput.value.trim();
                     if (state.apiKey && state.apiSecret) {
                         localStorage.setItem('bybitApiKey', state.apiKey);
                         localStorage.setItem('bybitApiSecret', state.apiSecret);
                         logMessage('API Key và Secret đã được lưu. Đang xác thực...');
-                        checkApiKeys();
-                    } else { logMessage('Vui lòng nhập cả API Key và Secret.', true); }
+                        await checkApiKeys(); 
+                        ui.apiModal.classList.add('hidden');
+                    } else { 
+                        logMessage('Vui lòng nhập cả API Key và Secret.', true); 
+                    }
                 });
 
                 ui.showApiKeysCheckbox.addEventListener('change', (e) => {
                     const type = e.target.checked ? 'text' : 'password';
-                    ui.apiKeyInput.type = type;
-                    ui.apiSecretInput.type = type;
+                    ui.modalApiKeyInput.type = type;
+                    ui.modalApiSecretInput.type = type;
                 });
                 
                 ui.scanner.startBtn.addEventListener('click', startScanner);
@@ -586,42 +719,92 @@
                 ui.priceChartTab.addEventListener('click', () => {
                     ui.priceChartContainer.classList.remove('hidden');
                     ui.pnlChartContainer.classList.add('hidden');
-                    ui.priceChartTab.classList.add('tab-active', 'text-white');
-                    ui.pnlChartTab.classList.remove('tab-active', 'text-white');
+                    ui.priceChartTab.classList.add('tab-active');
+                    ui.pnlChartTab.classList.remove('tab-active');
                     ui.clearPnlHistoryBtn.classList.add('hidden');
                 });
                  ui.pnlChartTab.addEventListener('click', () => {
                     ui.pnlChartContainer.classList.remove('hidden');
                     ui.priceChartContainer.classList.add('hidden');
-                    ui.pnlChartTab.classList.add('tab-active', 'text-white');
-                    ui.priceChartTab.classList.remove('tab-active', 'text-white');
+                    ui.pnlChartTab.classList.add('tab-active');
+                    ui.priceChartTab.classList.remove('tab-active');
                     ui.clearPnlHistoryBtn.classList.remove('hidden');
                 });
                 ui.clearPnlHistoryBtn.addEventListener('click', () => {
-                    state.pnlHistory = [];
-                    localStorage.removeItem('bybitPnlHistory');
-                    if(state.pnlChart) {
-                        state.pnlChart.data.labels = [];
-                        state.pnlChart.data.datasets = [];
-                        state.pnlChart.update();
+                    if (confirm("Bạn có chắc muốn xóa toàn bộ lịch sử lợi nhuận không?")) {
+                        state.pnlHistory = [];
+                        localStorage.removeItem('bybitPnlHistory');
+                        if(state.pnlChart) {
+                            state.pnlChart.data.labels = [];
+                            state.pnlChart.data.datasets = [];
+                            state.pnlChart.update();
+                        }
+                        logMessage('[PNL] Lịch sử PNL đã được xóa.');
                     }
-                    logMessage('[PNL] Lịch sử PNL đã được xóa.');
                 });
+
+                // Modal listeners
+                const apiModal = ui.apiModal;
+                const closeApiModal = () => apiModal.classList.add('hidden');
+                ui.openApiModalBtn.addEventListener('click', () => apiModal.classList.remove('hidden'));
+                ui.closeApiModalBtn.addEventListener('click', closeApiModal);
+                apiModal.addEventListener('click', (e) => {
+                    if (e.target === apiModal) closeApiModal();
+                });
+
+                const accountModal = ui.accountModal;
+                const closeAccountModal = () => accountModal.classList.add('hidden');
+                ui.openAccountModalBtn.addEventListener('click', () => {
+                    accountModal.classList.remove('hidden');
+                    fetchWalletBalance(); // Fetch latest balance when opening
+                });
+                ui.closeAccountModalBtn.addEventListener('click', closeAccountModal);
+                accountModal.addEventListener('click', (e) => {
+                    if (e.target === accountModal) closeAccountModal();
+                });
+                
+                // Collapsible sections
+                const createCollapsible = (header, content, chevron, storageKey) => {
+                    header.addEventListener('click', () => {
+                        const isHidden = content.classList.toggle('hidden');
+                        chevron.classList.toggle('rotate-180');
+                        localStorage.setItem(storageKey, isHidden);
+                    });
+                };
+
+                createCollapsible(ui.scanner.header, ui.scanner.content, ui.scanner.chevron, 'scannerCollapsed');
+                createCollapsible(ui.csh.header, ui.csh.content, ui.csh.chevron, 'cshCollapsed');
             }
              // --- Charting Functions ---
             function createChart(canvas) {
-                const ctx = canvas.getContext('2d');
-                 return new Chart(ctx, {
+                const gridColor = 'rgba(0, 0, 0, 0.05)';
+                const tickColor = '#4B5563';
+                const legendColor = '#1F2937';
+                const tooltipBgColor = '#FFFFFF';
+                const tooltipTitleColor = '#1F2937';
+                const tooltipBodyColor = '#4B5563';
+                const tooltipBorderColor = '#E5E7EB';
+
+                 return new Chart(canvas.getContext('2d'), {
                     type: 'line',
                     data: { labels: [], datasets: [] },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
                         scales: {
-                            x: { ticks: { color: '#9CA3AF', maxRotation: 0, autoSkip: true, maxTicksLimit: 8 }, grid: { color: 'rgba(255, 255, 255, 0.1)' } },
-                            y: { ticks: { color: '#9CA3AF' }, grid: { color: 'rgba(255, 255, 255, 0.1)' } }
+                            x: { ticks: { color: tickColor }, grid: { color: gridColor } },
+                            y: { ticks: { color: tickColor }, grid: { color: gridColor } }
                         },
-                        plugins: { legend: { labels: { color: '#D1D5DB' } }, tooltip: { titleColor: '#FFFFFF', bodyColor: '#E5E7EB', backgroundColor: '#1F2937' } }
+                        plugins: {
+                            legend: { labels: { color: legendColor } },
+                            tooltip: {
+                                backgroundColor: tooltipBgColor,
+                                titleColor: tooltipTitleColor,
+                                bodyColor: tooltipBodyColor,
+                                borderColor: tooltipBorderColor,
+                                borderWidth: 1
+                            }
+                        }
                     }
                 });
             }
@@ -645,9 +828,9 @@
 
                 state.priceChart.data.labels = labels;
                 state.priceChart.data.datasets = [
-                    { label: `Giá ${symbol}`, data: closes, borderColor: '#3498db', borderWidth: 2, tension: 0.1, pointRadius: 0 },
-                    { label: 'EMA 20', data: ema20Data, borderColor: '#f1c40f', borderWidth: 1, pointRadius: 0 },
-                    { label: 'EMA 50', data: ema50Data, borderColor: '#e74c3c', borderWidth: 1, pointRadius: 0 }
+                    { label: `Giá ${symbol}`, data: closes, borderColor: '#0d9488', borderWidth: 2, tension: 0.1, pointRadius: 0 },
+                    { label: 'EMA 20', data: ema20Data, borderColor: '#64748b', borderWidth: 1.5, pointRadius: 0, borderDash: [5, 5] },
+                    { label: 'EMA 50', data: ema50Data, borderColor: '#ef4444', borderWidth: 1.5, pointRadius: 0, borderDash: [5, 5] }
                 ];
                 state.priceChart.update();
             }
@@ -659,14 +842,17 @@
                 const data = state.pnlHistory.map(p => p.equity);
                 
                 const firstEquity = state.pnlHistory.length > 0 ? state.pnlHistory[0].equity : 0;
-                const pointBackgroundColors = data.map(equity => equity >= firstEquity ? 'rgba(46, 204, 113, 0.7)' : 'rgba(231, 76, 60, 0.7)');
+                const pointBackgroundColors = data.map(equity => equity >= firstEquity ? 'rgba(34, 197, 94, 0.8)' : 'rgba(239, 68, 68, 0.8)');
+                const borderColor = data[data.length - 1] >= firstEquity ? '#22c55e' : '#ef4444';
+                const backgroundColor = data[data.length - 1] >= firstEquity ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)';
+
 
                 state.pnlChart.data.labels = labels;
                 state.pnlChart.data.datasets = [{
                     label: 'Tổng Vốn (USD)',
                     data: data,
-                    borderColor: '#2ecc71',
-                    backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                    borderColor: borderColor,
+                    backgroundColor: backgroundColor,
                     borderWidth: 2,
                     tension: 0.1,
                     fill: true,
@@ -684,16 +870,16 @@
             let CSHRT_rotationTimer = null;
 
             function wsConnect() {
-              if (ws && ws.readyState === WebSocket.OPEN) return;
-              ws = new WebSocket(CONSTANTS.WS_SPOT_URL);
-              ws.onopen = () => {
-                logMessage("[WS] Connected (public spot)");
-                for (const t of wsSubs) wsSend({op:"subscribe", args:[t]});
-                wsPing = setInterval(()=> wsSend({op:"ping"}), 20000);
-              };
-              ws.onclose = () => { logMessage("[WS] Closed", true); if (wsPing) clearInterval(wsPing); setTimeout(wsConnect, 1500); };
-              ws.onerror = (e) => logMessage("[WS] Error " + (e?.message||""), true);
-              ws.onmessage = wsHandleMessage;
+                if (ws && ws.readyState === WebSocket.OPEN) return;
+                ws = new WebSocket(CONSTANTS.WS_SPOT_URL);
+                ws.onopen = () => {
+                    logMessage("[WS] Connected (public spot)");
+                    for (const t of wsSubs) wsSend({op:"subscribe", args:[t]});
+                    wsPing = setInterval(()=> wsSend({op:"ping"}), 20000);
+                };
+                ws.onclose = () => { logMessage("[WS] Closed", true); if (wsPing) clearInterval(wsPing); setTimeout(wsConnect, 1500); };
+                ws.onerror = (e) => logMessage("[WS] Error " + (e?.message||""), true);
+                ws.onmessage = wsHandleMessage;
             }
 
             function wsSend(obj){ if (ws?.readyState===WebSocket.OPEN) ws.send(JSON.stringify(obj)); }
@@ -702,53 +888,53 @@
             function ensureSym(sym){ if (!CSH.has(sym)) CSH.set(sym, { repriceCount:0 }); return CSH.get(sym); }
 
             function wsHandleMessage(ev){
-              const msg = JSON.parse(ev.data||"{}");
-              if (!msg.topic || !msg.data) return;
+                const msg = JSON.parse(ev.data||"{}");
+                if (!msg.topic || !msg.data) return;
 
-              if (msg.topic.startsWith("kline.")) {
-                const d = Array.isArray(msg.data) ? msg.data[0] : msg.data;
-                const [, interval, sym] = msg.topic.split(".");
-                if (interval !== "15") return; 
-                const st = ensureSym(sym);
-                const O = parseFloat(d.open), H=parseFloat(d.high), L=parseFloat(d.low), C=parseFloat(d.close);
-                if (d.confirm) {
-                  const R = Math.max(1e-12, H - L);
-                  st.lastClosed = {O,H,L,C,R,ts: d.end};
-                  st.entry = L + 0.18 * R;
-                  st.tp    = L + 0.55 * R;
-                  st.candleEndTs = Number(d.end) + 15*60*1000;
-                  st.repriceCount = 0;
-                  logMessage(`[CSH] ${sym} new plan: Entry=${st.entry.toFixed(5)} TP=${st.tp.toFixed(5)}`);
-                } else {
-                  st.live = {O,H,L,C};
+                if (msg.topic.startsWith("kline.")) {
+                    const d = Array.isArray(msg.data) ? msg.data[0] : msg.data;
+                    const [, interval, sym] = msg.topic.split(".");
+                    if (interval !== "15") return; 
+                    const st = ensureSym(sym);
+                    const O = parseFloat(d.open), H=parseFloat(d.high), L=parseFloat(d.low), C=parseFloat(d.close);
+                    if (d.confirm) {
+                        const R = Math.max(1e-12, H - L);
+                        st.lastClosed = {O,H,L,C,R,ts: d.end};
+                        st.entry = L + 0.18 * R;
+                        st.tp    = L + 0.55 * R;
+                        st.candleEndTs = Number(d.end) + 15*60*1000;
+                        st.repriceCount = 0;
+                        logMessage(`[CSH] ${sym} new plan: Entry=${st.entry.toFixed(5)} TP=${st.tp.toFixed(5)}`);
+                    } else {
+                        st.live = {O,H,L,C};
+                    }
+                    updateCshStatusUI();
+                    return;
                 }
-                updateCshStatusUI();
-                return;
-              }
 
-              if (msg.topic.startsWith("orderbook.")) {
-                const sym = msg.topic.split(".").pop();
-                const st = ensureSym(sym);
-                const ob = Array.isArray(msg.data) ? msg.data[0] : msg.data;
-                const ask = (ob.a?.[0]?.[0]) ?? ob.ask1Price ?? ob.bestAskPrice;
-                const bid = (ob.b?.[0]?.[0]) ?? ob.bid1Price ?? ob.bestBidPrice;
-                if (!ask || !bid) return;
-                st.mid = (parseFloat(ask) + parseFloat(bid))/2;
-                maybePlaceOrReprice(sym);
-                updateCshStatusUI();
-                return;
-              }
+                if (msg.topic.startsWith("orderbook.")) {
+                    const sym = msg.topic.split(".").pop();
+                    const st = ensureSym(sym);
+                    const ob = Array.isArray(msg.data) ? msg.data[0] : msg.data;
+                    const ask = (ob.a?.[0]?.[0]) ?? ob.ask1Price ?? ob.bestAskPrice;
+                    const bid = (ob.b?.[0]?.[0]) ?? ob.bid1Price ?? ob.bestBidPrice;
+                    if (!ask || !bid) return;
+                    st.mid = (parseFloat(ask) + parseFloat(bid))/2;
+                    maybePlaceOrReprice(sym);
+                    updateCshStatusUI();
+                    return;
+                }
             }
-             
+              
             async function primeSymbolMeta(sym){
-              const info = await bybitRequest('/v5/market/instruments-info', 'GET', {category:'spot', symbol:sym}, true);
-              const it = info?.list?.[0];
-              if (!it) return null;
-              const st = ensureSym(sym);
-              st.tickSize   = parseFloat(it.priceFilter?.tickSize ?? "0.00000001");
-              st.lotStep    = parseFloat(it.lotSizeFilter?.basePrecision ?? it.lotSizeFilter?.qtyStep ?? "0.00000001");
-              st.minNotional= parseFloat(it.lotSizeFilter?.minOrderAmt ?? "2");
-              return st;
+                const info = await bybitRequest('/v5/market/instruments-info', 'GET', {category:'spot', symbol:sym}, true);
+                const it = info?.list?.[0];
+                if (!it) return null;
+                const st = ensureSym(sym);
+                st.tickSize    = parseFloat(it.priceFilter?.tickSize ?? "0.00000001");
+                st.lotStep   = parseFloat(it.lotSizeFilter?.basePrecision ?? it.lotSizeFilter?.qtyStep ?? "0.00000001");
+                st.minNotional= parseFloat(it.lotSizeFilter?.minOrderAmt ?? "2");
+                return st;
             }
 
             function roundTo(x, step){ return Math.floor(x/step) * step; }
@@ -809,9 +995,9 @@
                 if (st.repriceCount < 3 && st.mid < st.openOrderPrice * 0.9995) {
                     const newP = Math.max(st.entry*(1-0.001), st.openOrderPrice - (st.tickSize||1e-8));
                     if (newP < st.openOrderPrice) {
-                      await cancelOrder(sym, st.openOrderId);
-                      st.repriceCount++;
-                      await placeLimitMaker(sym, newP, parseFloat(ui.csh.capitalInput.value));
+                        await cancelOrder(sym, st.openOrderId);
+                        st.repriceCount++;
+                        await placeLimitMaker(sym, newP, parseFloat(ui.csh.capitalInput.value));
                     }
                 }
             }
@@ -839,11 +1025,11 @@
                 let html = '<div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">';
                 for (const [symbol, data] of CSH.entries()) {
                     if (!wsSubs.has(`kline.15.${symbol}`)) continue;
-                    html += `<div class="bg-gray-900 p-2 rounded-md">
-                        <div class="font-bold text-purple-400">${symbol}</div>
-                        <div>Giá giữa: <span class="text-white">${data.mid?.toFixed(5) || '...'}</span></div>
-                        <div>Entry/TP: <span class="text-green-400">${data.entry?.toFixed(5) || '...'} / ${data.tp?.toFixed(5) || '...'}</span></div>
-                        <div>Trạng thái: <span class="text-yellow-400">${data.openOrderId ? `Đang chờ khớp` : 'Đang theo dõi'}</span></div>
+                    html += `<div class="bg-gray-100 p-2 rounded-md">
+                        <div class="font-bold text-purple-600">${symbol}</div>
+                        <div>Giá giữa: <span class="text-gray-900">${data.mid?.toFixed(5) || '...'}</span></div>
+                        <div>Entry/TP: <span class="text-green-600">${data.entry?.toFixed(5) || '...'} / ${data.tp?.toFixed(5) || '...'}</span></div>
+                        <div>Trạng thái: <span class="text-amber-600">${data.openOrderId ? `Đang chờ khớp` : 'Đang theo dõi'}</span></div>
                     </div>`;
                 }
                 html += '</div>';
@@ -875,181 +1061,181 @@
                 }
                 logMessage(`[CSH] Realtime OFF: ${symbols.join(", ")}`);
                 if(wsSubs.size === 0 && ws) ws.close();
-                ui.csh.startBtn.disabled = false;
+                ui.csh.startBtn.disabled = !state.apiKeysValid;
                 ui.csh.stopBtn.disabled = true;
                 updateCshStatusUI();
             }
-           
+            
             // --- Auto-Picker for CSH-RT ---
             async function pMap(items, limit, mapper) {
-              const ret = []; let i = 0; const running = new Set();
-              async function next() {
-                if (i >= items.length) return;
-                const idx = i++;
-                const p = Promise.resolve(mapper(items[idx], idx)).then(v => { ret[idx] = v; running.delete(p); });
-                running.add(p);
-                if (running.size >= limit) await Promise.race(running);
-                return next();
-              }
-              for (let k = 0; k < limit; k++) next();
-              await Promise.all(running);
-              return ret;
+                const ret = []; let i = 0; const running = new Set();
+                async function next() {
+                    if (i >= items.length) return;
+                    const idx = i++;
+                    const p = Promise.resolve(mapper(items[idx], idx)).then(v => { ret[idx] = v; running.delete(p); });
+                    running.add(p);
+                    if (running.size >= limit) await Promise.race(running);
+                    return next();
+                }
+                for (let k = 0; k < limit; k++) next();
+                await Promise.all(running);
+                return ret;
             }
 
             function computeSpreadBps(b,a){ const bid=parseFloat(b),ask=parseFloat(a);if(!isFinite(bid)||!isFinite(ask)||ask<=0||bid<=0)return 1e9;const mid=(ask+bid)/2;return mid>0?((ask-bid)/mid)*10000:1e9 }
             
             function computeCandleEdge(lastK, atrPrice, volZ) {
-              const O = parseFloat(lastK[1]), H = parseFloat(lastK[2]), L = parseFloat(lastK[3]), C = parseFloat(lastK[4]);
-              const R = Math.max(1e-12, H - L); if (!isFinite(R) || R<=0) return null;
-              const LW = Math.max(0, Math.min(O, C) - L);
-              const lwR  = LW / R;
-              const posC = (C - L) / R;
-              const exp  = atrPrice > 0 ? (R / atrPrice) : 0;
+                const O = parseFloat(lastK[1]), H = parseFloat(lastK[2]), L = parseFloat(lastK[3]), C = parseFloat(lastK[4]);
+                const R = Math.max(1e-12, H - L); if (!isFinite(R) || R<=0) return null;
+                const LW = Math.max(0, Math.min(O, C) - L);
+                const lwR  = LW / R;
+                const posC = (C - L) / R;
+                const exp  = atrPrice > 0 ? (R / atrPrice) : 0;
 
-              const clip = (x,lo=0,hi=1)=>Math.max(lo,Math.min(hi,x));
-              const s_exp  = clip((exp - 1.0)/1.5);
-              const s_wick = clip((lwR - 0.35)/0.35);
-              const s_pos  = clip((0.45 - posC)/0.45);
-              const s_vol  = clip((volZ - 2.0)/3.0);
-              const CES_raw = 0.32*s_exp + 0.28*s_wick + 0.22*s_pos + 0.18*s_vol;
+                const clip = (x,lo=0,hi=1)=>Math.max(lo,Math.min(hi,x));
+                const s_exp  = clip((exp - 1.0)/1.5);
+                const s_wick = clip((lwR - 0.35)/0.35);
+                const s_pos  = clip((0.45 - posC)/0.45);
+                const s_vol  = clip((volZ - 2.0)/3.0);
+                const CES_raw = 0.32*s_exp + 0.28*s_wick + 0.22*s_pos + 0.18*s_vol;
 
-              const alpha = 0.18, beta = 0.55;
-              const entry = L + alpha*R;
-              const tp = L + beta*R;
+                const alpha = 0.18, beta = 0.55;
+                const entry = L + alpha*R;
+                const tp = L + beta*R;
 
-              return { R, lwR, posC, exp, CES_raw, entry, tp, O,H,L,C };
+                return { R, lwR, posC, exp, CES_raw, entry, tp, O,H,L,C };
             }
 
             function estimateCostPct_maker(){ return 0.23; }
 
             function corr15m(closesA, closesB) {
-              const n = Math.min(closesA.length, closesB.length, 16);
-              if (n < 8) return 0;
-              const ra = [], rb = [];
-              for (let i=closesA.length-n+1; i<closesA.length; i++){
-                ra.push( (closesA[i]/closesA[i-1])-1 );
-                rb.push( (closesB[i]/closesB[i-1])-1 );
-              }
-              const ma = ra.reduce((a,b)=>a+b,0)/ra.length;
-              const mb = rb.reduce((a,b)=>a+b,0)/rb.length;
-              let num=0, da=0, db=0;
-              for (let i=0;i<ra.length;i++){ const xa=ra[i]-ma, xb=rb[i]-mb; num+=xa*xb; da+=xa*xa; db+=xb*xb; }
-              return (da>0 && db>0) ? (num/Math.sqrt(da*db)) : 0;
+                const n = Math.min(closesA.length, closesB.length, 16);
+                if (n < 8) return 0;
+                const ra = [], rb = [];
+                for (let i=closesA.length-n+1; i<closesA.length; i++){
+                    ra.push( (closesA[i]/closesA[i-1])-1 );
+                    rb.push( (closesB[i]/closesB[i-1])-1 );
+                }
+                const ma = ra.reduce((a,b)=>a+b,0)/ra.length;
+                const mb = rb.reduce((a,b)=>a+b,0)/rb.length;
+                let num=0, da=0, db=0;
+                for (let i=0;i<ra.length;i++){ const xa=ra[i]-ma, xb=rb[i]-mb; num+=xa*xb; da+=xa*xa; db+=xb*xb; }
+                return (da>0 && db>0) ? (num/Math.sqrt(da*db)) : 0;
             }
 
             async function autoPickCSHRT(topN = 3) {
-              try {
-                logMessage(`[CSH-RT] (S0) Lấy universe…`);
-                const inst = await bybitRequest('/v5/market/instruments-info', 'GET', { category: 'spot' }, true);
-                if (!inst?.list) throw new Error("Không lấy được instruments-info.");
-                const tradables = inst.list.filter(i => i.status==='Trading' && i.quoteCoin==='USDT').map(i => i.symbol);
+                try {
+                    logMessage(`[CSH-RT] (S0) Lấy universe…`);
+                    const inst = await bybitRequest('/v5/market/instruments-info', 'GET', { category: 'spot' }, true);
+                    if (!inst?.list) throw new Error("Không lấy được instruments-info.");
+                    const tradables = inst.list.filter(i => i.status==='Trading' && i.quoteCoin==='USDT').map(i => i.symbol);
 
-                const tickers = await bybitRequest('/v5/market/tickers', 'GET', { category: 'spot' }, true);
-                if (!tickers?.list) throw new Error("Không lấy được tickers.");
-                let uni = tickers.list.filter(t => tradables.includes(t.symbol));
-                
-                uni.sort((a,b)=> parseFloat(b.turnover24h) - parseFloat(a.turnover24h) );
-                uni = uni.slice(0, 150);
+                    const tickers = await bybitRequest('/v5/market/tickers', 'GET', { category: 'spot' }, true);
+                    if (!tickers?.list) throw new Error("Không lấy được tickers.");
+                    let uni = tickers.list.filter(t => tradables.includes(t.symbol));
+                    
+                    uni.sort((a,b)=> parseFloat(b.turnover24h) - parseFloat(a.turnover24h) );
+                    uni = uni.slice(0, 150);
 
-                logMessage(`[CSH-RT] (S1) Đo spread…`);
-                const ob = await pMap(uni, 20, t => bybitRequest('/v5/market/orderbook', 'GET', { category:'spot', symbol:t.symbol, limit:1 }, true));
-                const enriched = uni.map((t,i)=>{
-                  const o = ob[i];
-                  const ask = o?.a?.[0]?.[0] ?? t.ask1Price, bid = o?.b?.[0]?.[0] ?? t.bid1Price;
-                  const spread_bps = computeSpreadBps(bid, ask);
-                  return {...t, _ask:ask, _bid:bid, spread_bps};
-                }).filter(x => isFinite(x.spread_bps));
-                const spreads = enriched.map(x=>x.spread_bps).sort((a,b)=>a-b);
-                const p60 = spreads[Math.floor(0.60*spreads.length)] || 20;
-                const SPREAD_MAX = Math.max(15, Math.min(25, p60));
-                const liq = enriched.filter(x => x.spread_bps <= SPREAD_MAX);
+                    logMessage(`[CSH-RT] (S1) Đo spread…`);
+                    const ob = await pMap(uni, 20, t => bybitRequest('/v5/market/orderbook', 'GET', { category:'spot', symbol:t.symbol, limit:1 }, true));
+                    const enriched = uni.map((t,i)=>{
+                        const o = ob[i];
+                        const ask = o?.a?.[0]?.[0] ?? t.ask1Price, bid = o?.b?.[0]?.[0] ?? t.bid1Price;
+                        const spread_bps = computeSpreadBps(bid, ask);
+                        return {...t, _ask:ask, _bid:bid, spread_bps};
+                    }).filter(x => isFinite(x.spread_bps));
+                    const spreads = enriched.map(x=>x.spread_bps).sort((a,b)=>a-b);
+                    const p60 = spreads[Math.floor(0.60*spreads.length)] || 20;
+                    const SPREAD_MAX = Math.max(15, Math.min(25, p60));
+                    const liq = enriched.filter(x => x.spread_bps <= SPREAD_MAX);
 
-                logMessage(`[CSH-RT] (S2) ATR & nến cuối (15m) cho ${liq.length} cặp…`);
-                const kl = await pMap(liq, 16, t => bybitRequest('/v5/market/kline', 'GET', { category:'spot', symbol:t.symbol, interval:'15', limit:200 }, true));
-                const cands = [];
-                for (let i=0;i<liq.length;i++){
-                  const list = kl[i]?.list; if (!list || list.length<50) continue;
-                  const arr = list.map(k => [Number(k[0]), ...k.slice(1,6).map(Number)] ); 
-                  arr.sort((a,b)=>a[0]-b[0]);
-                  const closes = arr.map(r=>r[4]);
-                  const lastK = arr[arr.length-1];
-                  const atrArr = TA.atr(arr.map(k => ['', '', k[2], k[3], k[4]]), 14); const atrPrice = atrArr.pop() || 0;
-                  const volArr = arr.map(r=>r[5]||0); const med20 = volArr.slice(-20).sort((a,b)=>a-b)[10] || 1;
-                  const volZ = med20>0 ? (volArr[volArr.length-1]/med20) : 1;
-                  const lastPrice = closes[closes.length-1] || 0;
-                  const atrPct = lastPrice>0 ? (atrPrice/lastPrice)*100 : 0;
-                  cands.push({...liq[i], klines:arr, closes, lastK, atrPrice, atrPct, volZ});
+                    logMessage(`[CSH-RT] (S2) ATR & nến cuối (15m) cho ${liq.length} cặp…`);
+                    const kl = await pMap(liq, 16, t => bybitRequest('/v5/market/kline', 'GET', { category:'spot', symbol:t.symbol, interval:'15', limit:200 }, true));
+                    const cands = [];
+                    for (let i=0;i<liq.length;i++){
+                        const list = kl[i]?.list; if (!list || list.length<50) continue;
+                        const arr = list.map(k => [Number(k[0]), ...k.slice(1,6).map(Number)] ); 
+                        arr.sort((a,b)=>a[0]-b[0]);
+                        const closes = arr.map(r=>r[4]);
+                        const lastK = arr[arr.length-1];
+                        const atrArr = TA.atr(arr.map(k => ['', '', k[2], k[3], k[4]]), 14); const atrPrice = atrArr.pop() || 0;
+                        const volArr = arr.map(r=>r[5]||0); const med20 = volArr.slice(-20).sort((a,b)=>a-b)[10] || 1;
+                        const volZ = med20>0 ? (volArr[volArr.length-1]/med20) : 1;
+                        const lastPrice = closes[closes.length-1] || 0;
+                        const atrPct = lastPrice>0 ? (atrPrice/lastPrice)*100 : 0;
+                        cands.push({...liq[i], klines:arr, closes, lastK, atrPrice, atrPct, volZ});
+                    }
+                    if (!cands.length) throw new Error("Không đủ dữ liệu kline.");
+                    
+                    const atrs = cands.map(c=>c.atrPct).sort((a,b)=>a-b);
+                    const atrMin = Math.max(atrs[Math.floor(0.40*atrs.length)]||0.12, 0.12);
+                    const atrMax = Math.min(atrs[Math.floor(0.95*atrs.length)]||6.0, 6.0);
+                    const filtered = cands.filter(c => c.atrPct>=atrMin && c.atrPct<=atrMax);
+
+                    const ranked = [];
+                    for (const c of filtered) {
+                        const ce = computeCandleEdge(c.lastK, c.atrPrice, c.volZ);
+                        if (!ce) continue;
+                        if (!(ce.exp >= 1.2 && ce.lwR >= 0.35 && ce.posC <= 0.40 && c.volZ >= 2)) continue;
+                        const cost = estimateCostPct_maker();
+                        const pen_cost = Math.min(1, cost/0.6);
+                        const CES = ce.CES_raw - 0.20*pen_cost;
+                        const grossPct = c.entry>0 ? ((ce.tp-ce.entry)/ce.entry)*100 : 0;
+                        if (CES < 0.65 || grossPct < 2.0*cost) continue;
+                        ranked.push({ symbol: c.symbol, spread_bps: c.spread_bps, atrPct: c.atrPct, CES, grossPct, closes: c.closes });
+                    }
+
+                    ranked.sort((a,b)=> b.CES - a.CES || a.spread_bps - b.spread_bps);
+                    const picks = [];
+                    for (const r of ranked) {
+                        let ok = true;
+                        for (const p of picks) {
+                            if (corr15m(r.closes, p.closes) > 0.85) { ok = false; break; }
+                        }
+                        if (ok) {
+                            picks.push(r);
+                            if (picks.length >= topN) break;
+                        }
+                    }
+
+                    if (!picks.length) { logMessage(`[CSH-RT] Không tìm thấy cặp phù hợp.`); return []; }
+
+                    picks.forEach((p,i)=>{ logMessage(`[CSH-RT] Pick #${i+1} ${p.symbol} | CES=${p.CES.toFixed(3)} | spread=${p.spread_bps.toFixed(1)}bps | ATR=${p.atrPct.toFixed(2)}% | gross≈${p.grossPct.toFixed(2)}%`); });
+                    return picks.map(p=>p.symbol);
+                } catch (e) {
+                    logMessage(`[CSH-RT] Auto-pick lỗi: ${e.message}`, true);
+                    return [];
                 }
-                if (!cands.length) throw new Error("Không đủ dữ liệu kline.");
-                
-                const atrs = cands.map(c=>c.atrPct).sort((a,b)=>a-b);
-                const atrMin = Math.max(atrs[Math.floor(0.40*atrs.length)]||0.12, 0.12);
-                const atrMax = Math.min(atrs[Math.floor(0.95*atrs.length)]||6.0, 6.0);
-                const filtered = cands.filter(c => c.atrPct>=atrMin && c.atrPct<=atrMax);
-
-                const ranked = [];
-                for (const c of filtered) {
-                  const ce = computeCandleEdge(c.lastK, c.atrPrice, c.volZ);
-                  if (!ce) continue;
-                  if (!(ce.exp >= 1.2 && ce.lwR >= 0.35 && ce.posC <= 0.40 && c.volZ >= 2)) continue;
-                  const cost = estimateCostPct_maker();
-                  const pen_cost = Math.min(1, cost/0.6);
-                  const CES = ce.CES_raw - 0.20*pen_cost;
-                  const grossPct = c.entry>0 ? ((ce.tp-ce.entry)/ce.entry)*100 : 0;
-                  if (CES < 0.65 || grossPct < 2.0*cost) continue;
-                  ranked.push({ symbol: c.symbol, spread_bps: c.spread_bps, atrPct: c.atrPct, CES, grossPct, closes: c.closes });
-                }
-
-                ranked.sort((a,b)=> b.CES - a.CES || a.spread_bps - b.spread_bps);
-                const picks = [];
-                for (const r of ranked) {
-                  let ok = true;
-                  for (const p of picks) {
-                    if (corr15m(r.closes, p.closes) > 0.85) { ok = false; break; }
-                  }
-                  if (ok) {
-                    picks.push(r);
-                    if (picks.length >= topN) break;
-                  }
-                }
-
-                if (!picks.length) { logMessage(`[CSH-RT] Không tìm thấy cặp phù hợp.`); return []; }
-
-                picks.forEach((p,i)=>{ logMessage(`[CSH-RT] Pick #${i+1} ${p.symbol} | CES=${p.CES.toFixed(3)} | spread=${p.spread_bps.toFixed(1)}bps | ATR=${p.atrPct.toFixed(2)}% | gross≈${p.grossPct.toFixed(2)}%`); });
-                return picks.map(p=>p.symbol);
-              } catch (e) {
-                logMessage(`[CSH-RT] Auto-pick lỗi: ${e.message}`, true);
-                return [];
-              }
             }
             
             async function startCSHRT_Auto(topN=3){
-              const syms = await autoPickCSHRT(topN);
-              if (!syms.length) {
-                  logMessage(`[CSH-RT] Không có cặp để bật real-time. Thử lại sau 15 phút.`, true);
-                  scheduleCSHRT_Rotation(topN, []);
-                  return;
-              }
-              startCSH_RT(syms); 
-              scheduleCSHRT_Rotation(topN, syms);
+                const syms = await autoPickCSHRT(topN);
+                if (!syms.length) {
+                    logMessage(`[CSH-RT] Không có cặp để bật real-time. Thử lại sau 15 phút.`, true);
+                    scheduleCSHRT_Rotation(topN, []);
+                    return;
+                }
+                startCSH_RT(syms); 
+                scheduleCSHRT_Rotation(topN, syms);
             }
 
             function scheduleCSHRT_Rotation(topN, currentSyms){
-              if (CSHRT_rotationTimer) clearTimeout(CSHRT_rotationTimer);
-              const now = Date.now();
-              const msToNext15 = 15*60*1000 - (now % (15*60*1000)) + 1500;
-              logMessage(`[CSH-RT] Lần quét chọn cặp tiếp theo sau: ${(msToNext15/60000).toFixed(1)} phút.`);
-              CSHRT_rotationTimer = setTimeout(async ()=>{
-                stopCSH_RT(currentSyms);
-                startCSHRT_Auto(topN);
-              }, msToNext15);
+                if (CSHRT_rotationTimer) clearTimeout(CSHRT_rotationTimer);
+                const now = Date.now();
+                const msToNext15 = 15*60*1000 - (now % (15*60*1000)) + 1500;
+                logMessage(`[CSH-RT] Lần quét chọn cặp tiếp theo sau: ${(msToNext15/60000).toFixed(1)} phút.`);
+                CSHRT_rotationTimer = setTimeout(async ()=>{
+                    stopCSH_RT(currentSyms);
+                    startCSHRT_Auto(topN);
+                }, msToNext15);
             }
 
             function stopCSHRT_Auto(){
-              if (CSHRT_rotationTimer) clearTimeout(CSHRT_rotationTimer);
-              const currentSyms = Array.from(wsSubs).map(t => t.split(".").pop());
-              if (currentSyms.length) stopCSH_RT(currentSyms);
-              logMessage(`[CSH-RT] Auto-pick stopped.`);
+                if (CSHRT_rotationTimer) clearTimeout(CSHRT_rotationTimer);
+                const currentSyms = Array.from(wsSubs).map(t => t.split(".").pop());
+                if (currentSyms.length) stopCSH_RT(currentSyms);
+                logMessage(`[CSH-RT] Auto-pick stopped.`);
             }
             
             // --- Scanner Bot (V4) ---
@@ -1077,7 +1263,7 @@
                 }
                 logMessage("Công cụ quét đã dừng bởi người dùng.");
                 updateScannerStatus("Công cụ quét đang không hoạt động.");
-                ui.scanner.startBtn.disabled = false;
+                ui.scanner.startBtn.disabled = !state.apiKeysValid;
                 ui.scanner.stopBtn.disabled = true;
 
                  if(state.activeTrade) {
@@ -1087,7 +1273,7 @@
             async function executeScan() {
                  if (state.isScanning || state.activeTrade) return;
                 state.isScanning = true;
-                logMessage(`[Scanner] Bắt đầu quét với thuật toán V4.2.1...`);
+                logMessage(`[Scanner] Bắt đầu quét với thuật toán V4...`);
                 try {
                     updateScannerStatus(`(B1) Lấy dữ liệu thị trường...`); showLoader(ui.scanner.status.textContent);
                     const instrumentsInfo = await bybitRequest('/v5/market/instruments-info', 'GET', { category: 'spot' }, true);
@@ -1176,7 +1362,7 @@
             function displayScanResults(results) {
                  ui.scanner.results.innerHTML = '';
                 if (!results || results.length === 0) {
-                    ui.scanner.results.innerHTML = '<div class="col-span-full text-center text-gray-400">Không có kế hoạch giao dịch nào phù hợp.</div>';
+                    ui.scanner.results.innerHTML = '<div class="col-span-full text-center text-gray-500 pt-10">Đang chờ tín hiệu từ bot quét...</div>';
                     return;
                 }
                 results.forEach((item, index) => {
@@ -1185,22 +1371,22 @@
                     const potentialTp = lastPrice + (item.lastAtr * CONFIG.ATR_TP_MULTIPLIER);
                     const potentialSl = lastPrice - (item.lastAtr * CONFIG.ATR_SL_MULTIPLIER);
                     const cardHTML = `
-                        <div class="bg-gray-900/50 rounded-xl p-4 border border-gray-700 flex flex-col space-y-3 ${index > 0 ? 'opacity-60' : ''}">
+                        <div class="bg-white border border-gray-200 rounded-xl p-4 flex flex-col space-y-3 ${index > 0 ? 'opacity-70' : 'shadow-lg'}">
                             <div class="flex justify-between items-center">
-                                <h3 class="text-lg font-bold text-cyan-400">${item.symbol}</h3>
+                                <h3 class="text-lg font-bold text-teal-600">${item.symbol}</h3>
                                 <span class="px-2 py-1 text-xs font-semibold rounded-full regime-trend">${item.regime} ${capitalDisplay}</span>
                             </div>
                             <div class="grid grid-cols-2 gap-x-4 text-sm">
-                                <span class="text-gray-400">Score</span><span class="font-semibold text-yellow-400 text-right">${item.raos?.toFixed(3) ?? 'N/A'}</span>
-                                <span class="text-gray-400">RSI(14)</span><span class="font-semibold text-white text-right">${item.rsi?.toFixed(2) ?? 'N/A'}</span>
-                                <span class="text-gray-400">Spread</span><span class="font-semibold text-white text-right">${item.spread_bps?.toFixed(2) ?? 'N/A'} bps</span>
+                                <span class="text-gray-500">Score</span><span class="font-semibold text-teal-500 text-right">${item.raos?.toFixed(3) ?? 'N/A'}</span>
+                                <span class="text-gray-500">RSI(14)</span><span class="font-semibold text-gray-800 text-right">${item.rsi?.toFixed(2) ?? 'N/A'}</span>
+                                <span class="text-gray-500">Spread</span><span class="font-semibold text-gray-800 text-right">${item.spread_bps?.toFixed(2) ?? 'N/A'} bps</span>
                             </div>
-                             <div class="border-t border-gray-700 pt-2 mt-2 text-xs">
-                                <p class="font-semibold text-gray-400">TP/SL Động (dựa trên ATR):</p>
-                                <div class="flex justify-between"><span>Chốt lời (ước tính):</span><span class="text-green-400">${potentialTp.toFixed(4)}</span></div>
-                                <div class="flex justify-between"><span>Cắt lỗ (ước tính):</span><span class="text-red-400">${potentialSl.toFixed(4)}</span></div>
+                             <div class="border-t border-gray-200 pt-2 mt-2 text-xs">
+                                <p class="font-semibold text-gray-500">TP/SL Động (dựa trên ATR):</p>
+                                <div class="flex justify-between"><span>Chốt lời (ước tính):</span><span class="text-green-600 font-medium">${potentialTp.toFixed(4)}</span></div>
+                                <div class="flex justify-between"><span>Cắt lỗ (ước tính):</span><span class="text-red-600 font-medium">${potentialSl.toFixed(4)}</span></div>
                             </div>
-                             <button class="view-chart-btn mt-2 w-full bg-gray-600 hover:bg-gray-500 text-white text-xs font-bold py-2 px-4 rounded-lg transition" data-symbol="${item.symbol}">Xem Biểu Đồ</button>
+                             <button class="view-chart-btn mt-2 w-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold py-2 px-4 rounded-lg transition" data-symbol="${item.symbol}">Xem Biểu Đồ</button>
                         </div>`;
                     ui.scanner.results.innerHTML += cardHTML;
                 });
@@ -1210,6 +1396,7 @@
                         const symbol = e.target.dataset.symbol;
                         const candidateData = state.scannedCandidates.get(symbol);
                         if(candidateData) {
+                            ui.priceChartTab.click();
                             renderPriceChart(symbol, candidateData.klines);
                         }
                     });
@@ -1221,14 +1408,29 @@
                 const storedApiKey = localStorage.getItem('bybitApiKey');
                 const storedApiSecret = localStorage.getItem('bybitApiSecret');
                 if(storedApiKey && storedApiSecret) {
-                    ui.apiKeyInput.value = storedApiKey;
-                    ui.apiSecretInput.value = storedApiSecret;
+                    ui.modalApiKeyInput.value = storedApiKey;
+                    ui.modalApiSecretInput.value = storedApiSecret;
                     state.apiKey = storedApiKey;
                     state.apiSecret = storedApiSecret;
                     checkApiKeys();
                 } else {
-                    updateApiStatus(false);
+                    updateApiStatus(false, "Vui lòng nhập API Key và Secret.");
                 }
+
+                // Collapsible sections initialization
+                const initializeCollapsible = (content, chevron, storageKey) => {
+                    const isCollapsed = localStorage.getItem(storageKey) !== 'false'; // Default to collapsed
+                    if (isCollapsed) {
+                        content.classList.add('hidden');
+                        chevron.classList.add('rotate-180');
+                    } else {
+                        content.classList.remove('hidden');
+                        chevron.classList.remove('rotate-180');
+                    }
+                };
+                initializeCollapsible(ui.scanner.content, ui.scanner.chevron, 'scannerCollapsed');
+                initializeCollapsible(ui.csh.content, ui.csh.chevron, 'cshCollapsed');
+
                 setupEventListeners();
                 initializeCharts();
                 
