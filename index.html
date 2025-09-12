@@ -3,8 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Bybit Browser Bot v4.9 — Autopilot + ALT Hunter</title>
+  <title>Bybit Browser Bot v5.1 — Autopilot • ALT Hunter</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
   <style>
     /* A more refined color palette and modern UI styling */
     :root{
@@ -58,7 +59,7 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>Bybit Browser Bot v4.9 <span class="tiny">— Autopilot • ALT Hunter</span></h1>
+  <h1>Bybit Browser Bot v5.1 <span class="tiny">— Autopilot • ALT Hunter</span></h1>
   <div class="tabs">
     <div class="tab active" data-tab="live">⚡ Live Bot</div>
     <div class="tab" data-tab="back">⛏ Backtester</div>
@@ -212,7 +213,7 @@
 
 <script>
 // ================================================================================= //
-//                            BYBIT BOT v4.9 SCRIPT START                            //
+//                            BYBIT BOT v5.1 SCRIPT START                            //
 // ================================================================================= //
 
 const $ = id => document.getElementById(id); 
@@ -250,11 +251,37 @@ function trArr(H,L,C){const o=[];let pc=C[0];for(let i=0;i<H.length;i++)o.push(M
 function median(a){const b=[...a].sort((x,y)=>x-y),m=Math.floor(b.length/2);return b.length%2?b[m]:(b[m-1]+b[m])/2;}
 function pullbackScore(kl){const C=kl.map(k=>k.c),H=kl.map(k=>k.h),L=kl.map(k=>k.l),ema20=sma(C,20),ema50=sma(C,50);if(ema20==null||ema50==null)return{score:0};const last=C[C.length-1],prev=C[C.length-2],r=rsi(C,14)||0;let s=0;ema20>ema50&&(s+=2);last>ema20&&(s+=1);r>52&&(s+=1);(prev<ema20&&last>ema20)&&(s+=2);const tr=trArr(H,L,C).slice(-30),atr=median(tr);return{score:s,atr,last};}
 
-// Tick helpers to snap prices to Bybit price grid (fix 170134)
-function tickOf(info){ return +(info?.priceFilter?.tickSize || 0.0000001); }
+// --- Precision helpers (fix 170137)
+function __precToStep(x){
+  if (x == null) return null;
+  const s = String(x);
+  const n = Number(x);
+  if (!Number.isNaN(n) && n > 0 && n < 1) return n;           // đã là step (vd 0.0001)
+  if (!Number.isNaN(n) && Number.isInteger(n) && n >= 0)       // là "số chữ số" (vd 2)
+    return Math.pow(10, -n);
+  if (s.includes('e-')) return Math.pow(10, -Number(s.split('e-')[1])); // "1e-6"
+  return null;
+}
+function stepOf(info){
+  const ls = info?.lotSizeFilter || {};
+  return __precToStep(ls.qtyStep) ?? __precToStep(ls.basePrecision) ?? 1e-8;
+}
+function tickOf(info){
+  const pf = info?.priceFilter || {};
+  return __precToStep(pf.tickSize) ?? __precToStep(pf.pricePrecision) ?? 1e-8;
+}
+// Chuẩn hoá qty theo step & xuất chuỗi đúng số chữ số
+function fmtQty(q, step){
+  const s = String(step);
+  const dec = s.includes('e-') ? Number(s.split('e-')[1])
+            : (s.split('.')[1]?.length || 0);
+  // luôn floor về lưới và toFixed đúng số chữ số cho chắc
+  const floored = Math.floor(q/step)*step;
+  return (Math.max(step, floored)).toFixed(dec);
+}
+
 function snapUp(p, tick){ return Math.ceil(p/tick) * tick; }
 function snapDown(p, tick){ return Math.floor(p/tick) * tick; }
-function stepOf(info){ return +(info?.lotSizeFilter?.qtyStep || info?.lotSizeFilter?.basePrecision || 0.0000001); }
 function floorStep(x, step){ return Math.floor(x/step)*step; }
 
 async function computeOrderQtyLive(symbol, quoteAmt){
@@ -307,12 +334,20 @@ async function syncTime(force=false){
 }
 function now(){ return Date.now() + serverOffset; }
 
-// recvWindow khuyến nghị = max(user, 2*RTT + 1000ms)
-function suggestedRecvWindow(){
-  const base = +$('recvWindow').value || 5000;
-  return Math.max(base, 2*netRTT + 1000);
+// --- Monotonic timestamp: tránh "tụt giờ" gây 10001
+let __lastTs = 0;
+function tsNow(){
+  const t = now(); // Date.now() + serverOffset
+  __lastTs = t <= __lastTs ? (__lastTs + 1) : t;
+  return String(Math.floor(__lastTs));
 }
 
+// recvWindow “an toàn mạng” (>= 10s + biên theo RTT)
+function suggestedRecvWindow(){
+  const base = +$('recvWindow').value || 5000;
+  const pad  = 2*netRTT + 1500;    // biên an toàn theo RTT
+  return Math.max(10_000, base, pad); // tối thiểu 10s
+}
 
 async function getUniverseLiveAlt(){
   const list = await api.tickers();
@@ -345,7 +380,7 @@ const api={
 
             async function attempt(rwVal){
                 const rw = String(rwVal);
-                const ts = String(now());
+                const ts = tsNow(); // dùng timestamp đơn điệu khi ký
                 let url, payloadStr = '', qSorted = {};
 
                 if(method === 'GET'){
@@ -397,17 +432,40 @@ const api={
     getUniverse:async()=>{const l=await api.tickers(),a=l.filter(x=>x.symbol.endsWith('USDT')).map(x=>({symbol:x.symbol,chg24:+x.price24hPcnt||0,vol24:+x.turnover24h||0})).filter(x=>x.vol24>1e7);return a.sort((a,b)=>b.chg24-a.chg24),a.slice(0,40).map(x=>x.symbol);},
     btcOk:async()=>{try{const k=await api.klines('BTCUSDT',$('tf').value,100),C=k.map(k=>k.c);return sma(C,20)>sma(C,50)&&rsi(C,14)>48;}catch{return!0;}},
     buy:async(s,q)=>api.sign('POST','/v5/order/create',{},{category:'spot',symbol:s,side:'Buy',orderType:'Market',marketUnit:'quoteCoin',qty:String(q),orderLinkId:'buy_'+s+'_'+Date.now()}),
-    sl:async(symbol, qty, triggerPrice) => {
-        const info = await api.instruments(symbol);
-        const tick = tickOf(info);
-        const snappedPrice = snapDown(+triggerPrice, tick);
-        return api.sign('POST','/v5/order/create',{},{category:'spot',symbol,side:'Sell',orderType:'Market',qty:String(qty),triggerPrice:String(snappedPrice.toFixed(8)),triggerDirection:2,orderFilter:'StopOrder'});
+    sell: async (symbol, baseQty) => {
+      const info = await api.instruments(symbol);
+      const step = stepOf(info);
+      const qtyStr = fmtQty(baseQty, step);
+      return api.sign('POST','/v5/order/create',{},{
+        category:'spot', symbol, side:'Sell',
+        orderType:'Market', marketUnit:'baseCoin',
+        qty: qtyStr, timeInForce:'IOC',
+        orderLinkId:'sell_'+symbol+'_'+Date.now()
+      });
     },
-    tp:async(symbol, qty, triggerPrice) => {
-        const info = await api.instruments(symbol);
-        const tick = tickOf(info);
-        const snappedPrice = snapUp(+triggerPrice, tick);
-        return api.sign('POST','/v5/order/create',{},{category:'spot',symbol,side:'Sell',orderType:'Market',qty:String(qty),triggerPrice:String(snappedPrice.toFixed(8)),triggerDirection:1,orderFilter:'StopOrder'});
+    sl: async (symbol, qty, triggerPrice) => {
+      const info = await api.instruments(symbol);
+      const tick = tickOf(info), step = stepOf(info);
+      const snappedPrice = snapDown(+triggerPrice, tick);
+      const qtyStr = fmtQty(qty, step);
+      return api.sign('POST','/v5/order/create',{},{
+        category:'spot', symbol, side:'Sell',
+        orderType:'Market', orderFilter:'StopOrder',
+        triggerDirection:2, triggerPrice:String(snappedPrice.toFixed(8)),
+        qty: qtyStr
+      });
+    },
+    tp: async (symbol, qty, triggerPrice) => {
+      const info = await api.instruments(symbol);
+      const tick = tickOf(info), step = stepOf(info);
+      const snappedPrice = snapUp(+triggerPrice, tick);
+      const qtyStr = fmtQty(qty, step);
+      return api.sign('POST','/v5/order/create',{},{
+        category:'spot', symbol, side:'Sell',
+        orderType:'Market', orderFilter:'StopOrder',
+        triggerDirection:1, triggerPrice:String(snappedPrice.toFixed(8)),
+        qty: qtyStr
+      });
     },
     realtimeOrders:async(s)=>api.sign('GET','/v5/order/realtime',{category:'spot',symbol:s}),
     cancelAll: async (symbol) => {
@@ -501,13 +559,15 @@ async function step(){
           filledQty = +(execution?.cumExecQty || 0);
         } catch(e){}
         let sellQty = filledQty > 0 ? filledQty : qty;
-        sellQty = Math.max(step, floorStep(sellQty * 0.98, step));
-        cur.sellQty = sellQty;
+        sellQty = floorStep(sellQty * 0.98, step);
+        const info = await api.instruments(best.sym);
+        cur.sellQty = +fmtQty(sellQty, stepOf(info));
+
 
         if($('useOCOEmu').checked){
-            await api.tp(best.sym, sellQty, tpsl.tp);
-            await api.sl(best.sym, sellQty, tpsl.sl);
-            logLive(`Emulated OCO (TP/SL) orders placed with qty=${sellQty}`,'ok');
+            await api.tp(best.sym, cur.sellQty, tpsl.tp);
+            await api.sl(best.sym, cur.sellQty, tpsl.sl);
+            logLive(`Emulated OCO (TP/SL) orders placed with qty=${cur.sellQty}`,'ok');
         }
         monitor();
     } catch(e) {
@@ -517,7 +577,14 @@ async function step(){
 }
 
 let monTmr=null;
-async function monitor(){if(ws && $('useOCOEmu').checked)return;clearInterval(monTmr);const tS=+$('timeStopMin').value*60*1e3,st=Date.now();monTmr=setInterval(async()=>{try{const kl=await api.klines(cur.sym,'1',2),px=kl[kl.length-1].c;if(Date.now()-st>tS){logLive('Time‑stop triggered → Exiting market','warn');const sellRes = await api.buy(cur.sym, cur.quote); const p=(+sellRes.avgPrice-cur.entry)*cur.qty; journal.push({ts:Date.now(),sym:cur.sym,entry:cur.entry,tp:cur.tp,sl:cur.sl,exit:px,pnl:p,note:'Time-stop'});await gracefulExit();return;}
+async function monitor(){if(ws && $('useOCOEmu').checked)return;clearInterval(monTmr);const tS=+$('timeStopMin').value*60*1e3,st=Date.now();monTmr=setInterval(async()=>{try{const kl=await api.klines(cur.sym,'1',2),px=kl[kl.length-1].c;if(Date.now()-st>tS){
+    logLive('Time-stop triggered → Exiting market','warn');
+    const qtyExit = cur.sellQty || cur.qty;           // dùng qty đã làm tròn
+    try { await api.sell(cur.sym, qtyExit); } catch(e){ logLive('Market SELL fail: '+e.message,'warn'); }
+    const pnl = (px - cur.entry) * (cur.qty || qtyExit); // PX hiện tại để ghi sổ
+    journal.push({ts:Date.now(),sym:cur.sym,entry:cur.entry,tp:cur.tp,sl:cur.sl,exit:px,pnl, note:'Time-stop'});
+    await gracefulExit(); return;
+}
 let nS=cur.sl, m=!1;
 let isTrailingUpdate = false;
 
@@ -621,7 +688,7 @@ async function startBot(){
     logLive('Bot started.', 'ok');
 }
 
-async function stopBot(){if(!run)return;stopping=!0;run=!1;clearTimeout(schedTimer);clearInterval(monTmr);clearInterval(simTmr);if(inPos)await gracefulExit();if(ws){ws.close();ws=null;}$('status').textContent='Stopped';logLive('Bot stopped.','warn');stopping=!1;}
+async function stopBot(){if(!run)return;stopping=!0;run=!1;clearTimeout(schedTimer);clearInterval(monTmr);clearInterval(simTmr);if(inPos)await gracefulExit();if(ws){ws.close(),ws=null;}$('status').textContent='Stopped';logLive('Bot stopped.','warn');stopping=!1;}
 
 $('start').onclick=startBot;
 $('stop').onclick=stopBot;
