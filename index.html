@@ -1,10 +1,10 @@
-
 <!doctype html>
 <html lang="vi">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Bybit Browser Bot v6.5 (Patched) — Autopilot • ALT Hunter</title>
+  <meta name="color-scheme" content="dark light">
+  <title>Bybit Browser Bot v7.0 (UI Polish) — Autopilot • ALT Hunter</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
   <style>
@@ -60,7 +60,7 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>Bybit Browser Bot v6.5 <span class="tiny">— Tối ưu hoá • Autopilot • ALT Hunter</span></h1>
+  <h1>Bybit Browser Bot v7.0 <span class="tiny">— Tối ưu hoá • Autopilot • ALT Hunter</span></h1>
   <div class="tabs">
     <div class="tab active" data-tab="live">⚡ Live Bot</div>
     <div class="tab" data-tab="back">⛏ Backtester</div>
@@ -72,9 +72,9 @@
     <div class="grid">
       <div class="card col-4">
         <b>1) API & Security</b>
-        <label>API Key</label><input id="apiKey" placeholder="BYBITxxxx"/>
-        <label>API Secret</label><input id="apiSecret" type="password" placeholder="••••••"/>
-        <label>Encryption Passphrase</label><input id="passphrase" type="password" placeholder="e.g., batman-2002"/>
+        <label>API Key</label><input id="apiKey" placeholder="BYBITxxxx" autocomplete="off" spellcheck="false" />
+        <label>API Secret</label><input id="apiSecret" type="password" placeholder="••••••" autocomplete="off" spellcheck="false" />
+        <label>Encryption Passphrase</label><input id="passphrase" type="password" placeholder="e.g., batman-2002" autocomplete="new-password" />
         <div class="row" style="margin-top:12px">
           <button id="saveKeys" class="btn">Save</button>
           <button id="loadKeys" class="btn">Load</button>
@@ -95,13 +95,23 @@
           <div class="col-3"><label>USDT per Trade</label><input id="orderQuote" type="number" min="5" step="0.1" value="8"/></div>
           <div class="col-3"><label>Candle Timeframe</label><select id="tf"><option value="1">1m</option><option value="3">3m</option><option value="5" selected>5m</option><option value="15">15m</option></select></div>
           <div class="col-3"><label>Recv Window (ms)</label><input id="recvWindow" type="number" value="5000"/></div>
-          <div class="col-3"><label>Proxy (optional)</label><input id="proxy" placeholder="https://your-worker.workers.dev"/></div>
+          <div class="col-3"><label>Proxy (optional)</label><input id="proxy" placeholder="https://your-worker.workers.dev" inputmode="url" spellcheck="false" autocomplete="off" /></div>
           <div class="col-12 row">
             <label class="pill"><input id="autoMode" type="checkbox"> Auto Buy</label>
             <label class="pill"><input id="btcFilter" type="checkbox" checked> BTC 5m Uptrend Filter</label>
             <label class="pill"><input id="useTrailing" type="checkbox" checked> Trailing SL</label>
             <label class="pill"><input id="useBreakeven" type="checkbox" checked> Breakeven Lock</label>
             <label class="pill"><input id="useOCOEmu" type="checkbox" checked> Emulated OCO</label>
+          </div>
+          <div class="col-12 row">
+            <label class="pill"><input id="useBalanceSizing" type="checkbox" checked> Use % Balance Sizing</label>
+            <div style="width:110px"><label>Risk %</label><input id="riskPct" type="number" step="0.5" value="15"/></div>
+            <div style="width:130px"><label>Reserve (USDT)</label><input id="reserveUsd" type="number" step="0.1" value="2"/></div>
+            <div style="width:130px"><label>Min / Max (USDT)</label><input id="minQuote" type="number" step="0.1" value="5"/></div>
+            <div style="width:110px"><label>&nbsp;</label><input id="maxQuote" type="number" step="0.1" value="25"/></div>
+            <div style="width:160px"><label>Account Type</label>
+              <select id="balanceAcct"><option value="AUTO" selected>AUTO</option><option value="SPOT">SPOT</option><option value="UNIFIED">UNIFIED</option></select>
+            </div>
           </div>
           <div class="col-12"><label>Symbol List (CSV, empty = ALT Hunter)</label><input id="symbolList" placeholder="Leave empty for auto-selection of trending ALTs"/></div>
           <div class="col-3"><label>Min Signal Score (>=)</label><input id="minScore" type="number" value="5"/></div>
@@ -110,13 +120,14 @@
           <div class="col-3"><label>Base Scan Interval (s)</label><input id="scanSec" type="number" value="20"/></div>
         </div>
         <div class="grid" style="margin-top:12px">
-          <div class="col-12" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px">
+          <div class="col-12" style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px">
             <div><div class="tiny">Status</div><div id="status" class="ok">Idle</div></div>
             <div><div class="tiny">Watching</div><div id="watching">—</div></div>
             <div><div class="tiny">Signal</div><div id="signal">—</div></div>
             <div><div class="tiny">Last Update</div><div id="lastUpdate">—</div></div>
             <div><div class="tiny">Daily Losses</div><div id="lossStreak">0</div></div>
             <div><div class="tiny">Daily PnL</div><div id="pnlDay">0.00</div></div>
+             <div><div class="tiny">USDT free</div><div id="usdtFree">—</div></div>
           </div>
         </div>
         <div class="row" style="margin-top:12px">
@@ -129,7 +140,7 @@
 
       <div class="card col-12">
         <b>Live Log</b>
-        <div id="logLive"></div>
+        <div id="logLive" role="log" aria-live="polite"></div>
       </div>
       <div class="card col-12">
         <b>Journal & Performance (Live)</b>
@@ -172,7 +183,7 @@
           <button id="autopilot" class="btn">🚀 Autopilot: Optimize → Start</button>
         </div>
       </div>
-      <div class="card col-12"><div id="logBack"></div></div>
+      <div class="card col-12"><div id="logBack" role="log" aria-live="polite"></div></div>
       <div class="card col-12"><div id="B_summary" class="mono"></div></div>
       <div class="card col-12">
         <b>Equity Curve</b>
@@ -214,7 +225,7 @@
 
 <script>
 // ================================================================================= //
-//                            BYBIT BOT v6.5 SCRIPT START                            //
+//                            BYBIT BOT v7.0 SCRIPT START                            //
 // ================================================================================= //
 
 const BybitBotApp = {
@@ -257,6 +268,7 @@ const BybitBotApp = {
             'orderQuote', 'tf', 'recvWindow', 'proxy', 'autoMode', 'btcFilter',
             'useTrailing', 'useBreakeven', 'useOCOEmu', 'symbolList', 'minScore',
             'timeStopMin', 'maxLossDay', 'scanSec', 'autoResetStart',
+            'useBalanceSizing','riskPct','reserveUsd','minQuote','maxQuote','balanceAcct',
             'B_tf', 'B_lookback', 'B_topN', 'B_symbolList', 'B_btcFilter', 'B_pessimistic',
             'B_minScore', 'B_tpK', 'B_slK', 'B_timeStopMin', 'B_quote', 'B_feePct', 'B_slipBps',
             'B_useBreakeven', 'B_useTrailing'
@@ -277,13 +289,16 @@ const BybitBotApp = {
                 am: this.values.autoMode, bf: this.values.btcFilter, ut: this.values.useTrailing,
                 ub: this.values.useBreakeven, uo: this.values.useOCOEmu, sl: this.values.symbolList,
                 ms: this.values.minScore, ts: this.values.timeStopMin, ml: this.values.maxLossDay,
-                ss: this.values.scanSec, ar: this.values.autoRun, sm: this.values.simMode, ars: this.values.autoResetStart
+                ss: this.values.scanSec, ar: this.values.autoRun, sm: this.values.simMode, ars: this.values.autoResetStart,
+                bs: this.values.useBalanceSizing, rp: this.values.riskPct, rz: this.values.reserveUsd,
+                mn: this.values.minQuote, mx: this.values.maxQuote, ba: this.values.balanceAcct,
             };
-            localStorage.setItem('bb_bot_config_v6', JSON.stringify(cfgToSave));
+            // v7 storage key (giữ backward-compat khi load)
+            localStorage.setItem('bb_bot_config_v7', JSON.stringify(cfgToSave));
         },
         
         loadFromStorage() {
-            const j = localStorage.getItem('bb_bot_config_v6');
+            const j = localStorage.getItem('bb_bot_config_v7') || localStorage.getItem('bb_bot_config_v6');
             if (!j) return;
             const c = JSON.parse(j);
             const { DOMElements } = BybitBotApp;
@@ -304,6 +319,14 @@ const BybitBotApp = {
             DOMElements.autoRun.checked = !!c.ar;
             DOMElements.simMode.checked = !!c.sm;
             DOMElements.autoResetStart.checked = c.ars !== false;
+
+            DOMElements.useBalanceSizing.checked = c.bs !== false;
+            DOMElements.riskPct.value   = c.rp ?? 15;
+            DOMElements.reserveUsd.value= c.rz ?? 2;
+            DOMElements.minQuote.value  = c.mn ?? 5;
+            DOMElements.maxQuote.value  = c.mx ?? 25;
+            DOMElements.balanceAcct.value = c.ba ?? 'AUTO';
+            
             this.load(); // Reload values from UI after setting them
         },
 
@@ -314,9 +337,9 @@ const BybitBotApp = {
             if (!k || !s || !p) return BybitBotApp.ui.logLive('Thiếu API Key, Secret, hoặc Passphrase', 'error');
             
             const sealed = await BybitBotApp.utils.crypto.seal(p, s);
-            localStorage.setItem('bb_bot_key_v6', k);
-            localStorage.setItem('bb_bot_sec_v6', JSON.stringify(sealed));
-            localStorage.setItem('bb_bot_testnet_v6', BybitBotApp.DOMElements.useTestnet.checked ? '1' : '0');
+            localStorage.setItem('bb_bot_key_v7', k);
+            localStorage.setItem('bb_bot_sec_v7', JSON.stringify(sealed));
+            localStorage.setItem('bb_bot_testnet_v7', BybitBotApp.DOMElements.useTestnet.checked ? '1' : '0');
             BybitBotApp.ui.logLive('Đã mã hoá & lưu trữ API.', 'ok');
         },
 
@@ -325,14 +348,14 @@ const BybitBotApp = {
                 const p = BybitBotApp.DOMElements.passphrase.value;
                 if (!p) return BybitBotApp.ui.logLive('Vui lòng nhập passphrase để giải mã.', 'warn');
 
-                const k = localStorage.getItem('bb_bot_key_v6');
-                const b = localStorage.getItem('bb_bot_sec_v6');
+                const k = localStorage.getItem('bb_bot_key_v7') || localStorage.getItem('bb_bot_key_v6');
+                const b = localStorage.getItem('bb_bot_sec_v7') || localStorage.getItem('bb_bot_sec_v6');
                 if (!k || !b) return BybitBotApp.ui.logLive('Không tìm thấy API đã lưu.', 'warn');
 
                 const s = await BybitBotApp.utils.crypto.open(p, JSON.parse(b));
                 BybitBotApp.DOMElements.apiKey.value = k;
                 BybitBotApp.DOMElements.apiSecret.value = s;
-                BybitBotApp.DOMElements.useTestnet.checked = localStorage.getItem('bb_bot_testnet_v6') === '1';
+                BybitBotApp.DOMElements.useTestnet.checked = (localStorage.getItem('bb_bot_testnet_v7') || localStorage.getItem('bb_bot_testnet_v6')) === '1';
                 BybitBotApp.ui.logLive('Đã giải mã và nạp API Secret.', 'ok');
                 return true;
             } catch (e) {
@@ -342,9 +365,7 @@ const BybitBotApp = {
         },
 
         clearApiKeys() {
-            localStorage.removeItem('bb_bot_key_v6');
-            localStorage.removeItem('bb_bot_sec_v6');
-            localStorage.removeItem('bb_bot_testnet_v6');
+            ['bb_bot_key_v7','bb_bot_sec_v7','bb_bot_testnet_v7','bb_bot_key_v6','bb_bot_sec_v6','bb_bot_testnet_v6'].forEach(k=>localStorage.removeItem(k));
             BybitBotApp.ui.logLive('Đã xoá API khỏi trình duyệt.', 'ok');
         }
     },
@@ -371,11 +392,14 @@ const BybitBotApp = {
             el.className = level;
         },
         updateStats() {
-            const { DOMElements } = BybitBotApp;
+            const { DOMElements, api } = BybitBotApp;
             const { currentPosition } = BybitBotApp.state;
             DOMElements.lastUpdate.textContent = new Date().toLocaleTimeString();
             DOMElements.watching.textContent = currentPosition.watching || '—';
             DOMElements.signal.textContent = currentPosition.signal || '—';
+
+            const bc = api.balanceCache;
+            if (bc && bc.ts) DOMElements.usdtFree.textContent = (bc.free ?? 0).toFixed(2);
         },
         renderJournal(logId, trades) {
             const table = BybitBotApp.DOMElements[logId];
@@ -475,34 +499,68 @@ const BybitBotApp = {
         precision: {
             __precToStep(x) {
                 if (x == null) return null;
-                const s = String(x), n = Number(x);
-                if (!isNaN(n) && n > 0 && n < 1) return n;
-                if (!isNaN(n) && Number.isInteger(n) && n >= 0) return Math.pow(10, -n);
+                const s = String(x).trim();
                 if (s.includes('e-')) return Math.pow(10, -Number(s.split('e-')[1]));
+                if (s.includes('.'))  return Number(s);
+                const n = Number(s);
+                if (!isNaN(n) && Number.isInteger(n) && n >= 0) return Math.pow(10, -n);
                 return null;
+            },
+            __dec(step) {
+                const s = String(step);
+                return s.includes('e-') ? Number(s.split('e-')[1]) : (s.split('.')[1]?.length || 0);
             },
             stepOf(info) {
                 const ls = info?.lotSizeFilter || {};
-                return BybitBotApp.utils.precision.__precToStep(ls.qtyStep) ?? BybitBotApp.utils.precision.__precToStep(ls.basePrecision) ?? 1e-8;
+                return this.__precToStep(ls.qtyStep) ?? this.__precToStep(ls.basePrecision) ?? 1e-8;
             },
             tickOf(info) {
                 const pf = info?.priceFilter || {};
-                return BybitBotApp.utils.precision.__precToStep(pf.tickSize) ?? BybitBotApp.utils.precision.__precToStep(pf.pricePrecision) ?? 1e-8;
+                return this.__precToStep(pf.tickSize) ?? this.__precToStep(pf.pricePrecision) ?? 1e-8;
             },
+            quoteStepOf(info) {
+                const ls = info?.lotSizeFilter || {};
+                // Nếu không có quotePrecision, fallback 0.01 để không “decimal too long”
+                return this.__precToStep(ls.quotePrecision) ?? 1e-2;
+            },
+            floorStep(x, step) {
+                const dec = this.__dec(step);
+                const scale = Math.pow(10, dec);
+                const xi = Math.floor((+x * scale) + 1e-9);
+                const si = Math.round(step * scale);
+                const ri = Math.floor(xi / si) * si;
+                return ri / scale;
+            },
+            ceilStep(x, step) {
+                const dec = this.__dec(step);
+                const scale = Math.pow(10, dec);
+                const xi = Math.floor((+x * scale) + 1e-9);
+                const si = Math.round(step * scale);
+                const ri = Math.ceil(xi / si) * si;
+                return ri / scale;
+            },
+            // qty (base)
             fmtQty(q, step) {
-                const s = String(step);
-                const dec = s.includes('e-') ? Number(s.split('e-')[1]) : (s.split('.')[1]?.length || 0);
-                const floored = Math.floor(q / step) * step;
-                return (Math.max(step, floored)).toFixed(dec);
+                const dec = this.__dec(step);
+                const floored = this.floorStep(q, step);
+                if (floored < step) return (0).toFixed(dec);
+                return floored.toFixed(dec);
             },
-            snapUp: (p, tick) => Math.ceil(p / tick) * tick,
-            snapDown: (p, tick) => Math.floor(p / tick) * tick,
-            floorStep: (x, step) => Math.floor(x / step) * step,
+            // amount (quote USDT) cho marketUnit='quoteCoin'
+            fmtAmt(a, qstep) {
+                const dec = this.__dec(qstep);
+                const floored = this.floorStep(a, qstep);
+                if (floored < qstep) return (0).toFixed(dec);
+                return floored.toFixed(dec);
+            },
+            snapUp(p, tick)   { return this.floorStep(+p + +tick, tick); },
+            snapDown(p, tick) { return this.floorStep(+p, tick); },
         }
     },
 
     // --- Bybit API Module ---
     api: {
+        balanceCache: { ts: 0, free: 0, acct: 'AUTO' },
         async withApiQueue(fn) {
             const { state } = BybitBotApp;
             const prev = state.apiQueue;
@@ -537,9 +595,11 @@ const BybitBotApp = {
                         payloadStr = utils.canonQS(qs);
                         url = this.buildUrl(path, payloadStr);
                     } else {
+                        // Bybit V5: body string phải đúng JSON không khoảng trắng dư
                         payloadStr = body ? JSON.stringify(body) : '';
                         url = this.buildUrl(path, '');
                     }
+                    // SignType=2: HMAC-SHA256-HEX(ts + apiKey + recvWindow + query/body)
                     const sign = await utils.crypto.hmac(apiSecret, `${ts}${apiKey}${rw}${payloadStr}`);
                     const headers = { 'X-BAPI-API-KEY': apiKey, 'X-BAPI-TIMESTAMP': ts, 'X-BAPI-RECV-WINDOW': rw, 'X-BAPI-SIGN-TYPE': '2', 'X-BAPI-SIGN': sign };
                     if (method === 'POST') headers['Content-Type'] = 'application/json';
@@ -602,37 +662,83 @@ const BybitBotApp = {
                 const C = k.map(k => k.c);
                 const { sma, rsi } = BybitBotApp.utils.indicators;
                 return sma(C, 20) > sma(C, 50) && rsi(C, 14) > 48;
-              } catch { return true; }
+             } catch { return true; }
         },
         
-        // Order Placement
-        buy: async (s, q) => await BybitBotApp.api.sign('POST', '/v5/order/create', {}, { category: 'spot', symbol: s, side: 'Buy', orderType: 'Market', marketUnit: 'quoteCoin', qty: String(q), orderLinkId: 'buy_' + s + '_' + Date.now() }),
-        sell: async (s, bq) => { const i = await BybitBotApp.api.instruments(s); const qty = BybitBotApp.utils.precision.fmtQty(bq, BybitBotApp.utils.precision.stepOf(i)); return await BybitBotApp.api.sign('POST', '/v5/order/create', {}, { category: 'spot', symbol: s, side: 'Sell', orderType: 'Market', marketUnit: 'baseCoin', qty, timeInForce: 'IOC', orderLinkId: 'sell_' + s + '_' + Date.now() }); },
-        tp: async (s, q, p) => {
-            const i = await BybitBotApp.api.instruments(s);
-            const precision = BybitBotApp.utils.precision;
+        // --- Order Placement (with precision & min rules) ---
+        async __norms(symbol) {
+            const i = await BybitBotApp.api.instruments(symbol);
+            const pr = BybitBotApp.utils.precision;
+            const tick = pr.tickOf(i), step = pr.stepOf(i);
+            const minQty = +(i?.lotSizeFilter?.minOrderQty ?? 0) || 0;
+            const minAmt = +(i?.lotSizeFilter?.minOrderAmt ?? 0) || 0; // quote min for marketUnit=quoteCoin
+            const qstep = pr.quoteStepOf(i);
+            return { i, pr, tick, step, minQty, minAmt, qstep };
+        },
+        async buy(symbol, quoteUSDT) {
+            const n = await this.__norms(symbol);
+            let q = Math.max(+quoteUSDT, n.minAmt || 0);
+            // Chuẩn hoá amount theo quotePrecision (qstep) để tránh 170148
+            // Nếu sau khi floor < minAmt → ceil lên đúng bội bước
+            q = n.pr.floorStep(q, n.qstep);
+            if (q < n.minAmt) q = n.pr.ceilStep(n.minAmt, n.qstep);
+            const qtyStr = n.pr.fmtAmt(q, n.qstep);
+            if (+qtyStr <= 0) throw new Error('Quote amount <= 0 sau khi làm tròn');
             return await BybitBotApp.api.sign('POST', '/v5/order/create', {}, {
-                category: 'spot',
-                symbol: s,
-                side: 'Sell',
-                orderType: 'Market',
-                orderFilter: 'StopOrder',
-                triggerPrice: String(precision.snapUp(+p, precision.tickOf(i)).toFixed(8)),
-                qty: precision.fmtQty(q, precision.stepOf(i))
+                category: 'spot', symbol, side: 'Buy', orderType: 'Market',
+                marketUnit: 'quoteCoin', qty: qtyStr,
+                orderLinkId: `buy_${symbol}_${Date.now()}`
             });
         },
-        sl: async (s, q, p) => {
-            const i = await BybitBotApp.api.instruments(s);
-            const precision = BybitBotApp.utils.precision;
+        async sell(symbol, baseQty) {
+            const n = await this.__norms(symbol);
+            const qty = n.pr.fmtQty(baseQty, n.step);
             return await BybitBotApp.api.sign('POST', '/v5/order/create', {}, {
-                category: 'spot',
-                symbol: s,
-                side: 'Sell',
-                orderType: 'Market',
-                orderFilter: 'StopOrder',
-                triggerPrice: String(precision.snapDown(+p, precision.tickOf(i)).toFixed(8)),
-                qty: precision.fmtQty(q, precision.stepOf(i))
+                category: 'spot', symbol, side: 'Sell', orderType: 'Market',
+                marketUnit: 'baseCoin', qty, timeInForce: 'IOC',
+                orderLinkId: `sell_${symbol}_${Date.now()}`
             });
+        },
+        async tp(symbol, baseQty, price) {
+            const n = await this.__norms(symbol);
+            const trig = n.pr.snapUp(+price, n.tick);
+            const qty = n.pr.fmtQty(baseQty, n.step);
+            try {
+                return await BybitBotApp.api.sign('POST', '/v5/order/create', {}, {
+                    category: 'spot', symbol, side: 'Sell',
+                    orderType: 'Market',
+                    orderFilter: 'StopOrder',
+                    triggerDirection: 1,              // ↑ khớp khi giá tăng vượt
+                    triggerBy: 'LastPrice',
+                    triggerPrice: String(trig.toFixed(8)),
+                    qty,
+                    orderLinkId: `tp_${symbol}_${Date.now()}`
+                });
+            } catch (e) {
+                // Fallback sang OCO giả lập nếu sàn từ chối StopOrder
+                BybitBotApp.ui.logLive(`TP spot không hỗ trợ trên symbol này (fallback EMU OCO): ${e.message}`, 'warn');
+                return { emu: true, type: 'tp', price: trig, qty };
+            }
+        },
+        async sl(symbol, baseQty, price) {
+            const n = await this.__norms(symbol);
+            const trig = n.pr.snapDown(+price, n.tick);
+            const qty = n.pr.fmtQty(baseQty, n.step);
+            try {
+                return await BybitBotApp.api.sign('POST', '/v5/order/create', {}, {
+                    category: 'spot', symbol, side: 'Sell',
+                    orderType: 'Market',
+                    orderFilter: 'StopOrder',
+                    triggerDirection: 2,              // ↓ khớp khi giá giảm xuyên thủng
+                    triggerBy: 'LastPrice',
+                    triggerPrice: String(trig.toFixed(8)),
+                    qty,
+                    orderLinkId: `sl_${symbol}_${Date.now()}`
+                });
+            } catch (e) {
+                BybitBotApp.ui.logLive(`SL spot không hỗ trợ trên symbol này (fallback EMU OCO): ${e.message}`, 'warn');
+                return { emu: true, type: 'sl', price: trig, qty };
+            }
         },
         realtimeOrders: async (s) => await BybitBotApp.api.sign('GET', '/v5/order/realtime', { category: 'spot', symbol: s }),
         async cancelAll(symbol) {
@@ -644,6 +750,62 @@ const BybitBotApp = {
             catch (e) { ui.logLive('Huỷ lệnh thất bại: ' + e.message, 'warn'); } 
             finally { state.cancelTimer = setTimeout(() => { state.cancelLock = false; }, 800); }
         },
+        async usdtFreeBalance(force=false) {
+            const { config } = BybitBotApp;
+            const now = Date.now();
+            // cache 10s
+            if (!force && now - this.balanceCache.ts < 10_000 && this.balanceCache.free >= 0) {
+              return this.balanceCache;
+            }
+            const pref = (config.values.balanceAcct || 'AUTO').toUpperCase();
+            const tryOrder = pref === 'AUTO' ? ['SPOT','UNIFIED'] : [pref];
+
+            for (const acct of tryOrder) {
+              try {
+                const r = await BybitBotApp.api.sign('GET', '/v5/account/wallet-balance', { accountType: acct, coin: 'USDT' });
+                const list = r?.list?.[0]?.coin || [];
+                const usdt = list.find(c => c.coin === 'USDT');
+                if (!usdt) continue;
+
+                let free = 0;
+                if (acct === 'SPOT' && usdt.free != null) {
+                  free = +usdt.free;
+                } else {
+                  const wb = +usdt.walletBalance || 0;
+                  const locked = +usdt.locked || 0;
+                  free = Math.max(wb - locked, 0);
+                }
+                this.balanceCache = { ts: now, free: +free.toFixed(4), acct };
+                return this.balanceCache;
+              } catch (e) { /* continue to next account type */ }
+            }
+            throw new Error('Không lấy được số dư USDT.');
+          }
+    },
+
+    // --- OCO Emulation Module ---
+    oco: {
+      timer: null,
+      async watch(symbol, baseQty, tpPrice, slPrice) {
+        clearInterval(this.timer);
+        this.timer = setInterval(async () => {
+          try {
+            const t = await BybitBotApp.api.pub('/v5/market/tickers', { category: 'spot', symbol });
+            if (t.retCode !== 0) return;
+            const last = +t.result.list[0].lastPrice;
+            if (tpPrice && last >= tpPrice) {
+              clearInterval(this.timer);
+              BybitBotApp.ui.logLive(`[OCO-EMU] TakeProfit @ ${last} → SELL`, 'ok');
+              await BybitBotApp.api.sell(symbol, baseQty);
+            } else if (slPrice && last <= slPrice) {
+              clearInterval(this.timer);
+              BybitBotApp.ui.logLive(`[OCO-EMU] StopLoss @ ${last} → SELL`, 'warn');
+              await BybitBotApp.api.sell(symbol, baseQty);
+            }
+          } catch {}
+        }, 1500);
+      },
+      stop(){ clearInterval(this.timer); }
     },
 
     // --- WebSocket Module ---
@@ -652,26 +814,25 @@ const BybitBotApp = {
             try {
                 if (BybitBotApp.state.ws.instance) { try { BybitBotApp.state.ws.instance.close() } catch {} }
                 const { config, ui, api } = BybitBotApp;
+                config.load(); // Ensure latest API keys are used
                 const { apiKey, apiSecret } = config.values;
                 if (!apiKey || !apiSecret) return ui.logLive('WS private: thiếu API', 'warn');
 
                 const url = config.values.useTestnet ? 'wss://stream-testnet.bybit.com/v5/private' : 'wss://stream.bybit.com/v5/private';
-
-                const makeArgs = async (useSrvTime = true, unit = 's') => {
-                    const base = useSrvTime ? api.nowSec() * 1000 : Date.now();
-                    const expMs = base + 60000;
-                    const exp = unit === 's' ? String(Math.floor(expMs / 1000)) : String(Math.floor(expMs));
-                    const sig = await BybitBotApp.utils.crypto.hmac(apiSecret, `GET/realtime${exp}`);
-                    return [apiKey, exp, sig];
+                
+                const makeArgs = async () => {
+                    const expires = api.now() + 10000; // 10 seconds expiry, in MS
+                    const expiresStr = String(Math.floor(expires));
+                    const sig = await BybitBotApp.utils.crypto.hmac(apiSecret, `GET/realtime${expiresStr}`);
+                    return [apiKey, expiresStr, sig];
                 };
 
                 const ws = new WebSocket(url);
                 BybitBotApp.state.ws.instance = ws;
-                let lastPong = Date.now(), tries = 0;
+                let lastPong = Date.now();
 
                 ws.onopen = async () => {
-                    ws.send(JSON.stringify({ op: 'auth', args: await makeArgs(true, 's') }));
-                    tries = 1;
+                    ws.send(JSON.stringify({ op: 'auth', args: await makeArgs() }));
                     clearInterval(BybitBotApp.state.ws.ping);
                     BybitBotApp.state.ws.ping = setInterval(() => { try { ws.send(JSON.stringify({ op: 'ping' })); } catch {} }, 15000);
                     clearInterval(BybitBotApp.state.ws.watchdog);
@@ -688,9 +849,7 @@ const BybitBotApp = {
                             ws.send(JSON.stringify({ op: 'subscribe', args: ['order'] }));
                             return;
                         }
-                        if (tries === 1) { ws.send(JSON.stringify({ op: 'auth', args: await makeArgs(false, 's') })); tries = 2; return; }
-                        if (tries === 2) { ws.send(JSON.stringify({ op: 'auth', args: await makeArgs(false, 'ms') })); tries = 3; return; }
-                        ui.logLive('WS private: auth failed', 'error');
+                        ui.logLive(`WS private: auth failed (${msg.ret_msg})`, 'error');
                         try { ws.close(); } catch {}
                         return;
                     }
@@ -769,31 +928,67 @@ const BybitBotApp = {
 
     // --- Live Trading Bot ---
     liveBot: {
-        async computeOrderQtyLive(symbol, quoteAmt) {
-            const { api, utils, config } = BybitBotApp;
-            const info = await api.instruments(symbol);
-            const ls = info.lotSizeFilter || {};
-            const minAmt = +ls.minOrderAmt || 5;
-            const step = utils.precision.stepOf(info);
-            const minQty = +(ls.minOrderQty || 0);
+        async computeOrderQtyLive(symbol, fixedQuote) {
+          const { api, utils, config } = BybitBotApp;
+          const info = await api.instruments(symbol);
+          const ls = info.lotSizeFilter || {};
+          const minOrderAmt = +ls.minOrderAmt || 5;
+          const step   = utils.precision.stepOf(info);
+          const qstep  = utils.precision.quoteStepOf(info);
 
-            const kl = await api.klines(symbol, config.values.tf, 2);
-            const price = kl[kl.length - 1].c;
-            const quote = Math.max(quoteAmt, minAmt);
+          // Lấy giá hiện tại
+          const kl = await api.klines(symbol, config.values.tf, 2);
+          const price = kl[kl.length - 1].c;
 
-            let qty = utils.precision.floorStep(quote / price, step);
-            if (minQty && qty < minQty) {
-                // làm tròn lên theo bước step để đạt tối thiểu
-                const times = Math.ceil(minQty / step);
-                qty = +(times * step).toFixed(8);
+          // --- NEW: quote theo balance ---
+          let quote = fixedQuote;
+          if (config.values.useBalanceSizing) {
+            try {
+                const { free, acct } = await api.usdtFreeBalance(false);
+                const pct   = Math.max(0, Math.min(+config.values.riskPct || 0, 100)) / 100;
+                const minQ  = Math.max(+config.values.minQuote || 5, minOrderAmt);
+                const maxQ  = Math.max(+config.values.maxQuote || minQ, minQ);
+                const rz    = Math.max(+config.values.reserveUsd || 0, 0);
+
+                const capByPct = free * pct;
+                const capByFree= Math.max(0, free - rz);
+                quote = Math.min(Math.max(capByPct, minQ), maxQ, capByFree);
+                if (!isFinite(quote) || quote <= 0) quote = minQ;
+
+                BybitBotApp.ui.logLive(`[Sizing] acct=${acct} free=${free.toFixed(2)} → quote=${quote.toFixed(2)} USDT`);
+            } catch(e) {
+                BybitBotApp.ui.logLive(`Lỗi sizing: ${e.message}. Dùng quote cố định.`, 'warn');
+                quote = fixedQuote;
             }
+          }
 
-            return { qty: +qty.toFixed(8), step, price: +price, minAmt };
+          // Đổi ra số lượng base, ép minQty & step
+          let qty = utils.precision.floorStep(quote / price, step);
+          const minQty = +(ls.minOrderQty || 0);
+          if (minQty && qty < minQty) {
+            const times = Math.ceil(minQty / step);
+            qty = +(times * step).toFixed(8);
+          }
+          
+          let finalQuote = qty * price;
+          // Ràng amount theo quote step để không bị “decimal too long”
+          finalQuote = utils.precision.floorStep(finalQuote, qstep);
+          if (finalQuote < minOrderAmt) {
+              let qtyForMinAmt = Math.ceil(minOrderAmt / price / step) * step;
+              qty = Math.max(qty, qtyForMinAmt);
+              finalQuote = utils.precision.floorStep(qty * price, qstep);
+              if (finalQuote < minOrderAmt) {
+                  // Ceil lên mức min theo bội bước quote (nhỏ, nhưng bắt buộc)
+                  finalQuote = utils.precision.ceilStep(minOrderAmt, qstep);
+              }
+          }
+          return { qty, step, finalQuote };
         },
 
         async start() {
             const { state, config, api, ui, liveBot, ws } = BybitBotApp;
             if (state.isRunning) return;
+            config.load(); // Load latest UI settings
             if (config.values.autoResetStart) BybitBotApp.journal.reset();
 
             if (!config.values.simMode) {
@@ -816,7 +1011,7 @@ const BybitBotApp = {
         },
 
         async stop() {
-            const { state, ui, liveBot, ws } = BybitBotApp;
+            const { state, ui, liveBot, ws, oco } = BybitBotApp;
             if (!state.isRunning) return;
             state.isStopping = true;
             state.isRunning = false;
@@ -824,6 +1019,7 @@ const BybitBotApp = {
             if (state.isInPosition) await liveBot.gracefulExit();
             
             ws.disconnect();
+            oco.stop(); // Ensure OCO watcher is stopped as well
             
             ui.updateStatus('Đã dừng', 'warn');
             ui.logLive('Bot đã dừng.', 'warn');
@@ -831,9 +1027,10 @@ const BybitBotApp = {
         },
         
         async gracefulExit() {
-            const { state, api, ui, liveBot, ws } = BybitBotApp;
+            const { state, api, ui, liveBot, ws, oco } = BybitBotApp;
             clearTimeout(state.timers.monitor);
             clearTimeout(state.timers.simMonitor);
+            oco.stop();
             
             state.isInPosition = false;
             ui.updateStatus('Nhàn rỗi');
@@ -900,11 +1097,11 @@ const BybitBotApp = {
                 if (tpsl.rr < 1.2) return ui.logLive(`Bỏ qua ${best.sym}: R:R ${tpsl.rr.toFixed(2)}<1.2`, 'warn');
                 
                 // Calculate quantity
-                const { qty, step } = await this.computeOrderQtyLive(best.sym, config.values.orderQuote);
-                if (qty <= 0) return ui.logLive('Không tính được số lượng hợp lệ', 'warn');
+                const { qty, step, finalQuote } = await this.computeOrderQtyLive(best.sym, config.values.orderQuote);
+                if (qty <= 0 || finalQuote <= 0) return ui.logLive('Không tính được số lượng hợp lệ', 'warn');
                 
                 state.isInPosition = true;
-                state.currentPosition = { sym: best.sym, entry: best.meta.last, tp: tpsl.tp, sl: tpsl.sl, ts: Date.now(), qty, quote: config.values.orderQuote, atr: best.meta.atr || best.meta.last * 0.005 };
+                state.currentPosition = { sym: best.sym, entry: best.meta.last, tp: tpsl.tp, sl: tpsl.sl, ts: Date.now(), qty, quote: finalQuote, atr: best.meta.atr || best.meta.last * 0.005 };
                 
                 if (config.values.simMode) {
                     ui.updateStatus('[SIM] Trong vị thế');
@@ -914,7 +1111,7 @@ const BybitBotApp = {
                 }
                 
                 ui.updateStatus('Đang mua...');
-                const buyOrder = await api.buy(best.sym, config.values.orderQuote);
+                const buyOrder = await api.buy(best.sym, finalQuote);
                 ui.logLive(`Đã đặt lệnh BUY ${best.sym} (id=${buyOrder.orderId})`, 'ok');
                 ui.updateStatus('Trong vị thế');
                 await api.cancelAll(best.sym);
@@ -933,9 +1130,21 @@ const BybitBotApp = {
                 state.currentPosition.sellQty = +utils.precision.fmtQty(sellQty, utils.precision.stepOf(info));
                 
                 if (config.values.useOCOEmu) {
-                    await api.tp(best.sym, state.currentPosition.sellQty, tpsl.tp);
-                    await api.sl(best.sym, state.currentPosition.sellQty, tpsl.sl);
-                    ui.logLive(`Đã đặt OCO với qty=${state.currentPosition.sellQty}`, 'ok');
+                    const tpOrder = await api.tp(best.sym, state.currentPosition.sellQty, tpsl.tp);
+                    const slOrder = await api.sl(best.sym, state.currentPosition.sellQty, tpsl.sl);
+                    if (tpOrder.emu || slOrder.emu) {
+                        ui.logLive(`Kích hoạt OCO giả lập cho ${best.sym}`, 'warn');
+                        // Only watch for the side that failed. If TP failed, tpPrice is its trigger. If SL failed, slPrice is its trigger.
+                        // If both succeed, tpPrice and slPrice will be null.
+                        BybitBotApp.oco.watch(
+                            best.sym,
+                            state.currentPosition.sellQty,
+                            tpOrder.emu ? tpOrder.price : null,
+                            slOrder.emu ? slOrder.price : null
+                        );
+                    } else {
+                        ui.logLive(`Đã đặt OCO trên sàn với qty=${state.currentPosition.sellQty}`, 'ok');
+                    }
                 }
                 this.monitor();
             } catch (e) {
@@ -1053,14 +1262,278 @@ const BybitBotApp = {
             if (delta < 12000) wait = Math.min(wait, 4000);
             if (delta < 5000) wait = Math.min(wait, 2000);
             return Math.max(1500, wait);
-        },
+        }
     },
 
     // --- Backtester Module ---
     backtester: {
         pnlChartInstance: null,
-        // ... all backtesting functions like run, gridSearch, etc.
-        // These will be refactored to use App.config, App.ui, etc.
+
+        async run(isGridSearch = false, gridParams = null) {
+            const { config, ui, api, DOMElements } = BybitBotApp;
+            config.load();
+
+            ui.logBack('Bắt đầu Backtest...', 'ok');
+            DOMElements.B_run.disabled = true;
+            DOMElements.B_grid.disabled = true;
+            DOMElements.autopilot.disabled = true;
+            DOMElements.logBack.innerHTML = '';
+            DOMElements.journalBack.querySelector('tbody').innerHTML = '';
+            DOMElements.bySymBack.querySelector('tbody').innerHTML = '';
+            DOMElements.B_summary.textContent = 'Đang chạy...';
+
+            try {
+                const params = gridParams || {
+                    tf: String(config.values.B_tf), lookback: config.values.B_lookback, topN: config.values.B_topN,
+                    symbolList: config.values.B_symbolList, btcFilter: config.values.B_btcFilter,
+                    pessimistic: config.values.B_pessimistic, minScore: config.values.B_minScore,
+                    tpK: config.values.B_tpK, slK: config.values.B_slK,
+                    timeStopMin: config.values.B_timeStopMin, quote: config.values.B_quote,
+                    feePct: config.values.B_feePct, slipBps: config.values.B_slipBps,
+                    useBreakeven: config.values.B_useBreakeven, useTrailing: config.values.B_useTrailing
+                };
+
+                let symbols;
+                if (params.symbolList.trim()) {
+                    symbols = params.symbolList.toUpperCase().split(',').map(s => s.trim()).filter(Boolean);
+                } else {
+                    ui.logBack(`Đang tìm ${params.topN} coin có volume cao nhất...`);
+                    const tickers = await api.tickers();
+                    symbols = tickers
+                        .filter(t => t.symbol.endsWith('USDT') && !/BTC|ETH|USDC|FDUSD|TUSD/.test(t.symbol))
+                        .sort((a, b) => +b.turnover24h - +a.turnover24h)
+                        .slice(0, params.topN)
+                        .map(t => t.symbol);
+                }
+                ui.logBack(`Backtest trên các symbols: ${symbols.join(', ')}`);
+
+                let btcData = null;
+                if (params.btcFilter) {
+                    ui.logBack('Đang tải dữ liệu BTC filter...');
+                    btcData = await api.klines('BTCUSDT', '5', Math.max(200, params.lookback));
+                }
+
+                const allTrades = [];
+                for (const sym of symbols) {
+                    ui.logBack(`Đang xử lý ${sym}...`);
+                    try {
+                        const klines = await api.klines(sym, params.tf, params.lookback);
+                        const trades = this.runSymbol(sym, klines, params, btcData);
+                        allTrades.push(...trades);
+                    } catch (e) {
+                        ui.logBack(`Lỗi khi xử lý ${sym}: ${e.message}`, 'error');
+                    }
+                }
+
+                allTrades.sort((a, b) => a.ts - b.ts);
+                
+                if (isGridSearch) {
+                    const totalPnl = allTrades.reduce((sum, t) => sum + t.pnl, 0);
+                    return { pnl: totalPnl, trades: allTrades.length };
+                }
+
+                this.generateReport(allTrades, params);
+
+            } catch (e) {
+                ui.logBack(`Backtest thất bại: ${e.message}`, 'error');
+                DOMElements.B_summary.textContent = `Lỗi: ${e.message}`;
+            } finally {
+                DOMElements.B_run.disabled = false;
+                DOMElements.B_grid.disabled = false;
+                DOMElements.autopilot.disabled = false;
+            }
+        },
+
+        runSymbol(symbol, klines, params, btcData) {
+            const trades = [];
+            let inPosition = false;
+            let currentTrade = {};
+            const { strategy, indicators } = BybitBotApp.utils;
+            const tfMs = (params.tf || 5) * 60 * 1000;
+
+            const isBtcOk = (timestamp) => {
+                if (!params.btcFilter || !btcData) return true;
+                const btcCandleIndex = btcData.findIndex(k => k.t >= timestamp);
+                if (btcCandleIndex < 50) return false;
+                const btcSlice = btcData.slice(0, btcCandleIndex + 1);
+                const C = btcSlice.map(k => k.c);
+                return indicators.sma(C, 20) > indicators.sma(C, 50) && indicators.rsi(C, 14) > 48;
+            };
+
+            for (let i = 50; i < klines.length; i++) {
+                const currentCandle = klines[i];
+                const historicalSlice = klines.slice(0, i + 1);
+
+                if (inPosition) {
+                    let exitPrice = null, exitNote = '';
+                    const slHit = currentCandle.l <= currentTrade.sl, tpHit = currentCandle.h >= currentTrade.tp;
+                    if (slHit && tpHit && params.pessimistic) { exitPrice = currentTrade.sl; exitNote = 'SL Hit (Pessimistic)'; }
+                    else if (slHit) { exitPrice = currentTrade.sl; exitNote = 'SL Hit'; }
+                    else if (tpHit) { exitPrice = currentTrade.tp; exitNote = 'TP Hit'; }
+
+                    if (!exitPrice && (currentCandle.t - currentTrade.ts) / tfMs > params.timeStopMin / params.tf) {
+                        exitPrice = currentCandle.c; exitNote = 'Time-stop';
+                    }
+
+                    if (!exitPrice) {
+                        if (params.useBreakeven && !currentTrade.beLocked && currentCandle.h >= currentTrade.entry + 0.6 * currentTrade.atr) {
+                            currentTrade.sl = Math.max(currentTrade.sl, currentTrade.entry); currentTrade.beLocked = true;
+                        }
+                        if (params.useTrailing && currentCandle.h >= currentTrade.tp) {
+                            currentTrade.sl = Math.max(currentTrade.sl, currentCandle.c - 0.6 * currentTrade.atr);
+                            currentTrade.tp = currentCandle.c + (currentTrade.initialTp - currentTrade.entry);
+                        }
+                    }
+
+                    if (exitPrice) {
+                        inPosition = false;
+                        currentTrade.exit = exitPrice; currentTrade.note = exitNote;
+                        const slip = params.slipBps / 10000, fee = params.feePct / 100;
+                        const entryCost = currentTrade.qty * currentTrade.entry * (1 + fee + slip);
+                        const exitValue = currentTrade.qty * currentTrade.exit * (1 - fee - slip);
+                        currentTrade.pnl = exitValue - entryCost;
+                        trades.push(currentTrade);
+                    }
+                }
+
+                if (!inPosition) {
+                    const signal = strategy.pullbackScore(historicalSlice);
+                    if (signal.score >= params.minScore && isBtcOk(currentCandle.t)) {
+                        const entryPrice = currentCandle.c;
+                        const tpsl = strategy.calcTPSL(entryPrice, signal.atr, params.tpK, params.slK);
+                        if (tpsl.rr >= 1.2) {
+                            inPosition = true;
+                            currentTrade = {
+                                ts: currentCandle.t, sym: symbol, entry: entryPrice, tp: tpsl.tp, sl: tpsl.sl,
+                                initialSl: tpsl.sl, initialTp: tpsl.tp, atr: signal.atr, qty: params.quote / entryPrice, beLocked: false,
+                            };
+                        }
+                    }
+                }
+            }
+            return trades;
+        },
+
+        generateReport(trades, params) {
+            const { ui, DOMElements } = BybitBotApp;
+            ui.renderJournal('journalBack', [...trades].reverse());
+
+            if (trades.length === 0) {
+                DOMElements.B_summary.textContent = 'Không có trade nào được thực hiện.';
+                this.drawPnlChart([]);
+                return;
+            }
+            
+            const bySymbol = {};
+            trades.forEach(t => {
+                if (!bySymbol[t.sym]) bySymbol[t.sym] = { trades: 0, wins: 0, pnl: 0, sumR: 0 };
+                bySymbol[t.sym].trades++; bySymbol[t.sym].pnl += t.pnl;
+                const initialRisk = (t.entry - t.initialSl) * t.qty;
+                bySymbol[t.sym].sumR += initialRisk > 0 ? t.pnl / initialRisk : 0;
+                if (t.pnl > 0) bySymbol[t.sym].wins++;
+            });
+
+            const bySymBody = DOMElements.bySymBack.querySelector('tbody'); bySymBody.innerHTML = '';
+            Object.entries(bySymbol).forEach(([sym, data]) => {
+                bySymBody.innerHTML += `<tr><td>${sym}</td><td>${data.trades}</td><td>${(data.wins/data.trades*100).toFixed(1)}%</td><td class="${data.pnl>0?'ok':'bad'}">${data.pnl.toFixed(2)}</td><td>${(data.sumR/data.trades).toFixed(2)}</td></tr>`;
+            });
+
+            const totalPnl = trades.reduce((s, t) => s + t.pnl, 0), wins = trades.filter(t=>t.pnl>0).length, losses = trades.length - wins;
+            const grossP = trades.filter(t=>t.pnl>0).reduce((s,t)=>s+t.pnl,0), grossL = Math.abs(trades.filter(t=>t.pnl<0).reduce((s,t)=>s+t.pnl,0));
+            
+            let equity=[1000], maxEquity=1000, maxDD=0;
+            [...trades].sort((a,b)=>a.ts-b.ts).forEach(t => {
+                const newEquity = equity[equity.length - 1] + t.pnl;
+                equity.push(newEquity); maxEquity = Math.max(maxEquity, newEquity);
+                maxDD = Math.max(maxDD, (maxEquity - newEquity) / maxEquity);
+            });
+
+            DOMElements.B_summary.textContent = `
+Kết quả Backtest
+----------------------------------
+Tổng PnL      : ${totalPnl.toFixed(2)} USDT
+Tổng số Trades : ${trades.length}
+Tỷ lệ thắng   : ${trades.length>0?(wins/trades.length*100).toFixed(1):0}% (${wins} W / ${losses} L)
+Profit Factor : ${grossL>0?(grossP/grossL).toFixed(2):'∞'}
+Max Drawdown  : ${(maxDD * 100).toFixed(2)}%`;
+
+            this.drawPnlChart(trades);
+        },
+
+        drawPnlChart(trades) {
+            if (this.pnlChartInstance) this.pnlChartInstance.destroy();
+            const { DOMElements } = BybitBotApp;
+            const ctx = DOMElements.pnlChart.getContext('2d');
+            let cumulativePnl = 0;
+            const equityData = [...trades].sort((a, b) => a.ts - b.ts).map(trade => ({ x: trade.ts, y: cumulativePnl += trade.pnl }));
+            this.pnlChartInstance = new Chart(ctx, {
+                type: 'line', data: { datasets: [{ label: 'Equity Curve (USDT)', data: equityData, borderColor: '#58a6ff', backgroundColor: 'rgba(88,166,255,0.1)', borderWidth: 2, pointRadius: 0, fill: true }] },
+                options: { scales: { x: { type: 'time', time: { unit: 'day' }, grid: { color: 'rgba(255,255,255,0.1)' } }, y: { grid: { color: 'rgba(255,255,255,0.1)' } } }, plugins: { legend: { display: false } } }
+            });
+        },
+
+        async gridSearch() {
+            const { ui, config, DOMElements } = BybitBotApp;
+            ui.logBack('Bắt đầu Grid Search...', 'ok');
+            DOMElements.B_run.disabled = true; DOMElements.B_grid.disabled = true; DOMElements.autopilot.disabled = true;
+
+            const tpRange = [1.0, 1.2, 1.5, 2.0], slRange = [0.6, 0.8, 1.0, 1.2];
+            let bestParams = null, bestPnl = -Infinity;
+            const totalCombos = tpRange.length * slRange.length;
+
+            for (const [i, tpK] of tpRange.entries()) {
+                for (const [j, slK] of slRange.entries()) {
+                    const count = i * slRange.length + j + 1;
+                    ui.logBack(`[${count}/${totalCombos}] Testing TP=${tpK}, SL=${slK}...`);
+                    config.load();
+                    const backtestParams = {
+                        ...Object.keys(config.values).filter(k=>k.startsWith('B_')).reduce((o,k)=>(o[k.slice(2)]=config.values[k],o),{}),
+                        tf: String(config.values.B_tf), tpK: tpK, slK: slK, lookback: 300 // Use shorter lookback for speed
+                    };
+                    const result = await this.run(true, backtestParams);
+                    ui.logBack(`→ PnL: ${result.pnl.toFixed(2)} USDT, Trades: ${result.trades}`);
+                    if (result.pnl > bestPnl) { bestPnl = result.pnl; bestParams = { tpK, slK }; }
+                }
+            }
+
+            if (bestParams) {
+                ui.logBack(`Grid Search hoàn tất! Tốt nhất: TP=${bestParams.tpK}, SL=${bestParams.slK} với PnL ${bestPnl.toFixed(2)} USDT`, 'ok');
+                DOMElements.B_tpK.value = bestParams.tpK; DOMElements.B_slK.value = bestParams.slK;
+                DOMElements.B_tpK.dispatchEvent(new Event('change')); DOMElements.B_slK.dispatchEvent(new Event('change'));
+            } else { ui.logBack('Grid Search không tìm thấy kết quả.', 'warn'); }
+            
+            DOMElements.B_run.disabled = false; DOMElements.B_grid.disabled = false; DOMElements.autopilot.disabled = false;
+            return bestParams;
+        },
+
+        async runAutopilot() {
+            const { DOMElements, ui, config, liveBot } = BybitBotApp;
+            ui.logBack('🚀 Bắt đầu Autopilot...', 'ok');
+            document.querySelector('.tab[data-tab="back"]').click();
+
+            const bestParams = await this.gridSearch();
+            if (!bestParams) { ui.logLive('Autopilot dừng: không tìm được thông số tối ưu.', 'error'); return; }
+
+            ui.logLive('Đã tối ưu thông số, đang khởi động live bot...', 'ok');
+            config.load();
+
+            const passphrase = prompt("Nhập passphrase để giải mã API keys cho Autopilot. Bỏ trống để chạy ở chế độ SIM mode.");
+            DOMElements.simMode.checked = true;
+            if (passphrase) {
+                DOMElements.passphrase.value = passphrase;
+                if (await config.loadApiKeys()) {
+                    DOMElements.simMode.checked = false;
+                    ui.logLive('API keys đã nạp. Chạy chế độ REAL.', 'ok');
+                } else ui.logLive('Giải mã thất bại. Chạy chế độ SIM.', 'warn');
+            } else ui.logLive('Không có passphrase. Chạy chế độ SIM.', 'ok');
+
+            DOMElements.autoMode.checked = true;
+            [DOMElements.autoMode, DOMElements.simMode].forEach(el => el.dispatchEvent(new Event('change')));
+            
+            document.querySelector('.tab[data-tab="live"]').click();
+            liveBot.start();
+            ui.logLive('🚀 Autopilot đã khởi động!', 'ok');
+        }
     },
 
     // --- App Initialization ---
@@ -1071,7 +1544,7 @@ const BybitBotApp = {
             ...this.config.ids, 'status', 'watching', 'signal', 'lastUpdate', 'lossStreak', 'pnlDay',
             'logLive', 'journalLive', 'logBack', 'B_summary', 'pnlChart', 'journalBack', 'bySymBack',
             'start', 'stop', 'resetDay', 'saveKeys', 'loadKeys', 'clearKeys',
-            'B_run', 'B_grid', 'autopilot', 'corsWarn', 'tab-live', 'tab-back', 'tab-help'
+            'B_run', 'B_grid', 'autopilot', 'corsWarn', 'tab-live', 'tab-back', 'tab-help', 'usdtFree'
         ];
         allIds.forEach(id => this.DOMElements[id] = document.getElementById(id));
 
@@ -1106,7 +1579,10 @@ const BybitBotApp = {
         this.DOMElements.start.onclick = () => this.liveBot.start();
         this.DOMElements.stop.onclick = () => this.liveBot.stop();
         
-        // ... Attach backtester listeners later
+        // Attach backtester listeners
+        this.DOMElements.B_run.onclick = () => this.backtester.run();
+        this.DOMElements.B_grid.onclick = () => this.backtester.gridSearch();
+        this.DOMElements.autopilot.onclick = () => this.backtester.runAutopilot();
         
         if (this.config.values.autoRun) {
             this.liveBot.start();
@@ -1117,12 +1593,7 @@ const BybitBotApp = {
 // --- Start the application ---
 window.addEventListener('DOMContentLoaded', () => BybitBotApp.init());
 
-// NOTE: Due to length constraints, the backtester and some sim functions are not fully refactored in this view,
-// but they would follow the same pattern of using App.state, App.config, App.ui etc.
-// The provided code focuses on refactoring the core live bot and API interaction logic.
-// The original backtester code would be moved into the BybitBotApp.backtester object.
-
 </script>
 </body>
 </html>
-I have a set of patches for you. Please apply them.
+
