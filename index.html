@@ -8,54 +8,73 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
   <style>
-    /* A more refined color palette and modern UI styling */
+    /* macOS-inspired light palette */
     :root{
-      --bg:#0d1117;
-      --card:#161b22;
-      --line:#30363d;
-      --text:#c9d1d9;
-      --muted:#8b949e;
-      --ok:#56d364;
-      --bad:#f85149;
-      --warn:#d29922;
-      --accent:#58a6ff;
+      --bg:#f5f5f7;              /* macOS window background */
+      --card:#ffffff;            /* surfaces */
+      --line:#d2d2d7;            /* separators */
+      --text:#1d1d1f;            /* primary */
+      --muted:#6e6e73;           /* secondary */
+      --ok:#34c759;              /* system green */
+      --bad:#ff3b30;             /* system red */
+      --warn:#ff9f0a;            /* system orange */
+      --accent:#0a84ff;          /* system blue */
+      --shadow:0 1px 3px rgba(0,0,0,0.06), 0 6px 16px rgba(0,0,0,0.06);
+      --card-bg:linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+      --control:#ffffff;
+      --control-line:#d2d2d7;
     }
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji"}
     .wrap{max-width:1280px;margin:24px auto;padding:0 20px}
     h1{margin:0 0 12px;font-size:24px; font-weight: 500;}
     .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+    .card{background:var(--card-bg);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow)}
     .col-3{grid-column:span 3}.col-4{grid-column:span 4}.col-5{grid-column:span 5}.col-6{grid-column:span 6}.col-7{grid-column:span 7}.col-8{grid-column:span 8}.col-12{grid-column:span 12}
     @media (max-width: 992px) { .col-3, .col-4, .col-5 { grid-column: span 6; } }
     @media (max-width: 768px) { .col-3, .col-4, .col-5, .col-6, .col-7, .col-8 { grid-column: span 12; } }
-    label{display:block;color:var(--muted);font-size:12px;margin:8px 0 4px; font-weight: 500;}
-    input,select,textarea{width:100%;background:#0d1117;border:1px solid var(--line);color:var(--text);border-radius:8px;padding:10px; transition: border-color 0.2s ease, box-shadow 0.2s ease;}
-    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2);}
-    input[type="checkbox"]{width:auto; accent-color: var(--accent);}
+    label{display:block;color:var(--muted);font-size:12px;margin:8px 0 6px; font-weight: 600;}
+    input,select,textarea{width:100%;background:var(--control);border:1px solid var(--control-line);color:var(--text);border-radius:10px;padding:10px; transition: border-color 0.15s ease, box-shadow 0.15s ease;}
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px rgba(10,132,255,0.16);}
+    input[type="checkbox"]{width:auto; accent-color: var(--accent);}    
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .pill{display:inline-flex;gap:8px;align-items:center;padding:7px 12px;border-radius:999px;background:#0d1117;border:1px solid var(--line);color:var(--text); cursor:pointer; font-size: 13px;}
+    .pill{display:inline-flex;gap:8px;align-items:center;padding:7px 12px;border-radius:999px;background:var(--control);border:1px solid var(--control-line);color:var(--text); cursor:pointer; font-size: 13px; box-shadow: var(--shadow);}
     .tiny{font-size:12px;color:var(--muted); opacity: 0.9;}
     .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
     .ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}
-    #logLive,#logBack{height:220px;overflow:auto;background:#010409;border:1px solid var(--line);border-radius:8px;padding:12px;white-space:pre-wrap; font-size: 13px; line-height: 1.6;}
+    #logLive,#logBack{height:220px;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;white-space:pre-wrap; font-size: 13px; line-height: 1.6; box-shadow: var(--shadow);}
     table{width:100%;border-collapse:collapse;margin-top:8px;} th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left; font-size: 13px;} th {color: var(--muted); font-weight: 500;}
-    .tabs{display:flex;gap:8px;margin:16px 0; border-bottom: 1px solid var(--line);}
-    .tab{padding:10px 16px;border:1px solid transparent; border-bottom: 2px solid transparent; border-radius:8px 8px 0 0; color: var(--muted); cursor:pointer; transition: all 0.2s ease; margin-bottom: -1px;}
-    .tab:hover { background: var(--card); color: var(--text); }
-    .tab.active{background:var(--card); color:var(--text); border-bottom-color:var(--accent);}
+    .tabs{display:flex;gap:8px;margin:16px 0; border-bottom: 1px solid var(--line);}    
+    .tab{padding:10px 16px;border:1px solid var(--control-line); border-bottom: 2px solid transparent; border-radius:10px 10px 0 0; color: var(--muted); cursor:pointer; transition: all 0.2s ease; margin-bottom: -1px; background:#fbfbfd;}
+    .tab:hover { background: #fff; color: var(--text); }
+    .tab.active{background:#fff; color:var(--text); border-bottom-color:var(--accent); box-shadow: var(--shadow);}    
     .tabview{display:none}.tabview.active{display:block}
     .btn{
-        width:auto; padding: 10px 16px; font-weight: 500; cursor: pointer; border-radius: 8px;
-        background: #21262d; border: 1px solid var(--line); color: var(--text);
-        transition: all 0.2s ease;
+        width:auto; padding: 10px 16px; font-weight: 600; cursor: pointer; border-radius: 10px;
+        background: #ffffff; border: 1px solid var(--control-line); color: var(--text);
+        transition: all 0.15s ease; box-shadow: var(--shadow);
     }
-    .btn:hover:not(:disabled){background:#30363d; border-color: #8b949e;}
+    .btn:hover:not(:disabled){background:#fefefe; border-color: var(--accent);}    
     .btn:disabled { opacity: 0.6; cursor: not-allowed;}
-    button#start, button#B_run, button#autopilot { background: #238636; border-color: #38a24a; color: white; }
-    button#start:hover:not(:disabled), button#B_run:hover:not(:disabled), button#autopilot:hover:not(:disabled) { background: #2ea043; }
-    button#stop { background: #da3633; border-color: #e5534b; color: white;}
-    button#stop:hover:not(:disabled) { background: #f04747; }
+    button#start, button#B_run, button#autopilot { background: var(--accent); border-color: var(--accent); color: white; }
+    button#start:hover:not(:disabled), button#B_run:hover:not(:disabled), button#autopilot:hover:not(:disabled) { filter: brightness(1.05); }
+    button#stop { background: var(--bad); border-color: var(--bad); color: white;}
+    button#stop:hover:not(:disabled) { filter: brightness(1.05); }
+
+    /* Compact mode overrides */
+    body.compact{font-size:13px}
+    body.compact .wrap{max-width:1140px}
+    body.compact .grid{gap:10px}
+    body.compact .card{padding:10px;border-radius:10px}
+    body.compact input, body.compact select, body.compact textarea{padding:8px;border-radius:8px}
+    body.compact .pill{padding:5px 10px}
+    body.compact .btn{padding:8px 12px;border-radius:8px}
+    body.compact label{margin:6px 0 4px;font-size:11px}
+    body.compact .tiny{font-size:11px}
+    body.compact table th, body.compact table td{padding:6px 8px;font-size:12px}
+    body.compact #logLive, body.compact #logBack{height:160px;padding:8px}
+    body.compact .tab{padding:8px 12px}
+    body.compact #liveStrategyChart{height:280px !important}
   </style>
 </head>
 <body>
@@ -64,6 +83,8 @@
   <div class="tabs">
     <div class="tab active" data-tab="live">⚡ Live Bot</div>
     <div class="tab" data-tab="back">⛏ Backtester</div>
+    <div class="tab" data-tab="radar">📊 Radar</div>
+    <div class="tab" data-tab="news">📰 News</div>
     <div class="tab" data-tab="help">🧠 Autopilot & Help</div>
   </div>
 
@@ -84,6 +105,7 @@
           <label class="pill"><input id="useTestnet" type="checkbox" checked> Testnet</label>
           <label class="pill"><input id="simMode" type="checkbox"> SIM mode</label>
           <label class="pill"><input id="autoRun" type="checkbox"> Auto‑run</label>
+          <label class="pill" title="Thu nhỏ UI, giảm khoảng trống"><input id="uiCompact" type="checkbox"> Compact UI</label>
         </div>
         <div class="tiny" style="margin-top:12px">⚠️ Spot trading only. Secrets are AES‑GCM encrypted with your passphrase and saved in local storage.</div>
         <div class="tiny warn" id="corsWarn" style="display:none;margin-top:6px">CORS error detected → Use Testnet or a private Proxy.</div>
@@ -131,10 +153,44 @@
           </div>
         </div>
         <div class="row" style="margin-top:12px">
-          <button id="start" class="btn">▶ Start</button>
-          <button id="stop" class="btn">■ Stop</button>
-          <button id="resetDay" class="btn">⟲ Reset Session</button>
+          <button id="start" class="btn" title="Bắt đầu chạy bot (Live hoặc SIM)">▶ Start</button>
+          <button id="stop" class="btn" title="Dừng toàn bộ hoạt động giao dịch">■ Stop</button>
+          <button id="resetDay" class="btn" title="Xoá PnL và chuỗi lỗ của phiên hiện tại">⟲ Reset Session</button>
+          <button id="panicSell" class="btn" title="Bán hết ngay lập tức (Panic Sell)">⚠ Panic Sell</button>
           <label class="pill" style="margin-left:auto;"><input id="autoResetStart" type="checkbox" checked> Auto-reset on start</label>
+        </div>
+        <div class="grid" style="margin-top:10px">
+          <div class="col-12"><b>Advanced Filters</b></div>
+          <div class="col-4"><label>MTF Confirm</label>
+            <div class="row"><label class="pill"><input id="CO_mtfEnable" type="checkbox"> Enable</label>
+              <div style="width:120px"><select id="CO_mtfTf"><option value="15">15m</option><option value="60">1h</option></select></div>
+            </div>
+          </div>
+          <div class="col-4"><label>Regime Mode</label>
+            <select id="CO_regimeMode"><option value="AUTO" selected>AUTO</option><option value="TREND">TREND</option><option value="MEANREV">MEANREV</option><option value="SIDEWAYS">SIDEWAYS</option></select>
+          </div>
+          <div class="col-4"><label>Time Window (local)</label>
+            <div class="row">
+              <input id="CO_winStart" type="time" value="00:00" style="width:120px">
+              <input id="CO_winEnd" type="time" value="23:59" style="width:120px">
+            </div>
+          </div>
+          <div class="col-4"><label>Cooldown after SL streak</label>
+            <div class="row"><div style="width:110px"><input id="CO_slStreak" type="number" value="3" title="Số SL liên tiếp"/></div>
+            <div style="width:140px"><input id="CO_coolMin" type="number" value="20" title="Cooldown (phút)"/></div></div>
+          </div>
+          <div class="col-4"><label>Spread Guard (bps)</label><input id="CO_maxSpreadBps" type="number" value="15" /></div>
+          <div class="col-4"><label>Partial TP1</label>
+            <div class="row"><label class="pill"><input id="CO_tp1Enable" type="checkbox"> Enable</label>
+              <div style="width:120px"><input id="CO_tp1Frac" type="number" step="0.05" value="0.4" title="Fraction 0-1"/></div>
+            </div>
+          </div>
+        </div>
+        <div class="grid" style="margin-top:10px">
+          <div class="col-12"><b>Chart Overlays</b></div>
+          <label class="pill"><input id="OV_vwap" type="checkbox"> VWAP</label>
+          <label class="pill"><input id="OV_bb" type="checkbox"> Bollinger Bands</label>
+          <label class="pill"><input id="OV_vol" type="checkbox"> Volume</label>
         </div>
       </div>
 
@@ -143,8 +199,85 @@
         <div id="logLive" role="log" aria-live="polite"></div>
       </div>
       <div class="card col-12">
+        <b>Strategy View</b>
+        <canvas id="liveStrategyChart" style="margin-top:10px; height:360px"></canvas>
+      </div>
+      <div class="card col-12">
         <b>Journal & Performance (Live)</b>
         <table id="journalLive"><thead><tr><th>Time</th><th>Symbol</th><th>Entry</th><th>TP</th><th>SL</th><th>Exit</th><th>Result/PnL</th><th>Notes</th></tr></thead><tbody></tbody></table>
+      </div>
+      <div class="card col-12">
+        <b>Telegram Alerts</b>
+        <div class="grid" style="margin-top:6px">
+          <div class="col-4"><label>Bot Token</label><input id="tg-token" placeholder="123456:ABC-DEF..." autocomplete="off" spellcheck="false" /></div>
+          <div class="col-4"><label>Chat ID</label><input id="tg-chatid" placeholder="-1001234..." autocomplete="off" spellcheck="false" /></div>
+          <div class="col-4"><label>Test Message</label><input id="tg-msg" placeholder="Hello from Bybit Bot" autocomplete="off" spellcheck="false" /></div>
+        </div>
+        <div class="row" style="margin-top:8px; gap:8px; flex-wrap:wrap">
+          <button class="btn" id="btn-tg-validate" title="Kiểm tra token bot hợp lệ">Validate Token</button>
+          <button class="btn" id="btn-tg-detect" title="Lấy Chat ID tự động từ getUpdates (hãy nhắn cho bot trước)">Detect Chat ID</button>
+          <button class="btn" id="btn-tg-send" title="Gửi tin nhắn thử tới Chat ID">Send Test</button>
+          <label class="pill"><input class="bot-param" id="TG_onTrade" type="checkbox" checked> Notify on Entry/Exit</label>
+          <label class="pill"><input class="bot-param" id="TG_onLifecycle" type="checkbox" checked> Notify on Start/Stop</label>
+        </div>
+        <div class="tiny" style="margin-top:6px; color:var(--muted)">Gợi ý: 1) Bấm Validate Token → 2) Nhắn bất kỳ cho bot → 3) Detect Chat ID → 4) Send Test.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="tabview" id="tab-radar">
+    <div class="grid">
+      <div class="card col-12">
+        <b>Momentum Radar (Top ALT theo động lượng & thanh khoản)</b>
+        <div class="row" style="margin-top:8px; gap:8px; align-items:flex-end; flex-wrap:wrap">
+          <div style="width:140px"><label>Top N</label><input id="R_topN" type="number" value="12" /></div>
+          <div style="width:200px"><label>Min Turnover 1h (USDT)</label><input id="R_minTurnover" type="number" value="3000000" /></div>
+          <div style="width:160px"><label>Max Price (USDT)</label><input id="R_maxPrice" type="number" value="10" /></div>
+          <div style="width:140px"><label>Refresh (min)</label><input id="R_interval" type="number" value="5" /></div>
+          <label class="pill"><input id="R_auto" type="checkbox"> Auto refresh</label>
+          <button class="btn" id="R_scan" title="Quét lại thị trường">🔄 Scan</button>
+          <div class="tiny" style="margin-left:auto; color:var(--muted)">Mẹo: Chọn coin có %24h dương và turnover lớn → đà tốt hơn.</div>
+        </div>
+        <div class="row" style="margin-top:8px; gap:8px; align-items:flex-end; flex-wrap:wrap">
+          <label class="pill"><input id="RA_enable" type="checkbox"> Bật cảnh báo biến động lạ</label>
+          <div style="width:120px"><label>Lookback (min)</label><input id="RA_retMin" type="number" value="5" /></div>
+          <div style="width:140px"><label>Ngưỡng Δ% (abs)</label><input id="RA_retPct" type="number" value="3" /></div>
+          <div style="width:140px"><label>Vol spike (×)</label><input id="RA_volSpike" type="number" step="0.1" value="2" /></div>
+          <div style="width:150px"><label>Cooldown (min)</label><input id="RA_coolMin" type="number" value="30" /></div>
+        </div>
+      </div>
+      <div class="card col-12">
+        <div id="radar-list" style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px"></div>
+      </div>
+      <div class="card col-12">
+        <b>Daily Market Report</b>
+        <div class="row" style="margin-top:8px; gap:10px; align-items:flex-end; flex-wrap:wrap">
+          <label class="pill"><input id="DR_enable" type="checkbox"> Bật báo cáo tự động</label>
+          <div style="width:160px"><label>Giờ gửi (HH:MM)</label><input id="DR_time" type="time" value="09:00" /></div>
+          <button class="btn" id="DR_send" title="Tạo & gửi báo cáo ngay">📤 Send Now</button>
+          <div class="tiny" style="color:var(--muted)">Sẽ gửi qua Telegram nếu token/chat ID hợp lệ.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="tabview" id="tab-news">
+    <div class="grid">
+      <div class="card col-12">
+        <b>Crypto News</b>
+        <div class="row" style="margin-top:8px; gap:8px; align-items:flex-end; flex-wrap:wrap">
+          <label class="pill"><input id="NW_src_coindesk" type="checkbox" checked> CoinDesk</label>
+          <label class="pill"><input id="NW_src_cointele" type="checkbox" checked> Cointelegraph</label>
+          <label class="pill"><input id="NW_src_binance" type="checkbox"> Binance Blog</label>
+          <div style="width:260px"><label>Từ khoá (CSV, ví dụ: BTC,ETF)</label><input id="NW_keywords" placeholder="" /></div>
+          <div style="width:120px"><label>Refresh (min)</label><input id="NW_interval" type="number" value="15" /></div>
+          <label class="pill"><input id="NW_auto" type="checkbox"> Auto</label>
+          <label class="pill"><input id="NW_forward" type="checkbox"> Forward Telegram</label>
+          <button class="btn" id="NW_refresh">🔄 Refresh now</button>
+        </div>
+      </div>
+      <div class="card col-12">
+        <div id="news-list" style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px"></div>
       </div>
     </div>
   </section>
@@ -178,9 +311,9 @@
           <div class="col-9 row"><label class="pill"><input id="B_useTrailing" type="checkbox" checked> Trailing after TP</label></div>
         </div>
         <div class="row" style="margin-top:8px">
-          <button id="B_run" class="btn">▶ Backtest</button>
-          <button id="B_grid" class="btn">⛏ Grid Search</button>
-          <button id="autopilot" class="btn">🚀 Autopilot: Optimize → Start</button>
+          <button id="B_run" class="btn" title="Chạy backtest với thông số hiện tại">▶ Backtest</button>
+          <button id="B_grid" class="btn" title="Tìm TP/SL tối ưu bằng Grid Search">⛏ Grid Search</button>
+          <button id="autopilot" class="btn" title="Tối ưu thông số rồi khởi động bot tự động">🚀 Autopilot: Optimize → Start</button>
         </div>
       </div>
       <div class="card col-12"><div id="logBack" role="log" aria-live="polite"></div></div>
@@ -202,23 +335,35 @@
 
   <section class="tabview" id="tab-help">
     <div class="card col-12">
-      <b>User Guide & Autopilot</b>
+      <b>Hướng dẫn sử dụng & Autopilot</b>
       <ul>
-        <li><b>Autopilot (🚀):</b> Press the "Autopilot: Optimize → Start" button in the Backtester tab. The bot will:
+        <li><b>Autopilot (🚀):</b> Bấm nút "Autopilot: Optimize → Start" ở tab Backtester. Bot sẽ:
           <ol>
-            <li>Run a <b>Grid Search</b> to find the best TP/SL multipliers (k×ATR).</li>
-            <li>Automatically <b>copy</b> the optimal parameters to the Live Bot tab.</li>
-            <li>If you have saved API keys, it will <b>prompt for your passphrase</b>, decrypt, and load them. If this fails or no keys are saved, it will automatically run in <b>SIM mode</b>.</li>
-            <li>Enable <b>Auto Buy</b> and <b>start</b> the bot. (If not in SIM mode, it will connect to the private WebSocket for faster fill detection).</li>
+            <li>Chạy <b>Grid Search</b> để tìm bộ TP/SL tối ưu (k×ATR).</li>
+            <li>Tự động <b>sao chép</b> thông số tối ưu sang tab Live.</li>
+            <li>Nếu bạn đã lưu API, bot sẽ <b>hỏi passphrase</b> để giải mã và nạp. Nếu thất bại/không có API, bot sẽ chạy ở <b>SIM mode</b>.</li>
+            <li>Bật <b>Auto Buy</b> và <b>khởi động</b> bot. (Nếu không ở SIM, bot kết nối WebSocket riêng tư để phát hiện fill nhanh hơn).</li>
           </ol>
         </li>
-        <li><b>ALT Hunter:</b> When the symbol list is empty, the bot prioritizes high-liquidity, low-priced ALT coins suitable for your trade size. During BTC downtrends, it seeks ALTs showing relative strength against BTC.</li>
-        <li><b>Smart Scan:</b> The bot automatically scans faster (2-4s) near candle closes and slows down to the base interval mid-candle to optimize performance and reduce API load.</li>
-        <li><b>Timestamp Guard (10001):</b> The bot periodically syncs its clock with Bybit's servers and will automatically retry once if it encounters a timestamp-related API error.</li>
-        <li><b>Session Reset:</b> The "Auto-reset on start" option (enabled by default) clears the previous session's PnL and loss streak each time you press Start.</li>
-        <li><b>Manual Workflow:</b> 1️⃣ Backtest → 2️⃣ Fine-tune Live settings → 3️⃣ Load API keys (for real trading) → 4️⃣ Start.</li>
-        <li>⚠️ <b>Disclaimer:</b> Always test in SIM/Testnet mode first. Use at your own risk. Do not use API keys with withdrawal permissions. For CORS issues, use a private proxy like a Cloudflare Worker.</li>
+        <li><b>ALT Hunter:</b> Khi để trống danh sách mã, bot ưu tiên các ALT có thanh khoản cao, giá thấp phù hợp vốn. Khi BTC yếu, bot ưu tiên ALT có sức mạnh tương đối tốt hơn BTC.</li>
+        <li><b>Quét thông minh:</b> Tự động quét nhanh (2–4s) gần thời điểm chốt nến và chậm lại ở giữa nến để tối ưu hiệu năng, giảm tải API.</li>
+        <li><b>Bảo vệ lệch thời gian (10001):</b> Bot định kỳ đồng bộ giờ với Bybit và tự <b>retry 1 lần</b> nếu gặp lỗi timestamp.</li>
+        <li><b>Reset phiên:</b> Tuỳ chọn "Tự reset khi bắt đầu" (bật mặc định) sẽ xoá PnL/chuỗi lỗ của phiên trước mỗi lần Start.</li>
+        <li><b>Quy trình thủ công:</b> 1️⃣ Backtest → 2️⃣ Tinh chỉnh Live → 3️⃣ Nạp API (nếu trade thật) → 4️⃣ Start.</li>
+        <li><b>Telegram (tuỳ chọn):</b> Bấm <b>Validate Token</b> để kiểm tra token, gửi tin nhắn cho bot rồi bấm <b>Detect Chat ID</b> để điền ID tự động, sau đó thử <b>Send Test</b>.</li>
+        <li>⚠️ <b>Lưu ý:</b> Hãy thử ở SIM/Testnet trước. Tự chịu rủi ro khi sử dụng. Không dùng API có quyền rút tiền. Nếu gặp CORS, hãy dùng proxy riêng (ví dụ Cloudflare Worker).</li>
       </ul>
+    </div>
+    <div class="card col-12">
+      <b>Học từ sai lầm (Post‑mortem)</b>
+      <div class="row" style="margin-top:8px; gap:10px; align-items:flex-end; flex-wrap:wrap">
+        <div style="width:140px"><label>Lookback trades</label><input id="CO_lookback" type="number" value="30" /></div>
+        <label class="pill"><input id="CO_sendTg" type="checkbox" checked> Gửi nhận xét qua Telegram</label>
+        <label class="pill"><input id="CO_autoTune" type="checkbox"> Tự điều chỉnh sau chuỗi SL</label>
+        <button class="btn" id="CO_analyze" title="Phân tích các lệnh gần đây và đưa ra nhận xét">📈 Phân tích</button>
+        <div class="tiny" style="color:var(--muted)">Gợi ý: Nếu SL liên tiếp, giảm risk %, tăng minScore hoặc time‑stop.</div>
+      </div>
+      <div id="CO_out" class="tiny" style="margin-top:6px; white-space:pre-wrap; color:var(--muted)"></div>
     </div>
   </section>
 </div>
@@ -257,6 +402,234 @@ const BybitBotApp = {
         cancelTimer: null,
     },
 
+    // --- Momentum Radar ---
+    radar: {
+        timer: null,
+        async scan(){
+            try{
+                const E = BybitBotApp.DOMElements; const api = BybitBotApp.api; const ind = BybitBotApp.utils.indicators; const cfg = BybitBotApp.config;
+                const topN = Math.max(3, +E.R_topN.value || 12);
+                const minTurn = Math.max(0, +E.R_minTurnover.value || 30_000_000);
+                const maxPrice = Math.max(0.01, +E.R_maxPrice.value || 10);
+                E['radar-list'].innerHTML = 'Đang quét...';
+                const t0 = performance.now();
+                const tickers = await api.tickers();
+                const list = tickers
+                    .filter(t => t.symbol.endsWith('USDT'))
+                    .map(t => ({
+                        ...t,
+                        // xấp xỉ turnover 1h từ 24h: chia 24 (đủ nhanh, chấp nhận sai số)
+                        turnover1h: (+t.turnover24h || 0) / 24
+                    }))
+                    .filter(t => t.turnover1h >= minTurn)
+                    .filter(t => +t.lastPrice <= maxPrice)
+                    .map(t => ({
+                        sym: t.symbol,
+                        px: +t.lastPrice,
+                        chg: +t.price24hPcnt * 100,
+                        turn: +t.turnover1h
+                    }))
+                    .sort((a,b)=> (b.chg) - (a.chg))
+                    .slice(0, topN);
+
+                // Enrich with RSI14 and ATR%
+                const tf = String((cfg.values && cfg.values.tf) || '5');
+                for (const x of list) {
+                    try{
+                        const kl = await api.klines(x.sym, tf, 120);
+                        const C = kl.map(k=>k.c), H = kl.map(k=>k.h), L = kl.map(k=>k.l);
+                        const rsi = ind.rsi(C, 14);
+                        const tr = ind.trArr(H, L, C);
+                        const atr = ind.median(tr.slice(-14));
+                        x.rsi = rsi != null ? +rsi.toFixed(1) : null;
+                        x.atrp = C.length ? +((atr / C[C.length-1]) * 100).toFixed(2) : null;
+                        // Tính Δ% lookback để phát hiện bất thường
+                        const lookMin = Math.max(1, +BybitBotApp.DOMElements.RA_retMin?.value || 5);
+                        const n = Math.min(kl.length-1, Math.ceil((lookMin) * (60 / (+tf||5))));
+                        if (n >= 1) {
+                            const base = kl.at(-(n+1)).c; const last = kl.at(-1).c;
+                            x.retN = +(((last-base)/base)*100).toFixed(2);
+                        }
+                    }catch{ x.rsi = null; x.atrp = null; }
+                }
+                const dt = (performance.now()-t0).toFixed(0);
+                const tfLabel = ({'1':'1m','3':'3m','5':'5m','15':'15m'})[tf] || (tf+'m');
+                E['radar-list'].innerHTML = list.map(x => `
+                    <div class="card" style="padding:12px">
+                      <div style="display:flex;justify-content:space-between;align-items:center">
+                        <div style="font-weight:600">${x.sym}</div>
+                        <div class="${x.chg>=0?'ok':'bad'}">${x.chg.toFixed(2)}%</div>
+                      </div>
+                      <div class="tiny" style="margin-top:6px;color:var(--muted)">Giá: ${x.px} • Turnover1h: ${Math.round(x.turn/1e6)}M</div>
+                      <div class="tiny" style="margin-top:4px;color:var(--muted)">RSI14(${tfLabel}): ${x.rsi??'—'} • ATR%: ${x.atrp??'—'} • Δ${BybitBotApp.DOMElements.RA_retMin?.value||5}m: ${x.retN??'—'}%</div>
+                      <div class="row" style="margin-top:8px;gap:6px">
+                        <button class="btn" title="Sao chép vào danh sách symbol Live" onclick="(function(){ const el=document.getElementById('symbolList'); const s=el.value.trim(); el.value = s? (s+','+'${x.sym}') : '${x.sym}'; el.dispatchEvent(new Event('change')); })()">+ Live</button>
+                        <button class="btn" title="Backtest nhanh 1000 nến" onclick="(function(){ const el=document.getElementById('B_symbolList'); el.value='${x.sym}'; el.dispatchEvent(new Event('change')); document.getElementById('B_run').click(); })()">↺ Backtest</button>
+                      </div>
+                    </div>`).join('');
+                BybitBotApp.ui.logLive(`Radar scan: ${list.length} symbols in ${dt}ms`, 'ok');
+
+                // Gửi cảnh báo kèm nhận xét ngắn
+                if (BybitBotApp.DOMElements.RA_enable?.checked) {
+                    const th = Math.abs(+BybitBotApp.DOMElements.RA_retPct.value || 3);
+                    const coolMin = Math.max(1, +BybitBotApp.DOMElements.RA_coolMin.value || 30);
+                    const abnormal = list.filter(x => x.retN != null && Math.abs(x.retN) >= th);
+                    const coachText = BybitBotApp.coaching.analyzeRecentTrades(BybitBotApp.journal?.state?.trades||[]);
+                    const coachShort = coachText.split('\n').slice(0,2).join(' • ');
+                    for (const a of abnormal) {
+                        const dir = a.retN>0 ? '▲' : '▼';
+                        const msg = `[RADAR] ${a.sym} ${dir} ${a.retN}% / ${BybitBotApp.DOMElements.RA_retMin?.value||5}m | RSI14=${a.rsi??'—'} ATR%=${a.atrp??'—'}\nNhận xét: ${coachShort}`;
+                        await BybitBotApp.telegram.notify(msg);
+                    }
+                    // Lưu bản ghi coach report trong ngày
+                    const dayKey = new Date().toISOString().slice(0,10);
+                    const k = `bb_coach_reports_${dayKey}`;
+                    try { const hist = JSON.parse(localStorage.getItem(k)||'[]'); hist.push({ ts: Date.now(), msg: coachText }); localStorage.setItem(k, JSON.stringify(hist).slice(0,200000)); } catch {}
+                }
+            }catch(e){
+                (BybitBotApp.DOMElements['radar-list']||{}).innerHTML = `<div class="bad">Lỗi quét: ${e.message}</div>`;
+            }
+        },
+        startAuto(){
+            const E = BybitBotApp.DOMElements; const min = Math.max(1, +E.R_interval.value || 5);
+            this.stopAuto();
+            this.scan();
+            this.timer = setInterval(()=> this.scan(), min*60*1000);
+            BybitBotApp.ui.logLive(`Radar auto-refresh: ${min} phút`, 'ok');
+        },
+        stopAuto(){ if (this.timer) { clearInterval(this.timer); this.timer = null; } }
+    },
+
+    // --- News Aggregator ---
+    news: {
+        timer: null,
+        async fetchSource(url){
+            const r = await fetch(url); const text = await r.text();
+            // simple title extraction fallback
+            const items = [];
+            const re = /<a[^>]+href=["']([^"']+)["'][^>]*>(.*?)<\/a>/gi;
+            let m; const seen=new Set();
+            while((m=re.exec(text)) && items.length<30){ const href=m[1]; const title = m[2].replace(/<[^>]+>/g,'').trim(); if(!title||seen.has(title)) continue; seen.add(title); items.push({title, link: href}); }
+            return items;
+        },
+        async fetchAll(){
+            const E = BybitBotApp.DOMElements;
+            const tasks = [];
+            if (E.NW_src_coindesk?.checked) tasks.push(this.fetchSource('https://www.coindesk.com/'));
+            if (E.NW_src_cointele?.checked) tasks.push(this.fetchSource('https://cointelegraph.com/'));
+            if (E.NW_src_binance?.checked) tasks.push(this.fetchSource('https://www.binance.com/en/blog'));
+            const res = await Promise.allSettled(tasks);
+            let items = res.flatMap(x=> x.status==='fulfilled' ? x.value : []);
+            // filter by keywords if provided
+            const kw = (E.NW_keywords?.value||'').toUpperCase().split(',').map(s=>s.trim()).filter(Boolean);
+            if (kw.length) items = items.filter(it => kw.some(k=> it.title.toUpperCase().includes(k)));
+            // unique by title
+            const uniq=[]; const seen=new Set(); for(const it of items){ if(!seen.has(it.title)){ seen.add(it.title); uniq.push(it);} }
+            return uniq.slice(0,20);
+        },
+        async render(){
+            const E = BybitBotApp.DOMElements; E['news-list'].innerHTML = 'Đang tải tin...';
+            try{
+                const items = await this.fetchAll();
+                E['news-list'].innerHTML = items.map(it=>`
+                  <div class="card" style="padding:10px">
+                    <div style="font-weight:600;">${BybitBotApp.utils.escapeHtml(it.title)}</div>
+                    <div class="tiny"><a href="${it.link}" target="_blank">Mở liên kết</a></div>
+                  </div>`).join('');
+                if (BybitBotApp.DOMElements.NW_forward?.checked && items.length){
+                    const msg = `[News] ${items.slice(0,3).map(i=>i.title).join(' | ')}`;
+                    await BybitBotApp.telegram.notify(msg);
+                }
+            }catch(e){ E['news-list'].innerHTML = `<div class='bad'>Lỗi tải tin: ${e.message}</div>`; }
+        },
+        startAuto(){ const min = Math.max(1, +BybitBotApp.DOMElements.NW_interval?.value||15); this.stopAuto(); this.render(); this.timer = setInterval(()=>this.render(), min*60*1000); },
+        stopAuto(){ if (this.timer){ clearInterval(this.timer); this.timer=null; } }
+    },
+
+    // --- Daily Market Report ---
+    dailyReport: {
+        timer: null,
+        buildSummary(radarHtml){
+            const E = BybitBotApp.DOMElements; const now = new Date();
+            const top = Array.from((E['radar-list']||{}).children||[]).slice(0,6).map(el=>{
+                const name = el.querySelector('div[style*="font-weight:600"]')?.textContent||'';
+                const chg = el.querySelector('.ok,.bad')?.textContent||'';
+                return `${name} ${chg}`;
+            }).join(', ');
+            return `Báo cáo ${now.toLocaleDateString()} ${now.toLocaleTimeString()}\nTop: ${top}\n${radarHtml?'' : ''}`;
+        },
+        async sendNow(){
+            try{
+                // Ensure radar list exists; do a quick scan if empty
+                if (!BybitBotApp.DOMElements['radar-list']?.children?.length) {
+                    await BybitBotApp.radar.scan();
+                }
+                const summary = this.buildSummary();
+                const ok = await BybitBotApp.telegram.notify(summary);
+                BybitBotApp.ui.logLive(ok? '✓ Đã gửi báo cáo ngày qua Telegram' : 'Không gửi được báo cáo (thiếu token/chatid?)', ok?'ok':'warn');
+            }catch(e){ BybitBotApp.ui.logLive('Báo cáo lỗi: '+e.message, 'warn'); }
+        },
+        start(){
+            const E = BybitBotApp.DOMElements; this.stop();
+            const hhmm = (E.DR_time?.value||'09:00').split(':');
+            const h = Math.max(0, Math.min(23, +hhmm[0]||9));
+            const m = Math.max(0, Math.min(59, +hhmm[1]||0));
+            const schedule = ()=>{
+                const now = new Date();
+                const next = new Date(); next.setHours(h, m, 0, 0);
+                if (next <= now) next.setDate(next.getDate()+1);
+                const ms = next - now;
+                this.timer = setTimeout(async ()=>{ try { await BybitBotApp.radar.scan(); await this.sendNow(); } finally { schedule(); } }, ms);
+                BybitBotApp.ui.logLive(`Daily report scheduled at ${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')} (will send in ${(ms/60000).toFixed(1)} min)`, 'ok');
+            };
+            schedule();
+        },
+        stop(){ if (this.timer) { clearTimeout(this.timer); this.timer = null; } }
+    },
+
+    // --- Coaching / Post-mortem ---
+    coaching: {
+        analyzeRecentTrades(trades){
+            const out = [];
+            if (!trades || trades.length === 0) { out.push('Chưa có dữ liệu trade.'); return out.join('\n'); }
+            const recent = trades.slice(0, Math.max(5, Math.min(50, +BybitBotApp.DOMElements.CO_lookback?.value||30)));
+            const wins = recent.filter(t=> (t.pnl||0) > 0), losses = recent.filter(t=> (t.pnl||0) < 0);
+            const winrate = (wins.length/recent.length*100)||0;
+            out.push(`Tổng ${recent.length} lệnh gần nhất • Winrate=${winrate.toFixed(1)}%`);
+            // chuỗi SL dài nhất
+            let streak=0, maxStreak=0; for (const t of recent){ if ((t.pnl||0)<0) { streak++; maxStreak=Math.max(maxStreak, streak); } else streak=0; }
+            if (maxStreak>=3) out.push(`Chuỗi SL tối đa: ${maxStreak} → cân nhắc cooldown và tăng minScore.`);
+            // R:R trung bình
+            const rr = recent.map(t=>{ const baseSl = (t.initialSl ?? (t.sl || t.entry)); const risk=(t.entry - baseSl)*t.qty; return risk>0? (t.pnl||0)/risk: null; }).filter(x=>x!=null);
+            if (rr.length) out.push(`R:R trung bình ≈ ${(rr.reduce((a,b)=>a+b,0)/rr.length).toFixed(2)}`);
+            // theo symbol
+            const bySym = {}; for (const t of recent){ const k=t.sym; bySym[k]=bySym[k]||{n:0,pnl:0}; bySym[k].n++; bySym[k].pnl+=(t.pnl||0); }
+            const worst = Object.entries(bySym).sort((a,b)=>a[1].pnl-b[1].pnl)[0];
+            if (worst && worst[1].pnl < 0) out.push(`Symbol yếu nhất: ${worst[0]} (PnL ${(worst[1].pnl).toFixed(2)}) → cân nhắc loại tạm thời.`);
+            // gợi ý hành động
+            if (winrate < 40) out.push('Gợi ý: tăng minScore hoặc siết RR (kTp↑/kSl↑).');
+            if (maxStreak >= 3) out.push('Gợi ý: bật cooldown sau chuỗi SL và giảm risk %.');
+            return out.join('\n');
+        },
+        async run(){
+            try{
+                const J = BybitBotApp.journal?.state?.trades || [];
+                const text = this.analyzeRecentTrades(J);
+                const box = BybitBotApp.DOMElements.CO_out; if (box) box.textContent = text;
+                if (BybitBotApp.DOMElements.CO_sendTg?.checked) await BybitBotApp.telegram.notify(`[Coach]\n${text}`);
+                if (BybitBotApp.DOMElements.CO_autoTune?.checked) {
+                    // ví dụ tự động nhỏ: khi SL streak>=3, tăng minScore +1 trong phiên
+                    const recent = J.slice(0, +BybitBotApp.DOMElements.CO_lookback?.value||30);
+                    let st=0, ms=0; for (const t of recent){ if ((t.pnl||0)<0){ st++; ms=Math.max(ms,st); } else st=0; }
+                    if (ms>=3) {
+                        const E = BybitBotApp.DOMElements; const old = +E.minScore.value||5; E.minScore.value = old + 1; E.minScore.dispatchEvent(new Event('change'));
+                        BybitBotApp.ui.logLive(`Auto-tune: tăng Min Score ${old}→${old+1} do SL streak`, 'warn');
+                    }
+                }
+            }catch(e){ BybitBotApp.ui.logLive('Coaching error: '+e.message,'warn'); }
+        }
+    },
+
     // --- DOM Elements Cache ---
     DOMElements: {},
 
@@ -271,7 +644,12 @@ const BybitBotApp = {
             'useBalanceSizing','riskPct','reserveUsd','minQuote','maxQuote','balanceAcct',
             'B_tf', 'B_lookback', 'B_topN', 'B_symbolList', 'B_btcFilter', 'B_pessimistic',
             'B_minScore', 'B_tpK', 'B_slK', 'B_timeStopMin', 'B_quote', 'B_feePct', 'B_slipBps',
-            'B_useBreakeven', 'B_useTrailing'
+            'B_useBreakeven', 'B_useTrailing',
+            // Telegram
+            'tg-token','tg-chatid','TG_onTrade','TG_onLifecycle',
+            // Advanced filters
+            'CO_mtfEnable','CO_mtfTf','CO_regimeMode','CO_winStart','CO_winEnd','CO_slStreak','CO_coolMin','CO_maxSpreadBps','CO_tp1Enable','CO_tp1Frac'
+            , 'OV_vwap','OV_bb','OV_vol','panicSell','uiCompact'
         ],
         
         load() {
@@ -292,6 +670,14 @@ const BybitBotApp = {
                 ss: this.values.scanSec, ar: this.values.autoRun, sm: this.values.simMode, ars: this.values.autoResetStart,
                 bs: this.values.useBalanceSizing, rp: this.values.riskPct, rz: this.values.reserveUsd,
                 mn: this.values.minQuote, mx: this.values.maxQuote, ba: this.values.balanceAcct,
+                cx: !!this.values.uiCompact,
+                // Telegram
+                tg: {
+                    t: this.values['tg-token'] || '',
+                    c: this.values['tg-chatid'] || '',
+                    nt: !!this.values['TG_onTrade'],
+                    nl: !!this.values['TG_onLifecycle']
+                }
             };
             // v7 storage key (giữ backward-compat khi load)
             localStorage.setItem('bb_bot_config_v7', JSON.stringify(cfgToSave));
@@ -319,6 +705,7 @@ const BybitBotApp = {
             DOMElements.autoRun.checked = !!c.ar;
             DOMElements.simMode.checked = !!c.sm;
             DOMElements.autoResetStart.checked = c.ars !== false;
+            if (DOMElements.uiCompact) DOMElements.uiCompact.checked = !!c.cx;
 
             DOMElements.useBalanceSizing.checked = c.bs !== false;
             DOMElements.riskPct.value   = c.rp ?? 15;
@@ -326,6 +713,13 @@ const BybitBotApp = {
             DOMElements.minQuote.value  = c.mn ?? 5;
             DOMElements.maxQuote.value  = c.mx ?? 25;
             DOMElements.balanceAcct.value = c.ba ?? 'AUTO';
+            // Telegram
+            if (c.tg) {
+                if (DOMElements['tg-token']) DOMElements['tg-token'].value = c.tg.t || '';
+                if (DOMElements['tg-chatid']) DOMElements['tg-chatid'].value = c.tg.c || '';
+                if (DOMElements['TG_onTrade']) DOMElements['TG_onTrade'].checked = !!c.tg.nt;
+                if (DOMElements['TG_onLifecycle']) DOMElements['TG_onLifecycle'].checked = !!c.tg.nl;
+            }
             
             this.load(); // Reload values from UI after setting them
         },
@@ -401,12 +795,22 @@ const BybitBotApp = {
             const bc = api.balanceCache;
             if (bc && bc.ts) DOMElements.usdtFree.textContent = (bc.free ?? 0).toFixed(2);
         },
+        withinTimeWindow(){
+            const s = BybitBotApp.DOMElements.CO_winStart?.value||'00:00';
+            const e = BybitBotApp.DOMElements.CO_winEnd?.value||'23:59';
+            const now = new Date();
+            const cur = now.getHours()*60 + now.getMinutes();
+            const toMin = t=>{ const [h,m]=t.split(':').map(x=>+x||0); return h*60+m; };
+            const a = toMin(s), b = toMin(e);
+            return a<=b ? (cur>=a && cur<=b) : (cur>=a || cur<=b);
+        },
         renderJournal(logId, trades) {
             const table = BybitBotApp.DOMElements[logId];
             const body = table.querySelector('tbody');
             body.innerHTML = '';
             trades.slice(0, 200).forEach(r => {
                 const pnlClass = r.pnl > 0 ? 'ok' : (r.pnl < 0 ? 'bad' : '');
+                const note = BybitBotApp.utils.escapeHtml(r.note || '');
                 const row = `
                     <td>${new Date(r.ts).toLocaleString()}</td>
                     <td>${r.sym}</td>
@@ -415,8 +819,98 @@ const BybitBotApp = {
                     <td>${(logId === 'journalBack' ? r.initialSl : r.sl)?.toFixed(6) || '-'}</td>
                     <td>${r.exit?.toFixed(6) || '-'}</td>
                     <td class="${pnlClass}">${r.pnl?.toFixed(2) || '-'}</td>
-                    <td>${r.note || ''}</td>`;
+                    <td>${note}</td>`;
                 body.innerHTML += `<tr>${row}</tr>`;
+            });
+        },
+        drawLiveStrategy(kl, emaF, emaS, overlay={}) {
+            const E = BybitBotApp.DOMElements; if (!E.liveStrategyChart) return;
+            const ctx = E.liveStrategyChart.getContext('2d');
+            if (this.liveStratInstance) this.liveStratInstance.destroy();
+            const labels = kl.map(k=>k.t);
+            const price = kl.map(k=>k.c);
+
+            // Gradient fill for price line
+            const gradient = ctx.createLinearGradient(0, 0, 0, E.liveStrategyChart.clientHeight || 360);
+            gradient.addColorStop(0, 'rgba(10,132,255,0.18)');
+            gradient.addColorStop(1, 'rgba(10,132,255,0.00)');
+
+            const ds = [
+              { label:'Price', data: price.map((v,i)=>({x:labels[i], y:v})), borderColor:'#0a84ff', backgroundColor:gradient, fill:true, tension:0.25, borderWidth:2, pointRadius:0, order:3 },
+              { label:'EMA20', data: emaF.map((v,i)=>({x:labels[i], y:v})), borderColor:'#34c759', tension:0.2, borderWidth:1.6, pointRadius:0, order:2 },
+              { label:'EMA50', data: emaS.map((v,i)=>({x:labels[i], y:v})), borderColor:'#ff9f0a', tension:0.2, borderWidth:1.4, pointRadius:0, order:2 }
+            ];
+            try{
+              if (BybitBotApp.DOMElements.OV_vwap?.checked){
+                let sumPV=0, sumV=0; const vwap=[]; for(let i=0;i<kl.length;i++){ const p=(kl[i].h+kl[i].l+kl[i].c)/3; const v=kl[i].v||0; sumPV+=p*v; sumV+=v; vwap.push(sumV? sumPV/sumV : kl[i].c); }
+                ds.push({ label:'VWAP', data:vwap.map((v,i)=>({x:labels[i], y:v})), borderColor:'#8e8e93', borderWidth:1, pointRadius:0, tension:0.2, order:1 });
+              }
+              if (BybitBotApp.DOMElements.OV_bb?.checked){
+                const period=20; const std=(arr)=>{const m=arr.reduce((a,b)=>a+b,0)/arr.length; return Math.sqrt(arr.reduce((a,b)=>a+(b-m)*(b-m),0)/arr.length);};
+                const bbU=[], bbL=[]; for(let i=0;i<price.length;i++){ const w=price.slice(Math.max(0,i-period+1), i+1); const m=w.reduce((a,b)=>a+b,0)/w.length; const s=std(w); bbU.push(m+2*s); bbL.push(m-2*s);} 
+                ds.push({ label:'BB Upper', data:bbU.map((v,i)=>({x:labels[i], y:v})), borderColor:'rgba(10,132,255,0.35)', borderWidth:1, pointRadius:0, tension:0.15, order:1 });
+                ds.push({ label:'BB Lower', data:bbL.map((v,i)=>({x:labels[i], y:v})), borderColor:'rgba(10,132,255,0.35)', borderWidth:1, pointRadius:0, tension:0.15, order:1 });
+              }
+              if (BybitBotApp.DOMElements.OV_vol?.checked){
+                const vols = kl.map(k=>k.v||0);
+                ds.push({ type:'bar', yAxisID:'y2', label:'Volume', data: vols.map((v,i)=>({x:labels[i], y:v})), backgroundColor:'rgba(29,29,31,0.18)', borderWidth:0, order:0 });
+              }
+            }catch{}
+            const tMin = labels[0], tMax = labels[labels.length-1];
+            if (overlay.entry){ ds.push({ type:'scatter', label:'Entry', data:[{x: overlay.entry.t||tMax, y: overlay.entry.p}], borderColor:'#34c759', backgroundColor:'#34c759', pointRadius:4, showLine:false, order:4 }); }
+            if (overlay.exits && overlay.exits.length){ ds.push({ type:'scatter', label:'Exit', data: overlay.exits.map(e=>({x:e.t||tMax, y:e.p})), borderColor:'#ff3b30', backgroundColor:'#ff3b30', pointRadius:4, showLine:false, order:4 }); }
+            if (overlay.tp){ ds.push({ label:'TP', data:[{x:tMin,y:overlay.tp},{x:tMax,y:overlay.tp}], borderColor:'#34c759', borderDash:[6,4], pointRadius:0, order:1 }); }
+            if (overlay.sl){ ds.push({ label:'SL', data:[{x:tMin,y:overlay.sl},{x:tMax,y:overlay.sl}], borderColor:'#ff3b30', borderDash:[6,4], pointRadius:0, order:1 }); }
+
+            const crosshair = {
+              id: 'xCrosshair',
+              afterDatasetsDraw(chart) {
+                const active = chart.tooltip?.getActiveElements?.() || [];
+                if (!active.length) return;
+                const x = active[0].element.x;
+                const { ctx, chartArea: { top, bottom } } = chart;
+                ctx.save();
+                ctx.strokeStyle = 'rgba(10,132,255,0.25)';
+                ctx.setLineDash([4,4]);
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(x, top);
+                ctx.lineTo(x, bottom);
+                ctx.stroke();
+                ctx.restore();
+              }
+            };
+
+            this.liveStratInstance = new Chart(ctx, {
+              type:'line',
+              data:{ datasets: ds },
+              options:{
+                parsing:false,
+                responsive:true,
+                maintainAspectRatio:false,
+                interaction:{ mode:'index', intersect:false },
+                scales:{
+                  x:{ type:'time', grid:{ color:'rgba(0,0,0,0.06)' }, ticks:{ color:'#6e6e73' } },
+                  y:{ grid:{ color:'rgba(0,0,0,0.06)' }, ticks:{ color:'#6e6e73' } },
+                  y2:{ display: ds.some(d=>d.yAxisID==='y2'), position:'right', grid:{ drawOnChartArea:false }, ticks:{ color:'#6e6e73' } }
+                },
+                plugins:{
+                  legend:{ display:true, labels:{ usePointStyle:true, color:'#1d1d1f' } },
+                  tooltip:{
+                    mode:'index', intersect:false,
+                    backgroundColor:'rgba(255,255,255,0.95)', titleColor:'#1d1d1f', bodyColor:'#1d1d1f', borderColor:'#d2d2d7', borderWidth:1,
+                    callbacks:{
+                      label(ctx){
+                        const v = ctx.parsed.y;
+                        const name = ctx.dataset.label || '';
+                        if (ctx.dataset.yAxisID === 'y2') return `${name}: ${Math.round(v)}`;
+                        return `${name}: ${(+v).toFixed(6)}`;
+                      }
+                    }
+                  }
+                }
+              },
+              plugins:[crosshair]
             });
         },
     },
@@ -427,6 +921,7 @@ const BybitBotApp = {
             const enc = v => encodeURIComponent(v == null ? '' : v);
             return Object.keys(obj).sort().map(k => `${k}=${enc(obj[k])}`).join('&');
         },
+        escapeHtml(v){ const d=document.createElement('div'); d.textContent=String(v??''); return d.innerHTML; },
         crypto: {
             enc: new TextEncoder(),
             dec: new TextDecoder(),
@@ -461,6 +956,12 @@ const BybitBotApp = {
         },
         indicators: {
             sma(a, n) { if (a.length < n) return null; let s = 0; for (let i = a.length - n; i < a.length; i++) s += a[i]; return s / n; },
+            emaSeries(v, p){
+                const out = []; if (!v || v.length===0) return out; const k = 2/(p+1);
+                let prev = v[0]; out.push(prev);
+                for (let i=1;i<v.length;i++){ prev = v[i]*k + prev*(1-k); out.push(prev); }
+                return out;
+            },
             rsi(v, p = 14) {
                 if (v.length <= p) return null;
                 let g = 0, l = 0;
@@ -520,7 +1021,7 @@ const BybitBotApp = {
             },
             quoteStepOf(info) {
                 const ls = info?.lotSizeFilter || {};
-                // Nếu không có quotePrecision, fallback 0.01 để không “decimal too long”
+                // Nếu không có quotePrecision, fallback 0.01 để không "decimal too long"
                 return this.__precToStep(ls.quotePrecision) ?? 1e-2;
             },
             floorStep(x, step) {
@@ -553,14 +1054,49 @@ const BybitBotApp = {
                 if (floored < qstep) return (0).toFixed(dec);
                 return floored.toFixed(dec);
             },
-            // price formatted to tick precision
-            fmtPrice(p, tick) {
-                const dec = this.__dec(tick);
-                const snapped = this.floorStep(p, tick);
-                return snapped.toFixed(dec);
-            },
             snapUp(p, tick)   { return this.floorStep(+p + +tick, tick); },
             snapDown(p, tick) { return this.floorStep(+p, tick); },
+        }
+    },
+
+    // --- Telegram ---
+    telegram: {
+        getRaw(){ const E = BybitBotApp.DOMElements; return { t: (E['tg-token']?.value||'').trim(), c: (E['tg-chatid']?.value||'').trim() }; },
+        async sendTest(){
+            try{
+                const { t, c } = this.getRaw(); if(!t||!c) throw new Error('Missing token/chatid');
+                const msg = BybitBotApp.DOMElements['tg-msg']?.value || 'Test';
+                const r = await fetch(`https://api.telegram.org/bot${t}/sendMessage`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chat_id:c, text: msg }) });
+                const j = await r.json(); if(!j.ok) throw new Error(j.description||'Send failed');
+                BybitBotApp.ui.logLive('✓ Telegram test sent','ok');
+            }catch(e){ BybitBotApp.ui.logLive('Telegram error: '+e.message,'warn'); }
+        },
+        async notify(text){
+            try{
+                const { t, c } = this.getRaw(); if(!t||!c) return false;
+                await fetch(`https://api.telegram.org/bot${t}/sendMessage`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chat_id:c, text }) });
+                return true;
+            }catch{ return false; }
+        },
+        async validate(){
+            try{
+                const { t } = this.getRaw(); if(!t) throw new Error('Missing token');
+                const r = await fetch(`https://api.telegram.org/bot${t}/getMe`);
+                const j = await r.json(); if(!j.ok) throw new Error(j.description||'Invalid token');
+                BybitBotApp.ui.logLive(`✓ Bot: @${j.result.username}`,'ok');
+            }catch(e){ BybitBotApp.ui.logLive('Token invalid: '+e.message,'error'); }
+        },
+        async detectChatId(){
+            try{
+                const { t } = this.getRaw(); if(!t) throw new Error('Missing token');
+                const r = await fetch(`https://api.telegram.org/bot${t}/getUpdates`);
+                const j = await r.json(); if(!j.ok) throw new Error(j.description||'getUpdates failed');
+                const upd = (j.result||[]).slice().reverse().find(u=>u.message?.chat?.id);
+                if(!upd) throw new Error('No chat found. Send a message to the bot first.');
+                const chatId = upd.message.chat.id;
+                if (BybitBotApp.DOMElements['tg-chatid']) BybitBotApp.DOMElements['tg-chatid'].value = chatId;
+                BybitBotApp.ui.logLive(`✓ Detected Chat ID: ${chatId}`,'ok');
+            }catch(e){ BybitBotApp.ui.logLive('Detect Chat ID failed: '+e.message,'warn'); }
         }
     },
 
@@ -584,53 +1120,63 @@ const BybitBotApp = {
             return (proxy ? proxy.replace(/\/$/, '') + '/' : '') + u;
         },
 
+        // Internal: fetch JSON with timeout
+        async _fetchJsonWithTimeout(url, options = {}, timeoutMs = 18000) {
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), timeoutMs);
+            try {
+                const resp = await fetch(url, { ...options, signal: controller.signal });
+                const text = await resp.text();
+                let data; try { data = text ? JSON.parse(text) : {}; } catch { data = { raw: text }; }
+                return { resp, data };
+            } finally { clearTimeout(id); }
+        },
+
         async sign(method, path, qs = {}, body = null) {
             return this.withApiQueue(async () => {
-                const { config, state, ui, utils } = BybitBotApp;
+                const { config, ui, utils } = BybitBotApp;
                 await this.syncTime();
                 const apiKey = config.values.apiKey.trim();
                 const apiSecret = config.values.apiSecret.trim();
                 if (!apiKey || !apiSecret) throw new Error('Thiếu API');
 
-                const attempt = async (rwVal) => {
-                    const rw = String(rwVal);
-                    const ts = this.tsNow();
-                    let url, payloadStr = '';
+                const maxTries = 3;
+                let rwVal = this.suggestedRecvWindow();
+                for (let attemptIdx = 1; attemptIdx <= maxTries; attemptIdx++) {
+                    try {
+                        const rw = String(rwVal);
+                        const ts = this.tsNow();
+                        let url, payloadStr = '';
+                        if (method === 'GET') {
+                            payloadStr = BybitBotApp.utils.canonQS(qs);
+                            url = this.buildUrl(path, payloadStr);
+                        } else {
+                            payloadStr = body ? JSON.stringify(body) : '';
+                            url = this.buildUrl(path, '');
+                        }
+                        const sign = await utils.crypto.hmac(apiSecret, `${ts}${apiKey}${rw}${payloadStr}`);
+                        const headers = { 'X-BAPI-API-KEY': apiKey, 'X-BAPI-TIMESTAMP': ts, 'X-BAPI-RECV-WINDOW': rw, 'X-BAPI-SIGN-TYPE': '2', 'X-BAPI-SIGN': sign };
+                        if (method === 'POST') headers['Content-Type'] = 'application/json';
 
-                    if (method === 'GET') {
-                        payloadStr = utils.canonQS(qs);
-                        url = this.buildUrl(path, payloadStr);
-                    } else {
-                        // Bybit V5: body string phải đúng JSON không khoảng trắng dư
-                        payloadStr = body ? JSON.stringify(body) : '';
-                        url = this.buildUrl(path, '');
+                        const { resp, data } = await this._fetchJsonWithTimeout(url, { method, headers, body: (method === 'POST' && payloadStr) ? payloadStr : undefined }, 18000);
+                        if (resp.status === 403 && BybitBotApp.DOMElements.corsWarn) BybitBotApp.DOMElements.corsWarn.style.display = 'block';
+                        if (!resp.ok || data.retCode !== 0) {
+                            const ret = data.retCode ?? -1; const msg = data.retMsg || resp.statusText || 'ERR';
+                            const err = new Error(`HTTP ${resp.status} – ${msg} (${ret})`); err.retCode = ret; err.msg = msg; throw err;
+                        }
+                        return data.result;
+                    } catch (e) {
+                        const isTemporal = e.name === 'AbortError' || [429,500,502,503,504].some(c => String(e.message||'').includes(`HTTP ${c}`));
+                        const isTimeSkew = [10001,10002,10004].includes(e.retCode) || /recvWindow|timestamp|Signature/i.test(e.msg || '');
+                        if (attemptIdx < maxTries && (isTemporal || isTimeSkew)) {
+                            if (isTimeSkew) { await this.syncTime(true); rwVal += 5000; }
+                            const base = 600 * attemptIdx; const jitter = Math.floor(Math.random()*300);
+                            ui.logLive(`Retry ${attemptIdx}/${maxTries-1} for ${path}...`, 'warn');
+                            await new Promise(res => setTimeout(res, base + jitter));
+                            continue;
+                        }
+                        throw e;
                     }
-                    // SignType=2: HMAC-SHA256-HEX(ts + apiKey + recvWindow + query/body)
-                    const sign = await utils.crypto.hmac(apiSecret, `${ts}${apiKey}${rw}${payloadStr}`);
-                    const headers = { 'X-BAPI-API-KEY': apiKey, 'X-BAPI-TIMESTAMP': ts, 'X-BAPI-RECV-WINDOW': rw, 'X-BAPI-SIGN-TYPE': '2', 'X-BAPI-SIGN': sign };
-                    if (method === 'POST') headers['Content-Type'] = 'application/json';
-
-                    const resp = await fetch(url, { method, headers, body: (method === 'POST' && payloadStr) ? payloadStr : undefined });
-                    if (resp.status === 403) BybitBotApp.DOMElements.corsWarn.style.display = 'block';
-                    
-                    const data = await resp.json().catch(() => ({ retCode: -1, retMsg: 'Non-JSON' }));
-                    if (!resp.ok || data.retCode !== 0) {
-                        const err = new Error(`HTTP ${resp.status} – ${data.retMsg || 'ERR'} (${data.retCode})`);
-                        err.retCode = data.retCode; err.msg = data.retMsg;
-                        throw err;
-                    }
-                    return data.result;
-                };
-
-                try {
-                    return await attempt(this.suggestedRecvWindow());
-                } catch (e) {
-                    if ([10001, 10002, 10004].includes(e.retCode) || /recvWindow|timestamp|Signature/i.test(e.msg || '')) {
-                        ui.logLive(`API Error (${e.retCode}), đang thử lại...`, 'warn');
-                        await this.syncTime(true);
-                        return await attempt(this.suggestedRecvWindow() + 5000);
-                    }
-                    throw e;
                 }
             });
         },
@@ -657,7 +1203,22 @@ const BybitBotApp = {
         tsNow() { const t = this.now(); const { time } = BybitBotApp.state; time.lastTs = t <= time.lastTs ? (time.lastTs + 1) : t; return String(Math.floor(time.lastTs)); },
         suggestedRecvWindow() { const { config } = BybitBotApp; const { netRTT } = BybitBotApp.state.time; const pad = 2 * netRTT + 1500; return Math.max(10000, +config.values.recvWindow || 5000, pad); },
         
-        async pub(p, q = {}) { const r = await fetch(this.buildUrl(p, q)); if (r.status === 403 && !BybitBotApp.DOMElements.proxy.value.trim()) { BybitBotApp.DOMElements.corsWarn.style.display = 'block'; } return r.json(); },
+        async pub(p, q = {}) {
+            const url = this.buildUrl(p, q);
+            const tries = 2;
+            for (let i=1;i<=tries;i++){
+                try {
+                const { resp, data } = await this._fetchJsonWithTimeout(url, { method:'GET', headers:{'Accept':'application/json'} }, 15000);
+                    if (resp.status === 403 && !BybitBotApp.DOMElements.proxy.value.trim()) { BybitBotApp.DOMElements.corsWarn.style.display = 'block'; }
+                // chuẩn hoá lỗi mạng
+                if (resp.status === 0) throw new Error('Network error');
+                return data;
+                } catch (e) {
+                    if (i < tries) { await new Promise(r=>setTimeout(r, 200 + Math.random()*300)); continue; }
+                    throw e;
+                }
+            }
+        },
         async klines(s, i = '5', l = 200) { const j = await this.pub('/v5/market/kline', { category: 'spot', symbol: s, interval: i, limit: l }); if (j.retCode !== 0) throw new Error(j.retMsg); return j.result.list.map(r => ({ t: +r[0], o: +r[1], h: +r[2], l: +r[3], c: +r[4], v: +r[5] })).reverse(); },
         async tickers() { const j = await this.pub('/v5/market/tickers', { category: 'spot' }); if (j.retCode !== 0) throw new Error(j.retMsg); return j.result.list; },
         async instruments(s) { const j = await this.pub('/v5/market/instruments-info', { category: 'spot', symbol: s }); if (j.retCode !== 0) throw new Error(j.retMsg); return j.result.list[0]; },
@@ -709,6 +1270,10 @@ const BybitBotApp = {
             const n = await this.__norms(symbol);
             const trig = n.pr.snapUp(+price, n.tick);
             const qty = n.pr.fmtQty(baseQty, n.step);
+            // Pre-check: if quote value is below min amount, fallback to EMU OCO to avoid 170140
+            if ((+qty) * (+trig) < (n.minAmt || 0)) {
+                return { emu: true, type: 'tp', price: trig, qty };
+            }
             try {
                 return await BybitBotApp.api.sign('POST', '/v5/order/create', {}, {
                     category: 'spot', symbol, side: 'Sell',
@@ -716,7 +1281,7 @@ const BybitBotApp = {
                     orderFilter: 'StopOrder',
                     triggerDirection: 1,              // ↑ khớp khi giá tăng vượt
                     triggerBy: 'LastPrice',
-                    triggerPrice: n.pr.fmtPrice(trig, n.tick),
+                    triggerPrice: String(trig.toFixed(8)),
                     qty,
                     orderLinkId: `tp_${symbol}_${Date.now()}`
                 });
@@ -730,6 +1295,10 @@ const BybitBotApp = {
             const n = await this.__norms(symbol);
             const trig = n.pr.snapDown(+price, n.tick);
             const qty = n.pr.fmtQty(baseQty, n.step);
+            // Pre-check: if quote value is below min amount, fallback to EMU OCO to avoid 170140
+            if ((+qty) * (+trig) < (n.minAmt || 0)) {
+                return { emu: true, type: 'sl', price: trig, qty };
+            }
             try {
                 return await BybitBotApp.api.sign('POST', '/v5/order/create', {}, {
                     category: 'spot', symbol, side: 'Sell',
@@ -737,7 +1306,7 @@ const BybitBotApp = {
                     orderFilter: 'StopOrder',
                     triggerDirection: 2,              // ↓ khớp khi giá giảm xuyên thủng
                     triggerBy: 'LastPrice',
-                    triggerPrice: n.pr.fmtPrice(trig, n.tick),
+                    triggerPrice: String(trig.toFixed(8)),
                     qty,
                     orderLinkId: `sl_${symbol}_${Date.now()}`
                 });
@@ -857,6 +1426,8 @@ const BybitBotApp = {
                         }
                         ui.logLive(`WS private: auth failed (${msg.ret_msg})`, 'error');
                         try { ws.close(); } catch {}
+                        // Gợi ý sửa lỗi API
+                        ui.logLive('Kiểm tra lại API Key/Secret và Testnet/Real, sau đó Load API và Start lại.', 'warn');
                         return;
                     }
                     if (msg.topic === 'order') {
@@ -948,7 +1519,6 @@ const BybitBotApp = {
 
           // --- NEW: quote theo balance ---
           let quote = fixedQuote;
-          let capByFree = Infinity;
           if (config.values.useBalanceSizing) {
             try {
                 const { free, acct } = await api.usdtFreeBalance(false);
@@ -958,10 +1528,8 @@ const BybitBotApp = {
                 const rz    = Math.max(+config.values.reserveUsd || 0, 0);
 
                 const capByPct = free * pct;
-                capByFree = Math.max(0, free - rz);
-                // Target quote must respect min/max but DO NOT clamp down by free here
-                // We'll validate against free after precision & min rules
-                quote = Math.min(Math.max(capByPct, minQ), maxQ);
+                const capByFree= Math.max(0, free - rz);
+                quote = Math.min(Math.max(capByPct, minQ), maxQ, capByFree);
                 if (!isFinite(quote) || quote <= 0) quote = minQ;
 
                 BybitBotApp.ui.logLive(`[Sizing] acct=${acct} free=${free.toFixed(2)} → quote=${quote.toFixed(2)} USDT`);
@@ -980,7 +1548,7 @@ const BybitBotApp = {
           }
           
           let finalQuote = qty * price;
-          // Ràng amount theo quote step để không bị “decimal too long”
+          // Ràng amount theo quote step để không bị "decimal too long"
           finalQuote = utils.precision.floorStep(finalQuote, qstep);
           if (finalQuote < minOrderAmt) {
               let qtyForMinAmt = Math.ceil(minOrderAmt / price / step) * step;
@@ -989,18 +1557,6 @@ const BybitBotApp = {
               if (finalQuote < minOrderAmt) {
                   // Ceil lên mức min theo bội bước quote (nhỏ, nhưng bắt buộc)
                   finalQuote = utils.precision.ceilStep(minOrderAmt, qstep);
-              }
-          }
-
-          // If using balance sizing, ensure we actually have enough free USDT to place this order
-          if (config.values.useBalanceSizing) {
-              if (capByFree < minOrderAmt - 1e-8) {
-                  BybitBotApp.ui.logLive(`Insufficient free USDT (< min order ${minOrderAmt}) → bỏ qua lệnh`, 'warn');
-                  return { qty: 0, step, finalQuote: 0 };
-              }
-              if (finalQuote > capByFree + 1e-8) {
-                  BybitBotApp.ui.logLive(`Insufficient balance for ${finalQuote.toFixed(2)} USDT (free ${capByFree.toFixed(2)}) → bỏ qua lệnh`, 'warn');
-                  return { qty: 0, step, finalQuote: 0 };
               }
           }
           return { qty, step, finalQuote };
@@ -1029,6 +1585,7 @@ const BybitBotApp = {
             ui.updateStatus('Đang chạy...');
             liveBot.scheduler();
             ui.logLive('Bot đã bắt đầu.', 'ok');
+            if (BybitBotApp.config.values['TG_onLifecycle']) { BybitBotApp.telegram.notify('▶️ Bot started'); }
         },
 
         async stop() {
@@ -1044,6 +1601,7 @@ const BybitBotApp = {
             
             ui.updateStatus('Đã dừng', 'warn');
             ui.logLive('Bot đã dừng.', 'warn');
+            if (BybitBotApp.config.values['TG_onLifecycle']) { BybitBotApp.telegram.notify('■ Bot stopped'); }
             state.isStopping = false;
         },
         
@@ -1074,6 +1632,9 @@ const BybitBotApp = {
                 pnl,
                 note
             });
+            if (BybitBotApp.config.values['TG_onTrade']) {
+                BybitBotApp.telegram.notify(`EXIT ${state.currentPosition.sym} @ ${exitPrice} | PnL ${pnl.toFixed(2)}$`);
+            }
             this.gracefulExit();
         },
 
@@ -1082,6 +1643,7 @@ const BybitBotApp = {
             ui.updateStats(); // Update time
             if (journal.state.loss >= config.values.maxLossDay) return ui.updateStatus('Tạm dừng (Max Loss)', 'warn');
             if (state.isInPosition) return;
+            if (!BybitBotApp.ui.withinTimeWindow()) return ui.updateStatus('Ngoài khung giờ giao dịch', 'warn');
             
             try {
                 // Find best symbol
@@ -1093,10 +1655,16 @@ const BybitBotApp = {
                 if (!btcOk) dynMin += 1;
 
                 let best = null;
+                const viewSamples = [];
                 for (const sym of symbols) {
                     try {
                         const kl = await api.klines(sym, config.values.tf, 200);
                         const s = utils.strategy.pullbackScore(kl);
+                        // collect for visualization first symbol
+                        if (!viewSamples.length) {
+                          const C = kl.map(k=>k.c); const ema20 = utils.indicators.sma(C,20)||[]; const ema50 = utils.indicators.sma(C,50)||[];
+                          viewSamples.push({ kl, ema20, ema50 });
+                        }
                         // Add relative strength logic if BTC is not OK
                         if (!btcOk && kl.length >= 10) {
                              const C = kl.map(k=>k.c);
@@ -1109,14 +1677,60 @@ const BybitBotApp = {
                     } catch (e) {}
                 }
                 state.currentPosition.signal = best ? `${best.sym} • Điểm ${best.meta.score}` : '—';
+                // Draw strategy view for top-watching symbol (fallback nếu chưa có symbol: BTCUSDT)
+                if (viewSamples.length){ const v = viewSamples[0];
+                  const C = v.kl.map(k=>k.c);
+                  const emaF = utils.indicators.emaSeries(C, 20);
+                  const emaS = utils.indicators.emaSeries(C, 50);
+                  ui.drawLiveStrategy(v.kl, emaF, emaS, {});
+                }
+                else {
+                  try{
+                    const sym = 'BTCUSDT'; const kl = await api.klines(sym, config.values.tf, 200);
+                    const C = kl.map(k=>k.c); const ema20 = utils.indicators.emaSeries(C,20); const ema50 = utils.indicators.emaSeries(C,50);
+                    ui.drawLiveStrategy(kl, ema20, ema50, {});
+                  }catch{}
+                }
                 ui.updateStats();
                 
                 if (!best || !config.values.autoMode || best.meta.score < dynMin) return;
+
+                // MTF confirmation
+                if (BybitBotApp.DOMElements.CO_mtfEnable?.checked) {
+                    try{
+                        const tfHi = String(BybitBotApp.DOMElements.CO_mtfTf.value||'15');
+                        const klHi = await api.klines(best.sym, tfHi, 60);
+                        const C2 = klHi.map(k=>k.c); const ema20 = utils.indicators.sma(C2,20), ema50 = utils.indicators.sma(C2,50);
+                        const rhi = utils.indicators.rsi(C2,14)||0;
+                        const trendOk = (ema20!=null && ema50!=null) ? (ema20>ema50) : (rhi>50);
+                        if (!trendOk) return ui.logLive(`MTF từ chối ${best.sym} (${tfHi})`, 'warn');
+                    }catch{}
+                }
+
+                // Regime-based presets (AUTO)
+                if ((BybitBotApp.DOMElements.CO_regimeMode?.value||'AUTO')==='AUTO'){
+                    try{
+                        const klRef = await api.klines('BTCUSDT', String(config.values.tf||'5'), 120);
+                        const Cb = klRef.map(k=>k.c); const ema20b = utils.indicators.sma(Cb,20), ema50b=utils.indicators.sma(Cb,50);
+                        const trb = utils.indicators.trArr(klRef.map(k=>k.h), klRef.map(k=>k.l), Cb); const atrb = utils.indicators.median(trb.slice(-14));
+                        const atrp = Cb.length ? atrb/Cb.at(-1) : 0;
+                        let mode = 'SIDEWAYS'; if (ema20b>ema50b) mode='TREND'; if (atrp>0.02 && ema20b<ema50b) mode='MEANREV';
+                        // apply light preset
+                        const E = BybitBotApp.DOMElements; if (mode==='TREND'){ E.B_tpK.value=1.5; E.B_slK.value=0.9; } else if (mode==='MEANREV'){ E.B_tpK.value=1.2; E.B_slK.value=0.8; } else { E.B_tpK.value=1.3; E.B_slK.value=0.9; }
+                        E.B_tpK.dispatchEvent(new Event('change')); E.B_slK.dispatchEvent(new Event('change'));
+                    }catch{}
+                }
                 
                 // Calculate TP/SL
                 const tpsl = utils.strategy.calcTPSL(best.meta.last, best.meta.atr || best.meta.last * 0.005, config.values.B_tpK, config.values.B_slK);
                 if (tpsl.rr < 1.2) return ui.logLive(`Bỏ qua ${best.sym}: R:R ${tpsl.rr.toFixed(2)}<1.2`, 'warn');
                 
+                // Spread/slippage guard (approx using last price & tick size)
+                try{
+                    const t = await api.pub('/v5/market/tickers', { category:'spot', symbol: best.sym });
+                    if (t?.result?.list?.length){ const s = t.result.list[0]; const bid = +s.bid1Price||best.meta.last; const ask = +s.ask1Price||best.meta.last; const spreadBps = (ask-bid)/((ask+bid)/2)*10000; const maxBps = +BybitBotApp.DOMElements.CO_maxSpreadBps?.value||15; if (spreadBps>maxBps) return ui.logLive(`Spread guard: ${best.sym} ${spreadBps.toFixed(1)}bps > ${maxBps}`, 'warn'); }
+                }catch{}
+
                 // Calculate quantity
                 const { qty, step, finalQuote } = await this.computeOrderQtyLive(best.sym, config.values.orderQuote);
                 if (qty <= 0 || finalQuote <= 0) return ui.logLive('Không tính được số lượng hợp lệ', 'warn');
@@ -1136,13 +1750,27 @@ const BybitBotApp = {
                 ui.logLive(`Đã đặt lệnh BUY ${best.sym} (id=${buyOrder.orderId})`, 'ok');
                 ui.updateStatus('Trong vị thế');
                 await api.cancelAll(best.sym);
+                if (BybitBotApp.config.values['TG_onTrade']) {
+                    BybitBotApp.telegram.notify(`BUY ${best.sym} ~ ${finalQuote.toFixed(2)} USDT`);
+                }
+                // update overlay
+                try{
+                    const kl = await api.klines(best.sym, config.values.tf, 200);
+                    const C = kl.map(k=>k.c); const ema20 = utils.indicators.emaSeries(C,20); const ema50 = utils.indicators.emaSeries(C,50);
+                    ui.drawLiveStrategy(kl, ema20, ema50, { entry: { t: Date.now(), p: best.meta.last }, tp: tpsl.tp, sl: tpsl.sl });
+                }catch{}
                 
                 // Get filled quantity and place OCO
                 let filledQty = 0;
                 try {
-                    const orders = await api.realtimeOrders(best.sym);
-                    const exec = orders?.list?.find(o => o.orderId === buyOrder.orderId);
-                    filledQty = +(exec?.cumExecQty || 0);
+                    // Wait briefly and poll a few times for execution info
+                    for (let k=0;k<3;k++){
+                        await new Promise(r=>setTimeout(r, 400 + Math.random()*250));
+                        const orders = await api.realtimeOrders(best.sym);
+                        const exec = orders?.list?.find(o => o.orderId === buyOrder.orderId);
+                        filledQty = +(exec?.cumExecQty || 0);
+                        if (filledQty > 0) break;
+                    }
                 } catch (e) {}
                 
                 let sellQty = filledQty > 0 ? filledQty : qty;
@@ -1190,9 +1818,9 @@ const BybitBotApp = {
                     if (Date.now() - startTime > config.values.timeStopMin * 60 * 1000) {
                         ui.logLive('Time-stop, đang thoát lệnh...', 'warn');
                         const qtyExit = currentPosition.sellQty || currentPosition.qty;
-                        let soldOk = true;
-                        try { await api.sell(currentPosition.sym, qtyExit); } catch (e) { soldOk = false; ui.logLive('Lỗi Market SELL: ' + e.message, 'warn'); }
-                        if (soldOk) { this.handlePositionExit(px, 'Time-stop'); return; }
+                        try { await api.sell(currentPosition.sym, qtyExit); } catch (e) { ui.logLive('Lỗi Market SELL: ' + e.message, 'warn'); }
+                        this.handlePositionExit(px, 'Time-stop');
+                        return;
                     }
 
                     let newSl = currentPosition.sl, needsUpdate = false, isTrailing = false;
@@ -1205,6 +1833,18 @@ const BybitBotApp = {
                         if (newSl > currentPosition.sl) { ui.logLive(`Trailing SL → ${newSl.toFixed(6)}`, 'ok'); needsUpdate = true; isTrailing = true; }
                     }
 
+                    // Partial TP1
+                    if (BybitBotApp.DOMElements.CO_tp1Enable?.checked && !currentPosition.tp1Done && px >= currentPosition.tp) {
+                        const frac = Math.min(0.9, Math.max(0.1, +BybitBotApp.DOMElements.CO_tp1Frac?.value || 0.4));
+                        const sellQty = (currentPosition.sellQty || currentPosition.qty) * frac;
+                        try { await api.sell(currentPosition.sym, sellQty); } catch {}
+                        currentPosition.sellQty = (currentPosition.sellQty || currentPosition.qty) * (1-frac);
+                        currentPosition.tp1Done = true; ui.logLive(`[TP1] Chốt ${Math.round(frac*100)}% tại ${px}`, 'ok');
+                        // Move SL to BE
+                        newSl = Math.max(newSl, currentPosition.entry);
+                        needsUpdate = true;
+                    }
+
                     if (needsUpdate && config.values.useOCOEmu) {
                         state.currentPosition.sl = newSl;
                         if (isTrailing) state.currentPosition.tp *= 1.05;
@@ -1212,6 +1852,12 @@ const BybitBotApp = {
                         const qtyToUse = currentPosition.sellQty || currentPosition.qty;
                         await api.tp(currentPosition.sym, qtyToUse, state.currentPosition.tp);
                         await api.sl(currentPosition.sym, qtyToUse, state.currentPosition.sl);
+                        // refresh overlay lines
+                        try{
+                          const kl = await api.klines(currentPosition.sym, BybitBotApp.config.values.tf, 120);
+                          const C = kl.map(k=>k.c); const ema20 = BybitBotApp.utils.indicators.emaSeries(C,20); const ema50 = BybitBotApp.utils.indicators.emaSeries(C,50);
+                          BybitBotApp.ui.drawLiveStrategy(kl, ema20, ema50, { tp: state.currentPosition.tp, sl: state.currentPosition.sl });
+                        }catch{}
                     }
                 } catch (e) { ui.logLive('Lỗi theo dõi lệnh: ' + e.message, 'warn'); }
             }, 8000); // Poll less frequently
@@ -1493,6 +2139,46 @@ Max Drawdown  : ${(maxDD * 100).toFixed(2)}%`;
             });
         },
 
+        drawLiveStrategy(kl, emaF, emaS, overlay={}) {
+            const E = BybitBotApp.DOMElements; if (!E.liveStrategyChart) return;
+            const ctx = E.liveStrategyChart.getContext('2d');
+            if (this.liveStratInstance) this.liveStratInstance.destroy();
+            const labels = kl.map(k=>k.t);
+            const price = kl.map(k=>k.c);
+            const ds = [
+              { label:'Price', data: price.map((v,i)=>({x:labels[i], y:v})), borderColor:'#0a84ff', pointRadius:0 },
+              { label:'EMA20', data: emaF.map((v,i)=>({x:labels[i], y:v})), borderColor:'#34c759', pointRadius:0 },
+              { label:'EMA50', data: emaS.map((v,i)=>({x:labels[i], y:v})), borderColor:'#ff9f0a', pointRadius:0 }
+            ];
+            // overlays
+            try{
+              if (BybitBotApp.DOMElements.OV_vwap?.checked){
+                let sumPV=0, sumV=0; const vwap=[]; for(let i=0;i<kl.length;i++){ const p=(kl[i].h+kl[i].l+kl[i].c)/3; const v=kl[i].v||0; sumPV+=p*v; sumV+=v; vwap.push(sumV? sumPV/sumV : kl[i].c); }
+                ds.push({ label:'VWAP', data:vwap.map((v,i)=>({x:labels[i], y:v})), borderColor:'#8e8e93', pointRadius:0 });
+              }
+              if (BybitBotApp.DOMElements.OV_bb?.checked){
+                const period=20; const std=(arr)=>{const m=arr.reduce((a,b)=>a+b,0)/arr.length; return Math.sqrt(arr.reduce((a,b)=>a+(b-m)*(b-m),0)/arr.length);};
+                const bbU=[], bbL=[]; for(let i=0;i<price.length;i++){ const w=price.slice(Math.max(0,i-period+1), i+1); const m=w.reduce((a,b)=>a+b,0)/w.length; const s=std(w); bbU.push(m+2*s); bbL.push(m-2*s);} 
+                ds.push({ label:'BB Upper', data:bbU.map((v,i)=>({x:labels[i], y:v})), borderColor:'rgba(10,132,255,0.4)', pointRadius:0 });
+                ds.push({ label:'BB Lower', data:bbL.map((v,i)=>({x:labels[i], y:v})), borderColor:'rgba(10,132,255,0.4)', pointRadius:0 });
+              }
+            }catch{}
+            const tMin = labels[0], tMax = labels[labels.length-1];
+            if (overlay.entry){
+              ds.push({ type:'scatter', label:'Entry', data:[{x: overlay.entry.t||tMax, y: overlay.entry.p}], borderColor:'#34c759', backgroundColor:'#34c759', pointRadius:4, showLine:false });
+            }
+            if (overlay.exits && overlay.exits.length){
+              ds.push({ type:'scatter', label:'Exit', data: overlay.exits.map(e=>({x:e.t||tMax, y:e.p})), borderColor:'#ff3b30', backgroundColor:'#ff3b30', pointRadius:4, showLine:false });
+            }
+            if (overlay.tp){
+              ds.push({ label:'TP', data:[{x:tMin,y:overlay.tp},{x:tMax,y:overlay.tp}], borderColor:'#34c759', borderDash:[6,4], pointRadius:0 });
+            }
+            if (overlay.sl){
+              ds.push({ label:'SL', data:[{x:tMin,y:overlay.sl},{x:tMax,y:overlay.sl}], borderColor:'#ff3b30', borderDash:[6,4], pointRadius:0 });
+            }
+            this.liveStratInstance = new Chart(ctx, { type:'line', data:{ datasets: ds }, options:{ parsing:false, scales:{ x:{ type:'time'}, y:{} }, plugins:{ legend:{ display:true } } } });
+        },
+
         async gridSearch() {
             const { ui, config, DOMElements } = BybitBotApp;
             ui.logBack('Bắt đầu Grid Search...', 'ok');
@@ -1563,9 +2249,16 @@ Max Drawdown  : ${(maxDD * 100).toFixed(2)}%`;
         this.DOMElements = {};
         const allIds = [
             ...this.config.ids, 'status', 'watching', 'signal', 'lastUpdate', 'lossStreak', 'pnlDay',
-            'logLive', 'journalLive', 'logBack', 'B_summary', 'pnlChart', 'journalBack', 'bySymBack',
-            'start', 'stop', 'resetDay', 'saveKeys', 'loadKeys', 'clearKeys',
-            'B_run', 'B_grid', 'autopilot', 'corsWarn', 'tab-live', 'tab-back', 'tab-help', 'usdtFree'
+            'logLive', 'journalLive', 'logBack', 'B_summary', 'pnlChart', 'journalBack', 'bySymBack', 'liveStrategyChart',
+            'start', 'stop', 'resetDay', 'saveKeys', 'loadKeys', 'clearKeys', 'btn-tg-send', 'tg-msg',
+            'B_run', 'B_grid', 'autopilot', 'corsWarn', 'tab-live', 'tab-back', 'tab-help', 'usdtFree',
+            // Radar
+            'tab-radar','radar-list','R_scan','R_topN','R_minTurnover','R_maxPrice','R_interval','R_auto',
+            'RA_enable','RA_retMin','RA_retPct','RA_volSpike','RA_coolMin',
+            // Daily report
+            'DR_enable','DR_time','DR_send',
+            // News
+            'tab-news','news-list','NW_refresh','NW_src_coindesk','NW_src_cointele','NW_src_binance','NW_keywords','NW_interval','NW_auto','NW_forward'
         ];
         allIds.forEach(id => this.DOMElements[id] = document.getElementById(id));
 
@@ -1576,12 +2269,14 @@ Max Drawdown  : ${(maxDD * 100).toFixed(2)}%`;
             tabs.forEach(x => x.classList.remove('active'));
             t.classList.add('active');
             Object.values(views).forEach(v => v.classList.remove('active'));
-            views[t.dataset.tab].classList.add('active');
+            (views[t.dataset.tab] || this.DOMElements[`tab-${t.dataset.tab}`])?.classList.add('active');
         });
 
         // Load config and journal
         this.config.loadFromStorage();
         this.journal.load();
+        // Apply compact mode on load
+        try{ if (this.DOMElements.uiCompact?.checked) document.body.classList.add('compact'); }catch{}
         
         // Attach event listeners
         this.config.ids.forEach(id => {
@@ -1589,6 +2284,10 @@ Max Drawdown  : ${(maxDD * 100).toFixed(2)}%`;
             if (el) el.addEventListener('change', () => {
                 this.config.load();
                 this.config.saveToStorage();
+                if (id === 'uiCompact') {
+                    if (el.checked) document.body.classList.add('compact');
+                    else document.body.classList.remove('compact');
+                }
             });
         });
         
@@ -1604,10 +2303,46 @@ Max Drawdown  : ${(maxDD * 100).toFixed(2)}%`;
         this.DOMElements.B_run.onclick = () => this.backtester.run();
         this.DOMElements.B_grid.onclick = () => this.backtester.gridSearch();
         this.DOMElements.autopilot.onclick = () => this.backtester.runAutopilot();
+
+        // Radar auto toggle
+        const rAuto = this.DOMElements.R_auto; if (rAuto) {
+            rAuto.addEventListener('change', ()=>{
+                if (rAuto.checked) BybitBotApp.radar.startAuto(); else BybitBotApp.radar.stopAuto();
+            });
+        }
+
+        // Daily report controls
+        if (this.DOMElements.DR_send) this.DOMElements.DR_send.onclick = () => this.dailyReport.sendNow();
+        const drEnable = this.DOMElements.DR_enable; if (drEnable) {
+            drEnable.addEventListener('change', ()=>{
+                if (drEnable.checked) this.dailyReport.start(); else this.dailyReport.stop();
+            });
+        }
+
+        // Coaching actions
+        const coBtn = this.DOMElements.CO_analyze; if (coBtn) coBtn.onclick = () => this.coaching.run();
+
+        // News
+        if (this.DOMElements.NW_refresh) this.DOMElements.NW_refresh.onclick = () => this.news.render();
+        const nwAuto = this.DOMElements.NW_auto; if (nwAuto){ nwAuto.addEventListener('change', ()=>{ if (nwAuto.checked) this.news.startAuto(); else this.news.stopAuto(); }); }
+
+        // Panic Sell button & hotkey (Shift+P)
+        if (this.DOMElements.panicSell) this.DOMElements.panicSell.onclick = async () => {
+            try{
+                const { state, api, ui } = BybitBotApp; const pos = state.currentPosition; if (!state.isInPosition || !pos?.sym) return;
+                ui.logLive('Panic Sell initiated...', 'warn');
+                const qtyExit = pos.sellQty || pos.qty; await api.sell(pos.sym, qtyExit);
+                BybitBotApp.liveBot.handlePositionExit(pos.entry, 'Panic Sell');
+            }catch(e){ BybitBotApp.ui.logLive('Panic Sell error: '+e.message, 'error'); }
+        };
+        window.addEventListener('keydown', (ev)=>{ if (ev.shiftKey && (ev.key==='P' || ev.key==='p')) this.DOMElements.panicSell?.click(); });
         
         if (this.config.values.autoRun) {
             this.liveBot.start();
         }
+        if (this.DOMElements['btn-tg-send']) this.DOMElements['btn-tg-send'].onclick = () => this.telegram.sendTest();
+        const vBtn = document.getElementById('btn-tg-validate'); if (vBtn) vBtn.onclick = () => this.telegram.validate();
+        const dBtn = document.getElementById('btn-tg-detect'); if (dBtn) dBtn.onclick = () => this.telegram.detectChatId();
     }
 };
 
@@ -1617,4 +2352,3 @@ window.addEventListener('DOMContentLoaded', () => BybitBotApp.init());
 </script>
 </body>
 </html>
-
