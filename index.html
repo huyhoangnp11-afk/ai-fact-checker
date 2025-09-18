@@ -553,6 +553,12 @@ const BybitBotApp = {
                 if (floored < qstep) return (0).toFixed(dec);
                 return floored.toFixed(dec);
             },
+            // price formatted to tick precision
+            fmtPrice(p, tick) {
+                const dec = this.__dec(tick);
+                const snapped = this.floorStep(p, tick);
+                return snapped.toFixed(dec);
+            },
             snapUp(p, tick)   { return this.floorStep(+p + +tick, tick); },
             snapDown(p, tick) { return this.floorStep(+p, tick); },
         }
@@ -710,7 +716,7 @@ const BybitBotApp = {
                     orderFilter: 'StopOrder',
                     triggerDirection: 1,              // ↑ khớp khi giá tăng vượt
                     triggerBy: 'LastPrice',
-                    triggerPrice: String(trig.toFixed(8)),
+                    triggerPrice: n.pr.fmtPrice(trig, n.tick),
                     qty,
                     orderLinkId: `tp_${symbol}_${Date.now()}`
                 });
@@ -731,7 +737,7 @@ const BybitBotApp = {
                     orderFilter: 'StopOrder',
                     triggerDirection: 2,              // ↓ khớp khi giá giảm xuyên thủng
                     triggerBy: 'LastPrice',
-                    triggerPrice: String(trig.toFixed(8)),
+                    triggerPrice: n.pr.fmtPrice(trig, n.tick),
                     qty,
                     orderLinkId: `sl_${symbol}_${Date.now()}`
                 });
@@ -942,6 +948,7 @@ const BybitBotApp = {
 
           // --- NEW: quote theo balance ---
           let quote = fixedQuote;
+          let capByFree = Infinity;
           if (config.values.useBalanceSizing) {
             try {
                 const { free, acct } = await api.usdtFreeBalance(false);
@@ -951,8 +958,10 @@ const BybitBotApp = {
                 const rz    = Math.max(+config.values.reserveUsd || 0, 0);
 
                 const capByPct = free * pct;
-                const capByFree= Math.max(0, free - rz);
-                quote = Math.min(Math.max(capByPct, minQ), maxQ, capByFree);
+                capByFree = Math.max(0, free - rz);
+                // Target quote must respect min/max but DO NOT clamp down by free here
+                // We'll validate against free after precision & min rules
+                quote = Math.min(Math.max(capByPct, minQ), maxQ);
                 if (!isFinite(quote) || quote <= 0) quote = minQ;
 
                 BybitBotApp.ui.logLive(`[Sizing] acct=${acct} free=${free.toFixed(2)} → quote=${quote.toFixed(2)} USDT`);
@@ -980,6 +989,18 @@ const BybitBotApp = {
               if (finalQuote < minOrderAmt) {
                   // Ceil lên mức min theo bội bước quote (nhỏ, nhưng bắt buộc)
                   finalQuote = utils.precision.ceilStep(minOrderAmt, qstep);
+              }
+          }
+
+          // If using balance sizing, ensure we actually have enough free USDT to place this order
+          if (config.values.useBalanceSizing) {
+              if (capByFree < minOrderAmt - 1e-8) {
+                  BybitBotApp.ui.logLive(`Insufficient free USDT (< min order ${minOrderAmt}) → bỏ qua lệnh`, 'warn');
+                  return { qty: 0, step, finalQuote: 0 };
+              }
+              if (finalQuote > capByFree + 1e-8) {
+                  BybitBotApp.ui.logLive(`Insufficient balance for ${finalQuote.toFixed(2)} USDT (free ${capByFree.toFixed(2)}) → bỏ qua lệnh`, 'warn');
+                  return { qty: 0, step, finalQuote: 0 };
               }
           }
           return { qty, step, finalQuote };
@@ -1169,9 +1190,9 @@ const BybitBotApp = {
                     if (Date.now() - startTime > config.values.timeStopMin * 60 * 1000) {
                         ui.logLive('Time-stop, đang thoát lệnh...', 'warn');
                         const qtyExit = currentPosition.sellQty || currentPosition.qty;
-                        try { await api.sell(currentPosition.sym, qtyExit); } catch (e) { ui.logLive('Lỗi Market SELL: ' + e.message, 'warn'); }
-                        this.handlePositionExit(px, 'Time-stop');
-                        return;
+                        let soldOk = true;
+                        try { await api.sell(currentPosition.sym, qtyExit); } catch (e) { soldOk = false; ui.logLive('Lỗi Market SELL: ' + e.message, 'warn'); }
+                        if (soldOk) { this.handlePositionExit(px, 'Time-stop'); return; }
                     }
 
                     let newSl = currentPosition.sl, needsUpdate = false, isTrailing = false;
