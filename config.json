@@ -1,0 +1,50 @@
+{
+  "api": {
+    "base_url": "https://api.bybit.com",
+    "api_key": "YOUR_API_KEY_HERE",
+    "api_secret": "YOUR_API_SECRET_HERE",
+    "testnet": false
+  },
+  "trading": {
+    "default_symbols": ["TOSHIUSDT", "BTCUSDT", "ETHUSDT"],
+    "max_position_size": 0.1,
+    "risk_per_trade": 0.02,
+    "max_daily_trades": 100,
+    "timeout_seconds": 30
+  },
+  "precision": {
+    "auto_fetch_symbol_info": true,
+    "cache_symbol_info": true,
+    "default_base_precision": 8,
+    "default_quote_precision": 4
+  },
+  "balance": {
+    "min_balance_ratio": 0.1,
+    "auto_rebalance": false,
+    "reserve_balance": 0.05
+  },
+  "oco": {
+    "fallback_enabled": true,
+    "monitoring_interval": 1,
+    "max_stop_distance": 0.05
+  },
+  "logging": {
+    "level": "INFO",
+    "file_logging": true,
+    "log_file": "trading_bot.log",
+    "max_log_size": "10MB",
+    "backup_count": 5
+  },
+  "retry": {
+    "max_retries": 3,
+    "base_delay": 1.0,
+    "exponential_backoff": true,
+    "max_delay": 60.0
+  },
+  "errors": {
+    "handle_insufficient_balance": true,
+    "handle_precision_errors": true,
+    "auto_adjust_quantities": true,
+    "log_all_errors": true
+  }
+}
