@@ -1823,6 +1823,9 @@ const BybitBotApp = {
             const j = localStorage.getItem('bb_journal_v6');
             this.state = j ? JSON.parse(j) : { date: this.today(), loss: 0, pnl: 0, trades: [] };
             if (this.state.date !== this.today()) this.reset();
+            // Normalize legacy/null values
+            if (typeof this.state.pnl !== 'number' || isNaN(this.state.pnl)) this.state.pnl = 0;
+            if (typeof this.state.loss !== 'number' || isNaN(this.state.loss)) this.state.loss = 0;
             this.updateUI();
         },
         save() {
@@ -1845,7 +1848,7 @@ const BybitBotApp = {
         updateUI() {
             const { DOMElements, ui } = BybitBotApp;
             DOMElements.lossStreak.textContent = this.state.loss;
-            DOMElements.pnlDay.textContent = this.state.pnl.toFixed(2);
+            DOMElements.pnlDay.textContent = ((+this.state.pnl)||0).toFixed(2);
             ui.renderJournal('journalLive', this.state.trades);
         }
     },
