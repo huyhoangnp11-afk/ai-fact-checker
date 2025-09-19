@@ -1,0 +1,42 @@
+{
+  "bybit_api": {
+    "api_key": "",
+    "secret_key": "",
+    "base_url": "https://api.bybit.com",
+    "testnet": false
+  },
+  "trading_parameters": {
+    "rsi_period": 14,
+    "rsi_oversold": 30,
+    "rsi_overbought": 70,
+    "macd_fast": 12,
+    "macd_slow": 26,
+    "macd_signal": 9,
+    "volume_threshold": 1.5,
+    "price_change_threshold": 5.0,
+    "min_volume_24h": 1000000,
+    "max_coins_analyze": 100,
+    "refresh_interval": 300
+  },
+  "risk_management": {
+    "max_position_size": 0.1,
+    "stop_loss_percentage": 0.05,
+    "take_profit_percentage": 0.15,
+    "max_daily_trades": 10,
+    "max_concurrent_positions": 5
+  },
+  "notification": {
+    "telegram_bot_token": "",
+    "telegram_chat_id": "",
+    "email_smtp_server": "",
+    "email_username": "",
+    "email_password": "",
+    "email_recipients": []
+  },
+  "logging": {
+    "level": "INFO",
+    "file_path": "bybit_momentum_hunter.log",
+    "max_file_size": 10485760,
+    "backup_count": 5
+  }
+}
