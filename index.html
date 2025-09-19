@@ -75,6 +75,43 @@
     body.compact #logLive, body.compact #logBack{height:160px;padding:8px}
     body.compact .tab{padding:8px 12px}
     body.compact #liveStrategyChart{height:280px !important}
+
+    /* Strategy chart sizing */
+    .chart-box{
+      position: relative;
+      width: 100%;
+      height: clamp(280px, 40vh, 380px);
+      overflow: hidden;
+      border-radius: 12px;
+    }
+    #liveStrategyChart{
+      position: absolute; inset: 0;
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+    }
+    @media (max-width: 768px){
+      .chart-box{ height: 300px; }
+    }
+    /* an toàn hơn nữa: tránh content vượt khung card */
+    .card{ overflow: hidden; }
+
+    /* Collapsible cards (details/summary) */
+    .card.collapse{ padding: 0; }
+    .card.collapse>summary{ display:flex; align-items:center; gap:8px; padding:12px 14px; border-bottom:1px solid var(--line); cursor:pointer; font-weight:600; background:#fbfbfd; border-radius:12px 12px 0 0 }
+    .card.collapse[open]>summary{ border-bottom-color: var(--accent); box-shadow: var(--shadow); }
+    .card.collapse>summary::-webkit-details-marker{ display:none }
+    .card.collapse>div{ padding:12px 16px }
+
+    /* Tighter overall spacing in Live tab */
+    #tab-live .grid{ gap:12px }
+    body.compact #tab-live .grid{ gap:8px }
+
+    /* PATCH 3 — CSS helpers */
+    .fixed-scroll{ max-height:360px; overflow:auto }
+    .journal-clip{ max-height:360px; overflow:auto; background:#fff; border:1px solid var(--line); border-radius:8px; padding:4px }
+    @media (max-width: 992px){ .fixed-scroll,.journal-clip{ max-height:300px } }
+    @media (max-width: 768px){ .fixed-scroll,.journal-clip{ max-height:360px } }
   </style>
 </head>
 <body>
@@ -136,6 +173,10 @@
             </div>
           </div>
           <div class="col-12"><label>Symbol List (CSV, empty = ALT Hunter)</label><input id="symbolList" placeholder="Leave empty for auto-selection of trending ALTs"/></div>
+          <div class="row" style="gap:8px;align-items:flex-end">
+            <div style="width:50%"><label>Whitelist (CSV)</label><input id="WL_symbols" placeholder="DOGEUSDT,SUIUSDT"/></div>
+            <div style="width:50%"><label>Blacklist (CSV)</label><input id="BL_symbols" placeholder="PEPEUSDT,..."/></div>
+          </div>
           <div class="col-3"><label>Min Signal Score (>=)</label><input id="minScore" type="number" value="5"/></div>
           <div class="col-3"><label>Time‑stop (minutes)</label><input id="timeStopMin" type="number" value="15"/></div>
           <div class="col-3"><label>Max Daily Losses</label><input id="maxLossDay" type="number" value="2"/></div>
@@ -200,7 +241,9 @@
       </div>
       <div class="card col-12">
         <b>Strategy View</b>
-        <canvas id="liveStrategyChart" style="margin-top:10px; height:360px"></canvas>
+        <div class="chart-box" style="margin-top:10px">
+          <canvas id="liveStrategyChart"></canvas>
+        </div>
       </div>
       <div class="card col-12">
         <b>Journal & Performance (Live)</b>
@@ -397,6 +440,7 @@ const BybitBotApp = {
             netRTT: 300,
             lastTs: 0,
         },
+        cooldown: { bySym: {} },
         apiQueue: Promise.resolve(),
         cancelLock: false,
         cancelTimer: null,
@@ -416,6 +460,7 @@ const BybitBotApp = {
                 const tickers = await api.tickers();
                 const list = tickers
                     .filter(t => t.symbol.endsWith('USDT'))
+                    .filter(t => !BybitBotApp.filters.isPeggedSymbol(t.symbol))
                     .map(t => ({
                         ...t,
                         // xấp xỉ turnover 1h từ 24h: chia 24 (đủ nhanh, chấp nhận sai số)
@@ -503,29 +548,80 @@ const BybitBotApp = {
     // --- News Aggregator ---
     news: {
         timer: null,
+        hints: [],
+        getHints(){
+            const now = Date.now();
+            this.hints = (this.hints||[]).filter(h => h.expire > now);
+            return Array.from(new Set(this.hints.map(h => h.sym)));
+        },
+        _parseTickers(s){
+            if(!s) return [];
+            const txt = s.toUpperCase();
+            const out = new Set();
+            (txt.match(/\$([A-Z0-9]{2,12})\b/g)||[]).forEach(m=>out.add(m.slice(1)));
+            (txt.match(/\b([A-Z0-9]{2,12})USDT\b/g)||[]).forEach(m=>out.add(m.replace(/USDT$/,'')));
+            (txt.match(/\b([A-Z0-9]{2,12})\/USDT\b/g)||[]).forEach(m=>out.add(m.split('/')[0]));
+            ['USDT','USDC','FDUSD','TUSD','BUSD','USD','UST'].forEach(b=>out.delete(b));
+            return [...out];
+        },
+        _updateHintsFromNews(items){
+            const base = Math.max(5, +BybitBotApp.DOMElements.NW_interval?.value || 15);
+            const ttlMin = base * 2;
+            const expire = Date.now() + ttlMin*60*1000;
+            const seen = new Set();
+            for (const it of (items||[])){
+                const ticks = this._parseTickers(it.title||'');
+                for (const tk of ticks){
+                    const sym = `${tk}USDT`;
+                    if (seen.has(sym)) continue; seen.add(sym);
+                    this.hints.push({ sym, expire });
+                    BybitBotApp.ui.logLive(`News hint → ${sym} (TTL ${ttlMin}m)`, 'ok');
+                }
+            }
+            const uniq = new Map();
+            this.hints.forEach(h => { if (h.expire > Date.now() && !uniq.has(h.sym)) uniq.set(h.sym, h); });
+            this.hints = [...uniq.values()];
+        },
         async fetchSource(url){
             const r = await fetch(url); const text = await r.text();
-            // simple title extraction fallback
             const items = [];
-            const re = /<a[^>]+href=["']([^"']+)["'][^>]*>(.*?)<\/a>/gi;
-            let m; const seen=new Set();
-            while((m=re.exec(text)) && items.length<30){ const href=m[1]; const title = m[2].replace(/<[^>]+>/g,'').trim(); if(!title||seen.has(title)) continue; seen.add(title); items.push({title, link: href}); }
+            // Try RSS/Atom first
+            if (/<rss|<feed/i.test(text)) {
+                try{
+                    const dom = new DOMParser().parseFromString(text, 'application/xml');
+                    dom.querySelectorAll('item, entry').forEach(n => {
+                        const title = (n.querySelector('title')?.textContent || '').trim();
+                        const link = (n.querySelector('link')?.getAttribute('href') || n.querySelector('link')?.textContent || '').trim();
+                        if (title && link) items.push({ title, link });
+                    });
+                }catch{}
+            }
+            if (!items.length) {
+                // Fallback: naive anchor scrape
+                const re = /<a[^>]+href=["']([^"']+)["'][^>]*>(.*?)<\/a>/gi;
+                const seen = new Set();
+                let m; while((m=re.exec(text)) && items.length<40){
+                    const href = m[1]; const title = m[2].replace(/<[^>]+>/g,'').trim();
+                    if(!title||seen.has(title)) continue; seen.add(title);
+                    items.push({ title, link: href });
+                }
+            }
             return items;
         },
         async fetchAll(){
             const E = BybitBotApp.DOMElements;
-            const tasks = [];
-            if (E.NW_src_coindesk?.checked) tasks.push(this.fetchSource('https://www.coindesk.com/'));
-            if (E.NW_src_cointele?.checked) tasks.push(this.fetchSource('https://cointelegraph.com/'));
-            if (E.NW_src_binance?.checked) tasks.push(this.fetchSource('https://www.binance.com/en/blog'));
-            const res = await Promise.allSettled(tasks);
+            const srcs = [];
+            if (E.NW_src_coindesk?.checked) srcs.push('https://www.coindesk.com/arc/outboundfeeds/rss/?outputType=xml');
+            if (E.NW_src_cointele?.checked) srcs.push('https://cointelegraph.com/rss');
+            if (E.NW_src_binance?.checked) srcs.push('https://www.binance.com/en/blog/rss');
+            const res = await Promise.allSettled(srcs.map(s=> this.fetchSource(s)));
             let items = res.flatMap(x=> x.status==='fulfilled' ? x.value : []);
-            // filter by keywords if provided
+            // Keyword filter
             const kw = (E.NW_keywords?.value||'').toUpperCase().split(',').map(s=>s.trim()).filter(Boolean);
-            if (kw.length) items = items.filter(it => kw.some(k=> it.title.toUpperCase().includes(k)));
-            // unique by title
-            const uniq=[]; const seen=new Set(); for(const it of items){ if(!seen.has(it.title)){ seen.add(it.title); uniq.push(it);} }
-            return uniq.slice(0,20);
+            if (kw.length) items = items.filter(it => kw.some(k => it.title.toUpperCase().includes(k)));
+            // Unique by title
+            const seen=new Set(); items = items.filter(it => (it.title && !seen.has(it.title)) && seen.add(it.title));
+            return items.slice(0, 20);
         },
         async render(){
             const E = BybitBotApp.DOMElements; E['news-list'].innerHTML = 'Đang tải tin...';
@@ -536,6 +632,7 @@ const BybitBotApp = {
                     <div style="font-weight:600;">${BybitBotApp.utils.escapeHtml(it.title)}</div>
                     <div class="tiny"><a href="${it.link}" target="_blank">Mở liên kết</a></div>
                   </div>`).join('');
+                try{ this._updateHintsFromNews(items); }catch{}
                 if (BybitBotApp.DOMElements.NW_forward?.checked && items.length){
                     const msg = `[News] ${items.slice(0,3).map(i=>i.title).join(' | ')}`;
                     await BybitBotApp.telegram.notify(msg);
@@ -642,11 +739,12 @@ const BybitBotApp = {
             'useTrailing', 'useBreakeven', 'useOCOEmu', 'symbolList', 'minScore',
             'timeStopMin', 'maxLossDay', 'scanSec', 'autoResetStart',
             'useBalanceSizing','riskPct','reserveUsd','minQuote','maxQuote','balanceAcct',
+            'WL_symbols','BL_symbols',
             'B_tf', 'B_lookback', 'B_topN', 'B_symbolList', 'B_btcFilter', 'B_pessimistic',
             'B_minScore', 'B_tpK', 'B_slK', 'B_timeStopMin', 'B_quote', 'B_feePct', 'B_slipBps',
             'B_useBreakeven', 'B_useTrailing',
             // Telegram
-            'tg-token','tg-chatid','TG_onTrade','TG_onLifecycle',
+            'tg-token','tg-chatid','TG_onTrade','TG_onLifecycle','TG_onStatus','TG_statusMin','TG_onRisk','TG_onErrors',
             // Advanced filters
             'CO_mtfEnable','CO_mtfTf','CO_regimeMode','CO_winStart','CO_winEnd','CO_slStreak','CO_coolMin','CO_maxSpreadBps','CO_tp1Enable','CO_tp1Frac'
             , 'OV_vwap','OV_bb','OV_vol','panicSell','uiCompact'
@@ -676,7 +774,11 @@ const BybitBotApp = {
                     t: this.values['tg-token'] || '',
                     c: this.values['tg-chatid'] || '',
                     nt: !!this.values['TG_onTrade'],
-                    nl: !!this.values['TG_onLifecycle']
+                    nl: !!this.values['TG_onLifecycle'],
+                    ns: !!this.values['TG_onStatus'],
+                    sm: +this.values['TG_statusMin'] || 30,
+                    nr: !!this.values['TG_onRisk'],
+                    ne: !!this.values['TG_onErrors']
                 }
             };
             // v7 storage key (giữ backward-compat khi load)
@@ -719,6 +821,10 @@ const BybitBotApp = {
                 if (DOMElements['tg-chatid']) DOMElements['tg-chatid'].value = c.tg.c || '';
                 if (DOMElements['TG_onTrade']) DOMElements['TG_onTrade'].checked = !!c.tg.nt;
                 if (DOMElements['TG_onLifecycle']) DOMElements['TG_onLifecycle'].checked = !!c.tg.nl;
+                if (DOMElements['TG_onStatus']) DOMElements['TG_onStatus'].checked = !!c.tg.ns;
+                if (DOMElements['TG_statusMin']) DOMElements['TG_statusMin'].value = c.tg.sm ?? 30;
+                if (DOMElements['TG_onRisk']) DOMElements['TG_onRisk'].checked = c.tg.nr !== false;
+                if (DOMElements['TG_onErrors']) DOMElements['TG_onErrors'].checked = !!c.tg.ne;
             }
             
             this.load(); // Reload values from UI after setting them
@@ -772,6 +878,11 @@ const BybitBotApp = {
             const e = BybitBotApp.DOMElements.logLive;
             e.innerHTML += `<div class="${c} mono">[${t}] ${m}</div>`;
             e.scrollTop = e.scrollHeight;
+            try{
+                if (l==='error' && BybitBotApp.DOMElements['TG_onErrors']?.checked){
+                    BybitBotApp.telegram.throttle(`err_${String(m).slice(0,50)}`, 60000, ()=>`[ERROR] ${m}`);
+                }
+            }catch{}
         },
         logBack(m, l = 'info') {
             const t = new Date().toLocaleTimeString();
@@ -913,10 +1024,28 @@ const BybitBotApp = {
               plugins:[crosshair]
             });
         },
+        reputationInit(){ BybitBotApp.reputation.load(); }
+    },
+
+    // --- Filters ---
+    filters: {
+        // Loại coin neo giá fiat (đặc biệt USD)
+        isPeggedSymbol(sym) {
+            const base = String(sym || '').toUpperCase().replace(/USDT$/, '');
+            const hard = new Set([
+              'USDT','USDC','FDUSD','TUSD','BUSD','DAI','USDD','USDP','USDE',
+              'FRAX','PYUSD','LUSD','SUSD','MIM','FEI','USDN','GUSD','USDX',
+              'USDL','USDS','USDJ','USDB','USDX','EURS','EURT'
+            ]);
+            if (hard.has(base)) return true;
+            if (/(^|[^A-Z])(USD|EUR)([^A-Z]|$)/.test(base)) return true;
+            return false;
+        }
     },
 
     // --- Utility Functions ---
     utils: {
+        sleep(ms){ return new Promise(res => setTimeout(res, ms)); },
         canonQS(obj = {}) {
             const enc = v => encodeURIComponent(v == null ? '' : v);
             return Object.keys(obj).sort().map(k => `${k}=${enc(obj[k])}`).join('&');
@@ -992,6 +1121,84 @@ const BybitBotApp = {
                 const tr = trArr(H, L, C).slice(-30), atr = median(tr);
                 return { score: s, atr, last };
             },
+            // --- Pump Hunter (1m) ---
+            // Trả về null nếu chưa đạt, hoặc {entry, sl, tp, atr, atrp, score, reasons[]}
+            pumpHunterSignal(kl1m, opts = {}) {
+                const o = Object.assign({
+                    lookMin: 2,
+                    retMinPct: 2.8,
+                    volSpikeMin: 2.5,
+                    tpK: 1.2,
+                    slK: 0.6,
+                    atrLen: 14
+                }, opts);
+                if (!kl1m || kl1m.length < 40) return null;
+                const ind = BybitBotApp.utils.indicators;
+                const C = kl1m.map(k=>k.c), H=kl1m.map(k=>k.h), L=kl1m.map(k=>k.l), V=kl1m.map(k=>k.v||0);
+                const n = Math.max(1, o.lookMin);
+                const base = C.at(-(n+1)); if (!base) return null;
+                const last = C.at(-1);
+                const retN = (last/base - 1) * 100;
+                const vMean = V.slice(-21,-1).reduce((a,b)=>a+b,0)/Math.max(1, V.slice(-21,-1).length);
+                const vSpike = vMean ? (V.at(-1) / vMean) : 0;
+                const ema20 = ind.sma(C, 20), ema50 = ind.sma(C, 50);
+                let sumPV=0, sumV=0, VW=[];
+                for (let i=0;i<kl1m.length;i++){ const p=(H[i]+L[i]+C[i])/3; const v=V[i]; sumPV+=p*v; sumV+=v; VW.push(sumV? sumPV/sumV : C[i]); }
+                const pulled  = C.at(-2) < VW.at(-2) || C.at(-2) < ema20;
+                const reclaim = C.at(-1) > VW.at(-1) && C.at(-1) > C.at(-2);
+                const upTrend = (ema20 && ema50) ? (ema20 > ema50) : (C.at(-1) > C.at(-5));
+                const tr = ind.trArr(H, L, C).slice(-(o.atrLen));
+                const atr = ind.median(tr) || (last*0.005);
+                const atrp = atr / last * 100;
+                let score = 0; const reasons=[];
+                if (retN >= o.retMinPct){ score+=2; reasons.push(`Impulse ${retN.toFixed(2)}%`); }
+                if (vSpike >= o.volSpikeMin){ score+=2; reasons.push(`Vol ×${vSpike.toFixed(2)}`); }
+                if (pulled){ score+=1; reasons.push('Pullback ok'); }
+                if (reclaim){ score+=2; reasons.push('Reclaim VWAP'); }
+                if (upTrend){ score+=1; reasons.push('Uptrend MAs'); }
+                if (atrp > 3.5){ reasons.push('ATR% quá lớn'); return null; }
+                if (score < 5) return null;
+                const entry = last;
+                const sl1 = Math.min(L.at(-2), VW.at(-1) - o.slK*atr);
+                const tpK = atrp < 0.5 ? Math.max(o.tpK, 1.4) : (atrp > 2.0 ? Math.min(o.tpK, 1.1) : o.tpK);
+                const tp1 = entry + tpK*atr;
+                const rr = (tp1 - entry) / Math.max(entry - sl1, 1e-9);
+                if (rr < 1.2) reasons.push(`RR thấp ${rr.toFixed(2)}`);
+                return { entry, sl: sl1, tp: tp1, atr, atrp, score, reasons };
+            },
+            // --- Pump Hunter PRO (1m) ---
+            pumpHunterPro(kl1m, opts={}){
+                const o = Object.assign({ lookMin:2, retMinPct:2.8, volSpikeZ:1.8, rngZ:1.2, atrLen:14, tpK:1.2, slK:0.6, maxATRp:3.8 }, opts);
+                if (!kl1m || kl1m.length < 70) return null;
+                const I = BybitBotApp.utils.indicators, S = BybitBotApp.utils.stats;
+                const C=kl1m.map(k=>k.c), H=kl1m.map(k=>k.h), L=kl1m.map(k=>k.l), V=kl1m.map(k=>k.v||0);
+                const last=C.at(-1), base=C.at(-(o.lookMin+1)); if(!base) return null;
+                const retN=(last/base-1)*100;
+                const trArr = I.trArr(H,L,C);
+                const volR = S.rolling(V,30).at(-2)||{m:1,s:1};
+                const rngR = S.rolling(trArr,30).at(-2)||{m:1,s:1};
+                const vZ = S.z(V.at(-1), volR.m, volR.s);
+                const rZ = S.z(trArr.at(-1), rngR.m, rngR.s);
+                let sumPV=0,sumV=0,VW=[]; for(let i=0;i<C.length;i++){ const p=(H[i]+L[i]+C[i])/3, v=V[i]; sumPV+=p*v; sumV+=v; VW.push(sumV?sumPV/sumV:C[i]); }
+                const ema20=I.sma(C,20), ema50=I.sma(C,50);
+                const pulled=(C.at(-2)<VW.at(-2)||C.at(-2)<ema20)&&(L.at(-2)<C.at(-2));
+                const reclaim=C.at(-1)>VW.at(-1)&&C.at(-1)>C.at(-2);
+                const upTrend=(ema20&&ema50)?(ema20>ema50):(C.at(-1)>C.at(-6));
+                const atr = I.median(trArr.slice(-o.atrLen)) || (last*0.005);
+                const atrp = atr/last*100; if (atrp>o.maxATRp) return null;
+                let score=0, why=[];
+                if (retN>=o.retMinPct){ score+=2; why.push(`Δ${o.lookMin}m ${retN.toFixed(2)}%`); }
+                if (vZ>=o.volSpikeZ){ score+=2; why.push(`Vol z=${vZ.toFixed(2)}`); }
+                if (rZ>=o.rngZ){ score+=1; why.push(`Range z=${rZ.toFixed(2)}`); }
+                if (pulled){ score+=1; why.push('pullback ok'); }
+                if (reclaim){ score+=2; why.push('reclaim VWAP'); }
+                if (upTrend){ score+=1; }
+                if (score<6) return null;
+                const tpK = atrp<0.5?Math.max(o.tpK,1.4):(atrp>2.0?Math.min(o.tpK,1.1):o.tpK);
+                const entry=last, sl=Math.min(L.at(-2), VW.at(-1)-o.slK*atr), tp1=entry+tpK*atr, tp2=entry+(tpK+0.5)*atr;
+                const rr=(tp1-entry)/Math.max(entry-sl,1e-9);
+                return { entry, sl, tp1, tp2, atr, atrp, score, why };
+            },
             calcTPSL(e, a, t, s) {
                 const p = e + t * a, l = Math.max(e - s * a, 1e-9);
                 return { tp: +p.toFixed(8), sl: +l.toFixed(8), rr: +(p - e) / (e - l || 1e-9) };
@@ -1058,26 +1265,41 @@ const BybitBotApp = {
             snapDown(p, tick) { return this.floorStep(+p, tick); },
         }
     },
+    // --- Stats helpers ---
+    stats: {
+        mean(a){ return a.length ? a.reduce((s,x)=>s+x,0)/a.length : 0; },
+        std(a){ const m=this.mean(a); return a.length ? Math.sqrt(a.reduce((s,x)=>s+(x-m)*(x-m),0)/a.length) : 0; },
+        z(x, m, s){ return s ? (x-m)/s : 0; },
+        rolling(arr, n){ const out=[]; for(let i=n;i<=arr.length;i++){ const w=arr.slice(i-n,i); out.push({m:this.mean(w), s:this.std(w)}); } return out; }
+    },
 
     // --- Telegram ---
     telegram: {
-        getRaw(){ const E = BybitBotApp.DOMElements; return { t: (E['tg-token']?.value||'').trim(), c: (E['tg-chatid']?.value||'').trim() }; },
-        async sendTest(){
-            try{
-                const { t, c } = this.getRaw(); if(!t||!c) throw new Error('Missing token/chatid');
-                const msg = BybitBotApp.DOMElements['tg-msg']?.value || 'Test';
-                const r = await fetch(`https://api.telegram.org/bot${t}/sendMessage`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chat_id:c, text: msg }) });
-                const j = await r.json(); if(!j.ok) throw new Error(j.description||'Send failed');
-                BybitBotApp.ui.logLive('✓ Telegram test sent','ok');
-            }catch(e){ BybitBotApp.ui.logLive('Telegram error: '+e.message,'warn'); }
+        _throttle: new Map(), _hb: null,
+        getRaw(){ const E = BybitBotApp.DOMElements; return { 
+          t:(E['tg-token']?.value||'').trim(), 
+          c:(E['tg-chatid']?.value||'').trim(),
+          cfg: {
+            onTrade: !!E['TG_onTrade']?.checked,
+            onLife : !!E['TG_onLifecycle']?.checked,
+            onStat : !!E['TG_onStatus']?.checked,
+            statMin: Math.max(5, +E['TG_statusMin']?.value || 30),
+            onRisk : !!E['TG_onRisk']?.checked,
+            onErr  : !!E['TG_onErrors']?.checked
+          }
+        }; },
+        async _send(text){
+          try{
+            const { t, c } = this.getRaw(); if(!t||!c) return false;
+            const r = await fetch(`https://api.telegram.org/bot${t}/sendMessage`,{
+              method:'POST', headers:{'Content-Type':'application/json'},
+              body: JSON.stringify({ chat_id:c, text, disable_web_page_preview:true })
+            });
+            const j = await r.json(); return !!j.ok;
+          }catch{ return false; }
         },
-        async notify(text){
-            try{
-                const { t, c } = this.getRaw(); if(!t||!c) return false;
-                await fetch(`https://api.telegram.org/bot${t}/sendMessage`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chat_id:c, text }) });
-                return true;
-            }catch{ return false; }
-        },
+        async sendTest(){ try{ const ok = await this._send(BybitBotApp.DOMElements['tg-msg']?.value || 'Test'); BybitBotApp.ui.logLive(ok?'✓ Telegram test sent':'Send failed', ok?'ok':'warn'); }catch(e){ BybitBotApp.ui.logLive('Telegram error: '+e.message,'warn'); } },
+        async notify(text){ return this._send(text); },
         async validate(){
             try{
                 const { t } = this.getRaw(); if(!t) throw new Error('Missing token');
@@ -1097,7 +1319,37 @@ const BybitBotApp = {
                 if (BybitBotApp.DOMElements['tg-chatid']) BybitBotApp.DOMElements['tg-chatid'].value = chatId;
                 BybitBotApp.ui.logLive(`✓ Detected Chat ID: ${chatId}`,'ok');
             }catch(e){ BybitBotApp.ui.logLive('Detect Chat ID failed: '+e.message,'warn'); }
-        }
+        },
+        async throttle(key, ms, buildMsg){
+          const last = this._throttle.get(key)||0;
+          const now = Date.now(); if (now - last < ms) return false;
+          this._throttle.set(key, now);
+          const msg = (typeof buildMsg==='function') ? buildMsg() : String(buildMsg||key);
+          return this._send(msg);
+        },
+        startHeartbeat(){
+          try{ clearInterval(this._hb); }catch{}
+          const { cfg } = this.getRaw(); if(!cfg.onStat) return;
+          const min = Math.max(5, cfg.statMin);
+          const send = async ()=>{
+            const st = BybitBotApp.state, J = BybitBotApp.journal?.state||{pnl:0,loss:0};
+            const bc = BybitBotApp.api.balanceCache||{};
+            const pos = st.currentPosition||{};
+            const lines = [
+              `⏱ Heartbeat • ${new Date().toLocaleTimeString()}`,
+              `Status: ${st.isRunning ? 'RUNNING' : 'IDLE'}`,
+              `PnL ngày: ${(+J.pnl||0).toFixed(2)}$ | LossStreak: ${J.loss||0}`,
+              `USDT free: ${bc.free!=null?bc.free.toFixed(2):'—'} (${bc.acct||'?'})`,
+              pos.sym ? `Pos: ${pos.sym} @ ${(+pos.entry||0).toFixed(6)} | TP ${(+pos.tp||0).toFixed(6)} | SL ${(+pos.sl||0).toFixed(6)}` : 'Pos: —',
+              st.currentPosition?.watching ? `Watch: ${st.currentPosition.watching}` : ''
+            ];
+            await this._send(lines.filter(Boolean).join('\n'));
+          };
+          send();
+          this._hb = setInterval(send, min*60*1000);
+          BybitBotApp.ui.logLive(`Telegram heartbeat mỗi ${min} phút`, 'ok');
+        },
+        stopHeartbeat(){ try{ clearInterval(this._hb); this._hb=null; }catch{} }
     },
 
     // --- Bybit API Module ---
@@ -1111,13 +1363,18 @@ const BybitBotApp = {
             try { await prev; return await fn(); } finally { release(); }
         },
         
+        get proxyList(){
+            const raw = (BybitBotApp.DOMElements.proxy?.value||'').split(',').map(s=>s.trim()).filter(Boolean);
+            return raw.length ? raw : [''];
+        },
+        _currentProxyIdx: 0,
         buildUrl(p, q) {
-            const { DOMElements, config, utils } = BybitBotApp;
-            const proxy = DOMElements.proxy.value.trim();
+            const { config, utils } = BybitBotApp;
             const baseUrl = config.values.useTestnet ? 'https://api-testnet.bybit.com' : 'https://api.bybit.com';
             const qstr = (typeof q === 'string') ? q : (q && Object.keys(q).length ? utils.canonQS(q) : '');
             const u = baseUrl + p + (qstr ? ('?' + qstr) : '');
-            return (proxy ? proxy.replace(/\/$/, '') + '/' : '') + u;
+            const list = this.proxyList; const px = list[this._currentProxyIdx] || '';
+            return px ? (px.replace(/\/$/, '') + '/' + u) : u;
         },
 
         // Internal: fetch JSON with timeout
@@ -1159,7 +1416,7 @@ const BybitBotApp = {
                         if (method === 'POST') headers['Content-Type'] = 'application/json';
 
                         const { resp, data } = await this._fetchJsonWithTimeout(url, { method, headers, body: (method === 'POST' && payloadStr) ? payloadStr : undefined }, 18000);
-                        if (resp.status === 403 && BybitBotApp.DOMElements.corsWarn) BybitBotApp.DOMElements.corsWarn.style.display = 'block';
+                        if (resp.status === 403 && BybitBotApp.DOMElements.corsWarn) { BybitBotApp.DOMElements.corsWarn.style.display = 'block'; this._currentProxyIdx = (this._currentProxyIdx+1)%this.proxyList.length; }
                         if (!resp.ok || data.retCode !== 0) {
                             const ret = data.retCode ?? -1; const msg = data.retMsg || resp.statusText || 'ERR';
                             const err = new Error(`HTTP ${resp.status} – ${msg} (${ret})`); err.retCode = ret; err.msg = msg; throw err;
@@ -1221,7 +1478,96 @@ const BybitBotApp = {
         },
         async klines(s, i = '5', l = 200) { const j = await this.pub('/v5/market/kline', { category: 'spot', symbol: s, interval: i, limit: l }); if (j.retCode !== 0) throw new Error(j.retMsg); return j.result.list.map(r => ({ t: +r[0], o: +r[1], h: +r[2], l: +r[3], c: +r[4], v: +r[5] })).reverse(); },
         async tickers() { const j = await this.pub('/v5/market/tickers', { category: 'spot' }); if (j.retCode !== 0) throw new Error(j.retMsg); return j.result.list; },
+        async recentTrades(symbol, limit=80){
+            try{
+                const j = await this.pub('/v5/market/recent-trade', { category:'spot', symbol, limit: Math.min(1000, Math.max(10, limit)) });
+                if (j.retCode !== 0) throw new Error(j.retMsg||'recent-trade');
+                const rows = j.result.list || [];
+                const buy = rows.filter(r=> String(r.m).toLowerCase() === 'true').reduce((s,r)=> s + (+r.q || 0), 0);
+                const sell= rows.filter(r=> String(r.m).toLowerCase() !== 'true').reduce((s,r)=> s + (+r.q || 0), 0);
+                const total = buy + sell; const takerBuyRatio = total? buy/total : 0.5;
+                return { takerBuyRatio, n: rows.length };
+            }catch{ return { takerBuyRatio: 0.5, n: 0 }; }
+        },
         async instruments(s) { const j = await this.pub('/v5/market/instruments-info', { category: 'spot', symbol: s }); if (j.retCode !== 0) throw new Error(j.retMsg); return j.result.list[0]; },
+        // Snap 2 lần để đo vận tốc mất/cân bằng sổ lệnh & spread
+        async obDelta(symbol, limit = 30, dtMs = 700) {
+          const s1 = await this.orderbook(symbol, limit).catch(()=>null);
+          if (!s1) return { imbVel:0, spreadVel:0, midRet:0 };
+          await BybitBotApp.utils.sleep(dtMs);
+          const s2 = await this.orderbook(symbol, limit).catch(()=>null);
+          if (!s2) return { imbVel:0, spreadVel:0, midRet:0 };
+          const imbVel    = (s2.imb - s1.imb) / Math.max(0.1, dtMs/1000);
+          const spreadVel = (s2.spreadBps - s1.spreadBps) / Math.max(0.1, dtMs/1000);
+          const mid1 = (s1.bestBid + s1.bestAsk)/2, mid2 = (s2.bestBid + s2.bestAsk)/2;
+          const midRet = (mid2 - mid1) / Math.max(1e-9, mid1);
+          return { imbVel, spreadVel, midRet };
+        },
+        async depthImbalance(sym){
+          try{
+            const j = await BybitBotApp.api.pub('/v5/market/orderbook', {category:'spot',symbol:sym,limit:25});
+            const rows = j?.result?.a||[]; const rowsB = j?.result?.b||[];
+            const sum = (rows)=> rows.slice(0,10).reduce((s, r)=> s + (+r[1]||0), 0);
+            const A = sum(rows), B = sum(rowsB); if (!A && !B) return 0;
+            return (B - A) / (A + B);
+          }catch{ return 0; }
+        },
+        async orderbook(symbol, limit=50){
+            const j = await this.pub('/v5/market/orderbook', { category:'spot', symbol, limit });
+            if (j.retCode !== 0) throw new Error(j.retMsg||'orderbook error');
+            const bids = (j.result?.b||[]).map(([p,q])=>({ p:+p, q:+q, notional:+p*+q }));
+            const asks = (j.result?.a||[]).map(([p,q])=>({ p:+p, q:+q, notional:+p*+q }));
+            const bestBid = bids[0]?.p || 0, bestAsk = asks[0]?.p || 0;
+            const sumN = (arr, n=15) => arr.slice(0,n).reduce((s,x)=> s + (+x.notional||0), 0);
+            const bidN = sumN(bids, 15), askN = sumN(asks, 15);
+            const depthUSDT = bidN + askN;
+            const imb = (bidN - askN) / Math.max(1e-9, bidN + askN);
+            const mid = (bestBid && bestAsk) ? (bestBid + bestAsk)/2 : 0;
+            const spreadBps = mid ? ((bestAsk - bestBid) / mid) * 10000 : 1e6;
+            // keep qb/qa for backward compatibility
+            const qb = bids.reduce((s,x)=>s+(+x.q||0),0);
+            const qa = asks.reduce((s,x)=>s+(+x.q||0),0);
+            return { bids, asks, bestBid, bestAsk, spreadBps, depthUSDT, imb, qb, qa };
+        },
+        async microSig(symbol){
+            const j = await this.pub('/v5/market/orderbook', { category:'spot', symbol, limit: 25 });
+            const a = (j?.result?.a||[]).slice(0,10).map(r=>({ p:+r[0], q:+r[1] }));
+            const b = (j?.result?.b||[]).slice(0,10).map(r=>({ p:+r[0], q:+r[1] }));
+            const vA = a.reduce((s,x)=> s + (+x.q||0), 0), vB = b.reduce((s,x)=> s + (+x.q||0), 0);
+            const imb = (vB - vA) / Math.max(vA + vB, 1e-9);
+            const bestA = a[0]?.p||0, bestB = b[0]?.p||0;
+            const microPrice = (vB*(bestB) + vA*(bestA)) / Math.max(vA+vB, 1e-9);
+            const mid = (bestA && bestB) ? (bestA + bestB)/2 : 0;
+            const microDrift = mid ? ((microPrice - mid) / mid) : 0;
+            let s = 0;
+            if (imb > 0.07) s += 1;
+            if (microDrift > 0.0005) s += 1;
+            if (mid && ((bestA - bestB)/mid*10000) < 10) s += 1;
+            return { s, imb, microDrift };
+        },
+        async estSlipBps(symbol, notional){
+            const j = await this.pub('/v5/market/orderbook', { category:'spot', symbol, limit: 50 });
+            const asks = (j?.result?.a||[]).map(r=>({ p:+r[0], q:+r[1] }));
+            if (!asks.length) return 999;
+            let needBase = 0; // base amount we intend to buy
+            // approximate desired base from notional at best ask
+            const bestAsk = asks[0].p || 0; if (!bestAsk) return 999;
+            needBase = notional / bestAsk;
+            let filledBase = 0, spent = 0;
+            for (const a of asks){
+                if (needBase <= 0) break;
+                const baseCap = +a.q || 0;
+                const takeBase = Math.min(needBase, baseCap);
+                spent += takeBase * a.p;
+                filledBase += takeBase;
+                needBase -= takeBase;
+            }
+            if (needBase > 1e-12) return 999;
+            const avgPx = spent / Math.max(filledBase, 1e-9);
+            const bidTop = +(j?.result?.b?.[0]?.[0]||0);
+            const mid = (bestAsk && bidTop) ? (bestAsk + bidTop)/2 : bestAsk || bidTop || avgPx;
+            return mid ? ((avgPx - mid) / mid) * 10000 : 0;
+        },
         async btcOk() { 
              try {
                 // Luôn 5m đúng như label
@@ -1396,7 +1742,8 @@ const BybitBotApp = {
                 const url = config.values.useTestnet ? 'wss://stream-testnet.bybit.com/v5/private' : 'wss://stream.bybit.com/v5/private';
                 
                 const makeArgs = async () => {
-                    const expires = api.now() + 10000; // 10 seconds expiry, in MS
+                    // Per Bybit v5: expires is client-generated timestamp (ms). Keep ms precision.
+                    const expires = BybitBotApp.api.now() + 10_000; // 10s grace
                     const expiresStr = String(Math.floor(expires));
                     const sig = await BybitBotApp.utils.crypto.hmac(apiSecret, `GET/realtime${expiresStr}`);
                     return [apiKey, expiresStr, sig];
@@ -1517,8 +1864,9 @@ const BybitBotApp = {
           const kl = await api.klines(symbol, config.values.tf, 2);
           const price = kl[kl.length - 1].c;
 
-          // --- NEW: quote theo balance ---
+          // --- NEW: quote theo balance với early-exit khi thiếu tiền ---
           let quote = fixedQuote;
+          let capByFree = Infinity;
           if (config.values.useBalanceSizing) {
             try {
                 const { free, acct } = await api.usdtFreeBalance(false);
@@ -1527,12 +1875,17 @@ const BybitBotApp = {
                 const maxQ  = Math.max(+config.values.maxQuote || minQ, minQ);
                 const rz    = Math.max(+config.values.reserveUsd || 0, 0);
 
-                const capByPct = free * pct;
-                const capByFree= Math.max(0, free - rz);
-                quote = Math.min(Math.max(capByPct, minQ), maxQ, capByFree);
+                capByFree = Math.max(0, free - rz);
+                quote = Math.min(Math.max(free * pct, minQ), maxQ, capByFree);
                 if (!isFinite(quote) || quote <= 0) quote = minQ;
 
                 BybitBotApp.ui.logLive(`[Sizing] acct=${acct} free=${free.toFixed(2)} → quote=${quote.toFixed(2)} USDT`);
+
+                // Early-exit: tiền khả dụng < min order
+                if (capByFree + 1e-9 < minOrderAmt) {
+                  BybitBotApp.ui.logLive(`Bỏ qua: USDT free (${capByFree.toFixed(2)}) < min order (${minOrderAmt}).`, 'warn');
+                  return { qty: 0, step, finalQuote: 0 };
+                }
             } catch(e) {
                 BybitBotApp.ui.logLive(`Lỗi sizing: ${e.message}. Dùng quote cố định.`, 'warn');
                 quote = fixedQuote;
@@ -1550,14 +1903,17 @@ const BybitBotApp = {
           let finalQuote = qty * price;
           // Ràng amount theo quote step để không bị "decimal too long"
           finalQuote = utils.precision.floorStep(finalQuote, qstep);
-          if (finalQuote < minOrderAmt) {
-              let qtyForMinAmt = Math.ceil(minOrderAmt / price / step) * step;
-              qty = Math.max(qty, qtyForMinAmt);
-              finalQuote = utils.precision.floorStep(qty * price, qstep);
-              if (finalQuote < minOrderAmt) {
-                  // Ceil lên mức min theo bội bước quote (nhỏ, nhưng bắt buộc)
-                  finalQuote = utils.precision.ceilStep(minOrderAmt, qstep);
-              }
+          // Clamp theo free balance để khỏi 170131
+          try {
+            const { free } = await BybitBotApp.api.usdtFreeBalance(false);
+            const headroom = 0.2;
+            const maxSpend = Math.max(0, free - headroom);
+            if (finalQuote > maxSpend) finalQuote = BybitBotApp.utils.precision.floorStep(maxSpend, qstep);
+          } catch {}
+          // Early-exit: không cố nâng vượt số dư/min order
+          if (finalQuote + 1e-9 < minOrderAmt) {
+              BybitBotApp.ui.logLive(`Bỏ qua: finalQuote ${finalQuote.toFixed(2)} < min order ${minOrderAmt}.`, 'warn');
+              return { qty: 0, step, finalQuote: 0 };
           }
           return { qty, step, finalQuote };
         },
@@ -1625,6 +1981,7 @@ const BybitBotApp = {
             const baseQty = state.currentPosition.sellQty ?? state.currentPosition.qty;
             const pnl = (exitPrice - state.currentPosition.entry) * baseQty;
             ui.logLive(`✅ ${note}: Lệnh khớp @ ${exitPrice} → PnL: ${pnl.toFixed(2)}$`, pnl > 0 ? 'ok' : 'bad');
+            try{ BybitBotApp.adapt.push({ ts: Date.now(), took: 1, pnl }); }catch{}
             journal.push({
                 ts: Date.now(),
                 ...state.currentPosition,
@@ -1635,6 +1992,18 @@ const BybitBotApp = {
             if (BybitBotApp.config.values['TG_onTrade']) {
                 BybitBotApp.telegram.notify(`EXIT ${state.currentPosition.sym} @ ${exitPrice} | PnL ${pnl.toFixed(2)}$`);
             }
+            // Reputation bump
+            try{
+                const r = Math.sign(pnl) * Math.min(2, Math.max(1, Math.abs(pnl)/1.5));
+                BybitBotApp.reputation.bump(state.currentPosition.sym, r);
+            }catch{}
+            try {
+                if (pnl < 0) {
+                    const mins = Math.min(40, Math.max(20, Math.round(Math.abs(pnl))));
+                    BybitBotApp.state.cooldown.bySym[state.currentPosition.sym] = Date.now() + mins*60*1000;
+                    BybitBotApp.ui.logLive(`Cooldown ${state.currentPosition.sym} ~ ${mins} phút`, 'warn');
+                }
+            } catch {}
             this.gracefulExit();
         },
 
@@ -1644,6 +2013,24 @@ const BybitBotApp = {
             if (journal.state.loss >= config.values.maxLossDay) return ui.updateStatus('Tạm dừng (Max Loss)', 'warn');
             if (state.isInPosition) return;
             if (!BybitBotApp.ui.withinTimeWindow()) return ui.updateStatus('Ngoài khung giờ giao dịch', 'warn');
+
+            // BTC circuit-breaker
+            if (BybitBotApp.risk?.paused?.() || (await BybitBotApp.risk?.btcBreaker?.())) return;
+
+            // Kill-switch nhỏ vốn
+            try{
+                const pnl = BybitBotApp.journal?.state?.pnl ?? 0;
+                if (pnl >= 1) { BybitBotApp.ui.updateStatus('Đạt target ngày +$1', 'ok'); return; }
+                if (pnl <= -2){ BybitBotApp.ui.updateStatus('Chạm ngưỡng lỗ −$2', 'warn'); return; }
+            }catch{}
+
+            // Candle-phase gating: đợi nửa sau nến
+            try{
+                const n = BybitBotApp.api.now();
+                const tfMs = ({'1':60,'3':180,'5':300,'15':900}[BybitBotApp.config.values.tf]||300)*1000;
+                const dist = (Math.ceil(n/tfMs)*tfMs) - n;
+                if (dist > tfMs*0.5 && dist < tfMs*0.9) { BybitBotApp.ui.updateStatus('Đợi nửa sau nến', 'warn'); return; }
+            }catch{}
             
             try {
                 // Find best symbol
@@ -1651,32 +2038,47 @@ const BybitBotApp = {
                 state.currentPosition.watching = symbols.slice(0, 6).join(',') + (symbols.length > 6 ? ' ...' : '');
                 
                 const btcOk = config.values.btcFilter ? await api.btcOk() : true;
+                // Adaptive co-giãn
+                const S = BybitBotApp.adapt.stats();
                 let dynMin = config.values.minScore;
-                if (!btcOk) dynMin += 1;
+                let spreadCapDyn = +BybitBotApp.DOMElements.CO_maxSpreadBps.value || 15;
+                if (S.F < 0.5 && S.P >= 1.2) { dynMin = Math.max(3, dynMin - 1); spreadCapDyn = Math.min(30, spreadCapDyn + 5); }
+                if (S.F > 4 || (S.P > 0 && S.P < 1.1)) { dynMin = Math.min(9, dynMin + 1); spreadCapDyn = Math.max(8, spreadCapDyn - 5); }
+                BybitBotApp.state.currentPosition._minScoreApplied = dynMin;
+                BybitBotApp.state.currentPosition._spreadCapApplied = spreadCapDyn;
+                if (!btcOk) { dynMin += 1; if (BybitBotApp.DOMElements['TG_onRisk']?.checked) BybitBotApp.telegram.throttle('breaker_btc', 120000, ()=>`[BREAKER] BTC yếu → nâng MinScore lên ${dynMin}`); }
 
                 let best = null;
                 const viewSamples = [];
+                // --- Phase 1: quét nhanh bằng v2 ---
+                let coarse = [];
                 for (const sym of symbols) {
-                    try {
-                        const kl = await api.klines(sym, config.values.tf, 200);
-                        const s = utils.strategy.pullbackScore(kl);
-                        // collect for visualization first symbol
-                        if (!viewSamples.length) {
-                          const C = kl.map(k=>k.c); const ema20 = utils.indicators.sma(C,20)||[]; const ema50 = utils.indicators.sma(C,50)||[];
-                          viewSamples.push({ kl, ema20, ema50 });
-                        }
-                        // Add relative strength logic if BTC is not OK
-                        if (!btcOk && kl.length >= 10) {
-                             const C = kl.map(k=>k.c);
-                             const btcKl = await api.klines('BTCUSDT', config.values.tf, 10);
-                             const btcROC = (btcKl.at(-1).c - btcKl.at(-10).c) / btcKl.at(-10).c;
-                             const roc = (C.at(-1) - C.at(-10)) / C.at(-10);
-                             if (roc - btcROC > 0.01) s.score += 1; else s.score -= 1;
-                        }
-                        if (!best || s.score > best.meta?.score) best = { sym, meta: s };
-                    } catch (e) {}
+                  if (BybitBotApp.filters?.isPeggedSymbol?.(sym)) continue;
+                  try {
+                    const sc = await BybitBotApp.utils.pumpScoreV2(sym);
+                    coarse.push({ sym, s: sc.score, parts: sc.parts });
+                  } catch {}
                 }
-                state.currentPosition.signal = best ? `${best.sym} • Điểm ${best.meta.score}` : '—';
+                coarse.sort((a,b)=> b.s - a.s);
+                if (!coarse.length || !config.values.autoMode) return;
+
+                // --- Phase 2: refine topK bằng v3 ---
+                const topK = coarse.slice(0, Math.min(5, Math.max(3, Math.floor(coarse.length*0.2))));
+                for (const c of topK) {
+                  try {
+                    const sc3 = await BybitBotApp.utils.pumpScoreV3(c.sym);
+                    const total = sc3.score;
+                    if (!best || total > best.meta.score) best = { sym: c.sym, meta: { score: total, parts: sc3.parts } };
+                  } catch {}
+                }
+                state.currentPosition.signal = best ? `${best.sym} • PumpScoreV3 ${best.meta.score.toFixed(1)}` : '—';
+                // Per-symbol cooldown guard
+                const cd = BybitBotApp.state.cooldown.bySym[best?.sym];
+                if (cd && cd > Date.now()){
+                    const mins = Math.ceil((cd - Date.now())/60000);
+                    ui.logLive(`Cooldown ${best.sym} còn ${mins}p`, 'warn');
+                    return;
+                }
                 // Draw strategy view for top-watching symbol (fallback nếu chưa có symbol: BTCUSDT)
                 if (viewSamples.length){ const v = viewSamples[0];
                   const C = v.kl.map(k=>k.c);
@@ -1693,7 +2095,7 @@ const BybitBotApp = {
                 }
                 ui.updateStats();
                 
-                if (!best || !config.values.autoMode || best.meta.score < dynMin) return;
+                if (!best || !config.values.autoMode || best.meta.score < dynMin) { BybitBotApp.adapt.push({ ts: Date.now(), took: 0 }); return; }
 
                 // MTF confirmation
                 if (BybitBotApp.DOMElements.CO_mtfEnable?.checked) {
@@ -1721,22 +2123,134 @@ const BybitBotApp = {
                     }catch{}
                 }
                 
-                // Calculate TP/SL
-                const tpsl = utils.strategy.calcTPSL(best.meta.last, best.meta.atr || best.meta.last * 0.005, config.values.B_tpK, config.values.B_slK);
+                // --- Budget guard: skip nếu free < minAmt ---
+                try {
+                    const info = await BybitBotApp.api.instruments(best.sym);
+                    const minAmt = +(info?.lotSizeFilter?.minOrderAmt || 5);
+                    const { free } = await BybitBotApp.api.usdtFreeBalance(false);
+                    if (free < (minAmt + 0.2)) {
+                        BybitBotApp.ui.logLive(`Bỏ qua ${best.sym}: free ${free.toFixed(2)} < min ${minAmt}`, 'warn');
+                        return;
+                    }
+                } catch {}
+
+                // --- TrashGuard trước khi vào lệnh ---
+                try{
+                    const tg = await BybitBotApp.filters.assess(best.sym);
+                    const tagStr = tg.tags.join(',');
+                    if (!tg.ok){
+                        ui.logLive(`Bỏ ${best.sym}: coin rác rủi ro (${tagStr}) depth=${Math.round(tg.depthUSDT/1000)}k spread=${tg.spreadBps.toFixed(1)}bps`, 'warn');
+                        return;
+                    } else if (tg.sizeMul < 1){
+                        ui.logLive(`Giảm size ${best.sym}: x${tg.sizeMul.toFixed(2)} (${tagStr||'ok'})`, 'warn');
+                        best.sizeMul = tg.sizeMul;
+                    }
+                    const maxBps = BybitBotApp.state.currentPosition._spreadCapApplied || Math.min(+BybitBotApp.DOMElements.CO_maxSpreadBps?.value||15, 12);
+                    if (tg.spreadBps > maxBps) { ui.logLive(`Spread guard: ${best.sym} ${tg.spreadBps.toFixed(1)}bps > ${maxBps}`, 'warn'); return; }
+                }catch(e){ ui.logLive('TrashGuard lỗi: '+e.message, 'warn'); }
+
+                // --- Pump PRO gate (1m + MTF + OB) ---
+                let usePro=false, sig=null;
+                try{
+                    const kl1 = await BybitBotApp.api.klines(best.sym,'1',80);
+                    sig = BybitBotApp.utils.strategy.pumpHunterPro(kl1,{ tpK: BybitBotApp.config.values.B_tpK, slK: 0.6 });
+                    if (sig){
+                        try{
+                            const kl3 = await BybitBotApp.api.klines(best.sym,'3',60);
+                            const C3=kl3.map(k=>k.c), ema20_3=BybitBotApp.utils.indicators.sma(C3,20), ema50_3=BybitBotApp.utils.indicators.sma(C3,50);
+                            if (!(ema20_3 && ema50_3 && ema20_3 > ema50_3)) sig=null;
+                        }catch{}
+                    }
+                    if (sig){
+                        const cmp = async (sym)=>{ const k=await BybitBotApp.api.klines(sym,'1',12); return (k.at(-1).c - k.at(-12).c)/k.at(-12).c*100; };
+                        try{
+                            const [rBTC, rSOL, rNEAR, rAVAX] = await Promise.allSettled(['BTCUSDT','SOLUSDT','NEARUSDT','AVAXUSDT'].map(cmp));
+                            const val = (x)=> x.status==='fulfilled' ? x.value : 0;
+                            const peer = (val(rSOL)+val(rNEAR)+val(rAVAX))/3;
+                            const coin = (kl1.at(-1).c - kl1.at(-12).c)/kl1.at(-12).c*100;
+                            if ((coin - val(rBTC)) < 0.8 || (coin - peer) < 0.5) sig=null;
+                        }catch{}
+                    }
+                    if (sig){
+                        try{ const ob = await BybitBotApp.api.orderbook(best.sym, 40); if (ob.imb < 0.05) sig=null; }catch{}
+                    }
+                    usePro = !!sig;
+                }catch{ usePro=false; }
+
+                if (!usePro){
+                    BybitBotApp.ui.logLive(`Bỏ ${best.sym}: chưa đạt Pump-PRO`, 'warn');
+                    return;
+                }
+
+                const tpsl = { tp: sig.tp1, sl: sig.sl, rr: (sig.tp1 - sig.entry)/Math.max(sig.entry - sig.sl,1e-9) };
+                BybitBotApp.ui.logLive(`[Pump-PRO] ${best.sym} • ${sig.why.join(' | ')}`, 'ok');
                 if (tpsl.rr < 1.2) return ui.logLive(`Bỏ qua ${best.sym}: R:R ${tpsl.rr.toFixed(2)}<1.2`, 'warn');
                 
                 // Spread/slippage guard (approx using last price & tick size)
                 try{
                     const t = await api.pub('/v5/market/tickers', { category:'spot', symbol: best.sym });
-                    if (t?.result?.list?.length){ const s = t.result.list[0]; const bid = +s.bid1Price||best.meta.last; const ask = +s.ask1Price||best.meta.last; const spreadBps = (ask-bid)/((ask+bid)/2)*10000; const maxBps = +BybitBotApp.DOMElements.CO_maxSpreadBps?.value||15; if (spreadBps>maxBps) return ui.logLive(`Spread guard: ${best.sym} ${spreadBps.toFixed(1)}bps > ${maxBps}`, 'warn'); }
+                    if (t?.result?.list?.length){ const s = t.result.list[0]; const bid = +s.bid1Price||best.meta.last; const ask = +s.ask1Price||best.meta.last; const spreadBps = (ask-bid)/((ask+bid)/2)*10000; const maxBps = BybitBotApp.state.currentPosition._spreadCapApplied || (+BybitBotApp.DOMElements.CO_maxSpreadBps?.value||15); if (spreadBps>maxBps) return ui.logLive(`Spread guard: ${best.sym} ${spreadBps.toFixed(1)}bps > ${maxBps}`, 'warn'); }
+                }catch{}
+
+                // Microstructure score boost & imbalance gate
+                try{
+                    const ms = await BybitBotApp.api.microSig(best.sym);
+                    best.meta.score = (best.meta.score||0) + (ms?.s||0);
+                    if (ms.imb < 0.03) return BybitBotApp.ui.logLive('Imbalance yếu → bỏ', 'warn');
+                }catch{}
+
+                // Microstructure quick score
+                async function microSig(sym){
+                  const j = await BybitBotApp.api.pub('/v5/market/orderbook', {category:'spot',symbol:sym,limit:25});
+                  const a = (j?.result?.a||[]).slice(0,10).map(r=>({p:+r[0],q:+r[1]}));
+                  const b = (j?.result?.b||[]).slice(0,10).map(r=>({p:+r[0],q:+r[1]}));
+                  const vA = a.reduce((s,x)=>s+x.q,0), vB = b.reduce((s,x)=>s+x.q,0);
+                  const imb = (vB - vA) / Math.max(vA+vB,1e-9);
+                  const bestA = a[0]?.p||0, bestB = b[0]?.p||0;
+                  const microPrice = (vB*bestA + vA*bestB)/Math.max(vA+vB,1e-9);
+                  const mid = (bestA+bestB)/2;
+                  const microDrift = (microPrice-mid)/Math.max(mid,1e-9);
+                  let s = 0; if (imb > 0.07) s += 1; if (microDrift > 0.0005) s += 1; if (bestA && bestB && ((bestA-bestB)/mid*10000) < 10) s += 1;
+                  return { s, imb, microDrift };
+                }
+                try{
+                  const ms = await microSig(best.sym);
+                  best.meta.score = (best.meta.score||0) + ms.s;
+                  if (ms.imb < 0.03) return BybitBotApp.ui.logLive('Imbalance yếu → bỏ', 'warn');
+                }catch{}
+
+                // Depth imbalance check
+                try{
+                  const imb = await BybitBotApp.api.depthImbalance(best.sym);
+                  if (imb < 0.05) { BybitBotApp.ui.logLive(`Imbalance thấp (${(imb*100).toFixed(1)}%) → bỏ qua`, 'warn'); return; }
                 }catch{}
 
                 // Calculate quantity
-                const { qty, step, finalQuote } = await this.computeOrderQtyLive(best.sym, config.values.orderQuote);
-                if (qty <= 0 || finalQuote <= 0) return ui.logLive('Không tính được số lượng hợp lệ', 'warn');
-                
+                // TrashGuard đã trả sizeMul; siết thêm theo vi mô nếu có
+                let sizeMul = (best.sizeMul || 1);
+                try {
+                  const od = best.meta?.parts?.od;
+                  if (od) {
+                    if (od.spreadVel > 4) sizeMul *= 0.8;
+                    if (od.imbVel < -0.05) sizeMul *= 0.85;
+                  }
+                } catch {}
+                let { qty, step, finalQuote } = await this.computeOrderQtyLive(best.sym, config.values.orderQuote);
+                finalQuote = finalQuote * Math.max(0.2, Math.min(1, sizeMul));
+                if (qty <= 0 || finalQuote <= 0) {
+                    ui.logLive('Skip trade: không đủ điều kiện khối lượng/tối thiểu.', 'warn');
+                    state.isInPosition = false;
+                    return;
+                }
+
+                // Slippage guard (depth-aware) for small notional
+                try{
+                    const slip = await BybitBotApp.api.estSlipBps(best.sym, finalQuote);
+                    if (slip > 18) return BybitBotApp.ui.logLive(`Slippage ${slip.toFixed(1)}bps > 18 → bỏ`, 'warn');
+                }catch{}
+
                 state.isInPosition = true;
-                state.currentPosition = { sym: best.sym, entry: best.meta.last, tp: tpsl.tp, sl: tpsl.sl, ts: Date.now(), qty, quote: finalQuote, atr: best.meta.atr || best.meta.last * 0.005 };
+                state.currentPosition = { sym: best.sym, entry: sig.entry, tp: tpsl.tp, sl: tpsl.sl, ts: Date.now(), qty, quote: finalQuote, atr: sig.atr || best.meta.atr || best.meta.last * 0.005 };
                 
                 if (config.values.simMode) {
                     ui.updateStatus('[SIM] Trong vị thế');
@@ -1746,7 +2260,17 @@ const BybitBotApp = {
                 }
                 
                 ui.updateStatus('Đang mua...');
-                const buyOrder = await api.buy(best.sym, finalQuote);
+                let buyOrder;
+                try {
+                    buyOrder = await api.buy(best.sym, finalQuote);
+                } catch (e) {
+                    if (/Insufficient balance|170131/.test(String(e.message))) {
+                        ui.logLive('Skip: không đủ USDT cho min order. Điều chỉnh cấu hình hoặc nạp thêm.', 'warn');
+                        state.isInPosition = false;
+                        return;
+                    }
+                    throw e;
+                }
                 ui.logLive(`Đã đặt lệnh BUY ${best.sym} (id=${buyOrder.orderId})`, 'ok');
                 ui.updateStatus('Trong vị thế');
                 await api.cancelAll(best.sym);
@@ -1757,9 +2281,22 @@ const BybitBotApp = {
                 try{
                     const kl = await api.klines(best.sym, config.values.tf, 200);
                     const C = kl.map(k=>k.c); const ema20 = utils.indicators.emaSeries(C,20); const ema50 = utils.indicators.emaSeries(C,50);
-                    ui.drawLiveStrategy(kl, ema20, ema50, { entry: { t: Date.now(), p: best.meta.last }, tp: tpsl.tp, sl: tpsl.sl });
+                    ui.drawLiveStrategy(kl, ema20, ema50, { entry: { t: Date.now(), p: sig.entry }, tp: tpsl.tp, sl: tpsl.sl });
                 }catch{}
                 
+                // Quick symbol validity check after BUY (1x)
+                try {
+                    await BybitBotApp.api.klines(state.currentPosition.sym, '1', 2);
+                } catch (e) {
+                    BybitBotApp.ui.logLive(`Symbol không hợp lệ sau BUY (${state.currentPosition.sym}). Đang thoát lệnh...`, 'warn');
+                    try {
+                        const qtyExit = state.currentPosition.sellQty || state.currentPosition.qty;
+                        await BybitBotApp.api.sell(state.currentPosition.sym, qtyExit);
+                    } catch {}
+                    BybitBotApp.liveBot.handlePositionExit(state.currentPosition.entry, 'Invalid symbol fallback');
+                    return;
+                }
+
                 // Get filled quantity and place OCO
                 let filledQty = 0;
                 try {
@@ -1777,6 +2314,10 @@ const BybitBotApp = {
                 sellQty = utils.precision.floorStep(sellQty * 0.98, step);
                 const info = await api.instruments(best.sym);
                 state.currentPosition.sellQty = +utils.precision.fmtQty(sellQty, utils.precision.stepOf(info));
+                // set Pump-PRO extras
+                state.currentPosition.tp2 = sig?.tp2;
+                state.currentPosition.chandelierK = 2.5;
+                state.currentPosition.highest = Math.max(state.currentPosition.entry, sig?.entry || state.currentPosition.entry);
                 
                 if (config.values.useOCOEmu) {
                     const tpOrder = await api.tp(best.sym, state.currentPosition.sellQty, tpsl.tp);
@@ -1811,14 +2352,28 @@ const BybitBotApp = {
             const startTime = Date.now();
             state.timers.monitor = setInterval(async () => {
                 try {
+                    // Guard chống symbol rỗng / đã thoát lệnh
+                    if (!state.isInPosition || !state.currentPosition?.sym) {
+                        clearInterval(state.timers.monitor);
+                        return;
+                    }
+                    const sym = String(state.currentPosition.sym || '').trim();
+                    if (!sym) {
+                        ui.logLive('Monitor: symbol trống → dừng polling.', 'warn');
+                        clearInterval(state.timers.monitor);
+                        return;
+                    }
                     const { currentPosition } = state;
-                    const kl = await api.klines(currentPosition.sym, '1', 2);
+                    const kl = await api.klines(sym, '1', 2);
                     const px = kl[kl.length - 1].c;
 
-                    if (Date.now() - startTime > config.values.timeStopMin * 60 * 1000) {
+                    // Dynamic time-stop based on impulse strength
+                    const impulse = Math.abs((state.currentPosition.tp || 0) - state.currentPosition.entry) / Math.max(state.currentPosition.atr||1e-9);
+                    const tsMin = Math.max(6, Math.min(14, 6 + (impulse>1.4 ? 4 : 0) + (impulse>1.8 ? 2 : 0)));
+                    if (Date.now() - startTime > tsMin * 60 * 1000) {
                         ui.logLive('Time-stop, đang thoát lệnh...', 'warn');
                         const qtyExit = currentPosition.sellQty || currentPosition.qty;
-                        try { await api.sell(currentPosition.sym, qtyExit); } catch (e) { ui.logLive('Lỗi Market SELL: ' + e.message, 'warn'); }
+                        try { await api.sell(sym, qtyExit); } catch (e) { ui.logLive('Lỗi Market SELL: ' + e.message, 'warn'); }
                         this.handlePositionExit(px, 'Time-stop');
                         return;
                     }
@@ -1826,40 +2381,95 @@ const BybitBotApp = {
                     let newSl = currentPosition.sl, needsUpdate = false, isTrailing = false;
                     if (config.values.useBreakeven && !currentPosition.beLocked && px >= currentPosition.entry + 0.6 * currentPosition.atr) {
                         newSl = Math.max(currentPosition.sl, currentPosition.entry - 0.1 * currentPosition.atr);
-                        if (newSl > currentPosition.sl) { currentPosition.beLocked = true; ui.logLive(`BE-lock: dời SL → ${newSl.toFixed(6)}`, 'ok'); needsUpdate = true; }
+                        if (newSl > currentPosition.sl) { currentPosition.beLocked = true; ui.logLive(`BE-lock: dời SL → ${newSl.toFixed(6)}`, 'ok'); if (BybitBotApp.DOMElements['TG_onTrade']?.checked) BybitBotApp.telegram.notify(`[BE] ${currentPosition.sym} SL→ ${newSl.toFixed(6)}`); needsUpdate = true; }
                     }
                     if (config.values.useTrailing && px >= currentPosition.tp) {
-                        newSl = Math.max(newSl, px - 0.6 * currentPosition.atr);
-                        if (newSl > currentPosition.sl) { ui.logLive(`Trailing SL → ${newSl.toFixed(6)}`, 'ok'); needsUpdate = true; isTrailing = true; }
+                        // Chandelier trailing if TP1 done or price beyond TP1
+                        const k = currentPosition.chandelierK || 2.5;
+                        const highest = currentPosition.highest = Math.max(currentPosition.highest||px, px);
+                        const trail = highest - k * (currentPosition.atr || 0);
+                        newSl = Math.max(newSl, trail);
+                        if (newSl > currentPosition.sl) { ui.logLive(`Chandelier SL → ${newSl.toFixed(6)}`, 'ok'); if (BybitBotApp.DOMElements['TG_onTrade']?.checked) BybitBotApp.telegram.throttle(`trail_${currentPosition.sym}`, 15000, ()=>`[TRAIL] ${currentPosition.sym} SL→ ${newSl.toFixed(6)}`); needsUpdate = true; isTrailing = true; }
                     }
 
                     // Partial TP1
                     if (BybitBotApp.DOMElements.CO_tp1Enable?.checked && !currentPosition.tp1Done && px >= currentPosition.tp) {
                         const frac = Math.min(0.9, Math.max(0.1, +BybitBotApp.DOMElements.CO_tp1Frac?.value || 0.4));
                         const sellQty = (currentPosition.sellQty || currentPosition.qty) * frac;
-                        try { await api.sell(currentPosition.sym, sellQty); } catch {}
+                        try { await api.sell(sym, sellQty); } catch {}
                         currentPosition.sellQty = (currentPosition.sellQty || currentPosition.qty) * (1-frac);
-                        currentPosition.tp1Done = true; ui.logLive(`[TP1] Chốt ${Math.round(frac*100)}% tại ${px}`, 'ok');
+                        currentPosition.tp1Done = true; ui.logLive(`[TP1] Chốt ${Math.round(frac*100)}% tại ${px}`, 'ok'); if (BybitBotApp.DOMElements['TG_onTrade']?.checked) BybitBotApp.telegram.notify(`[TP1] ${currentPosition.sym} chốt ${Math.round(frac*100)}% @ ~${px.toFixed(6)}`);
                         // Move SL to BE
                         newSl = Math.max(newSl, currentPosition.entry);
                         needsUpdate = true;
                     }
 
+                    // Exhaustion: vol z-score xuống và giá phẳng → chốt luôn phần còn lại
+                    try{
+                        const kl1x = await BybitBotApp.api.klines(state.currentPosition.sym,'1',35);
+                        const V = kl1x.map(k=>k.v||0), C = kl1x.map(k=>k.c);
+                        const R = BybitBotApp.utils.stats.rolling(V, 20).at(-1);
+                        const vZ = BybitBotApp.utils.stats.z(V.at(-1), R.m, R.s);
+                        const flat = Math.abs(C.at(-1) - C.at(-6)) / (C.at(-6)||1) < 0.0025;
+                        if ((state.currentPosition.tp1Done || C.at(-1) >= state.currentPosition.tp) && vZ < -0.3 && flat){
+                            const qtyExit = state.currentPosition.sellQty || state.currentPosition.qty;
+                            await BybitBotApp.api.sell(state.currentPosition.sym, qtyExit);
+                            return BybitBotApp.liveBot.handlePositionExit(C.at(-1), 'Exhaustion');
+                        }
+                    }catch{}
+
+                    // Orderbook flip về phe bán rõ rệt → thoát
+                    try{
+                        const ob = await BybitBotApp.api.orderbook(state.currentPosition.sym, 50);
+                        if ((state.currentPosition.tp1Done || true) && ob.imb < -0.05){
+                            const kl2 = await BybitBotApp.api.klines(state.currentPosition.sym,'1',2);
+                            const px2 = kl2.at(-1).c;
+                            const qtyExit = state.currentPosition.sellQty || state.currentPosition.qty;
+                            await BybitBotApp.api.sell(state.currentPosition.sym, qtyExit);
+                            return BybitBotApp.liveBot.handlePositionExit(px2, 'OB flip');
+                        }
+                    }catch{}
+
+                    // TP2 ladder: exit all
+                    if (currentPosition.tp2 && px >= currentPosition.tp2){
+                        try { await api.sell(sym, currentPosition.sellQty || currentPosition.qty); } catch {}
+                        return BybitBotApp.liveBot.handlePositionExit(px, 'TP2 hit');
+                    }
+
+                    // Flip mạnh: vừa CUSUM down hoặc imbVel âm nhanh → thoát
+                    try{
+                        const od = await BybitBotApp.api.obDelta(state.currentPosition.sym, 30, 800);
+                        const k1 = await BybitBotApp.api.klines(state.currentPosition.sym,'1',20);
+                        const cus = BybitBotApp.utils.cusumJump(k1.map(k=>k.c), 0.0022, 0.0050);
+                        if (cus.down || od.imbVel < -0.12){
+                            const px3 = k1.at(-1).c;
+                            const q3 = state.currentPosition.sellQty || state.currentPosition.qty;
+                            await BybitBotApp.api.sell(state.currentPosition.sym, q3);
+                            return BybitBotApp.liveBot.handlePositionExit(px3, 'Flip mạnh');
+                        }
+                    }catch{}
+
                     if (needsUpdate && config.values.useOCOEmu) {
                         state.currentPosition.sl = newSl;
                         if (isTrailing) state.currentPosition.tp *= 1.05;
-                        await api.cancelAll(currentPosition.sym);
+                        await api.cancelAll(sym);
                         const qtyToUse = currentPosition.sellQty || currentPosition.qty;
-                        await api.tp(currentPosition.sym, qtyToUse, state.currentPosition.tp);
-                        await api.sl(currentPosition.sym, qtyToUse, state.currentPosition.sl);
+                        await api.tp(sym, qtyToUse, state.currentPosition.tp);
+                        await api.sl(sym, qtyToUse, state.currentPosition.sl);
                         // refresh overlay lines
                         try{
-                          const kl = await api.klines(currentPosition.sym, BybitBotApp.config.values.tf, 120);
+                          const kl = await api.klines(sym, BybitBotApp.config.values.tf, 120);
                           const C = kl.map(k=>k.c); const ema20 = BybitBotApp.utils.indicators.emaSeries(C,20); const ema50 = BybitBotApp.utils.indicators.emaSeries(C,50);
                           BybitBotApp.ui.drawLiveStrategy(kl, ema20, ema50, { tp: state.currentPosition.tp, sl: state.currentPosition.sl });
                         }catch{}
                     }
-                } catch (e) { ui.logLive('Lỗi theo dõi lệnh: ' + e.message, 'warn'); }
+                } catch (e) {
+                    const sym = state.currentPosition?.sym || '∅';
+                    ui.logLive(`Lỗi theo dõi lệnh @ ${sym}: ${e.message}`, 'warn');
+                    if (/requested symbol is invalid/i.test(String(e.message))) {
+                        clearInterval(state.timers.monitor);
+                    }
+                }
             }, 8000); // Poll less frequently
         },
 
@@ -1893,23 +2503,48 @@ const BybitBotApp = {
         
         async getUniverseLiveAlt() {
             const { api, config } = BybitBotApp;
+            // Mix News hints into universe if available
+            try{
+                const newsSyms = BybitBotApp.news?.getHints?.() || [];
+                if (newsSyms.length){
+                    const list = await api.tickers();
+                    const EX = new Set(['BTCUSDT','ETHUSDT','USDCUSDT','FDUSDUSDT','TUSDUSDT']);
+                    let cands = list
+                      .filter(x => x.symbol.endsWith('USDT') && !EX.has(x.symbol))
+                      .filter(x => +x.turnover24h > 50_000_000)
+                      .filter(x => +x.lastPrice < 10)
+                      .map(x => x.symbol);
+                    return Array.from(new Set([ ...newsSyms, ...cands ])).slice(0, 30);
+                }
+            }catch{}
             const list = await api.tickers();
             const EX = new Set(['BTCUSDT', 'ETHUSDT', 'USDCUSDT', 'FDUSDUSDT', 'TUSDUSDT']);
             let cands = list
                 .filter(x => x.symbol.endsWith('USDT') && !EX.has(x.symbol))
-                .filter(x => +x.turnover24h > 50_000_000)
-                .filter(x => +x.lastPrice < 10);
-            const quote = config.values.orderQuote;
+                .filter(x => !BybitBotApp.filters.isPeggedSymbol(x.symbol))
+                .filter(x => +x.turnover24h > 30_000_000)
+                .filter(x => +x.lastPrice < 1.5);
+
             const out = [];
-            for (const it of cands.slice(0, 80)) {
-                try {
-                    const info = await api.instruments(it.symbol);
-                    const minAmt = +(info.lotSizeFilter?.minOrderAmt || 5);
-                    if (minAmt <= quote) out.push(it.symbol);
-                    if (out.length >= 30) break;
-                } catch {}
-            }
-            return out.length ? out : cands.slice(0, 30).map(x => x.symbol);
+            try{
+                const { free } = await api.usdtFreeBalance(false);
+                for (const it of cands.slice(0, 120)) {
+                    try {
+                        const info = await api.instruments(it.symbol);
+                        const minAmt = +(info?.lotSizeFilter?.minOrderAmt || 5);
+                        if (minAmt <= 5 && minAmt <= (free - 0.2)) out.push(it.symbol);
+                        if (out.length >= 30) break;
+                    } catch {}
+                }
+            }catch{}
+            // Apply WL/BL and reputation ordering
+            let pool = out.length ? out : cands.slice(0, 30).map(x => x.symbol);
+            const WL = (BybitBotApp.DOMElements.WL_symbols?.value||'').toUpperCase().split(',').map(s=>s.trim()).filter(Boolean);
+            const BL = new Set((BybitBotApp.DOMElements.BL_symbols?.value||'').toUpperCase().split(',').map(s=>s.trim()).filter(Boolean));
+            pool = pool.filter(s => !BL.has(s));
+            if (WL.length) { const wled = WL.filter(s => pool.includes(s)); pool = Array.from(new Set([...wled, ...pool])); }
+            if (BybitBotApp.reputation?.map) pool.sort((a,b)=> (BybitBotApp.reputation.map[b]||0)-(BybitBotApp.reputation.map[a]||0));
+            return pool.slice(0, 30);
         },
         
         async scheduler() {
@@ -1967,7 +2602,9 @@ const BybitBotApp = {
                     ui.logBack(`Đang tìm ${params.topN} coin có volume cao nhất...`);
                     const tickers = await api.tickers();
                     symbols = tickers
-                        .filter(t => t.symbol.endsWith('USDT') && !/BTC|ETH|USDC|FDUSD|TUSD/.test(t.symbol))
+                        .filter(t => t.symbol.endsWith('USDT'))
+                        .filter(t => !/BTC|ETH/.test(t.symbol))
+                        .filter(t => !BybitBotApp.filters.isPeggedSymbol(t.symbol))
                         .sort((a, b) => +b.turnover24h - +a.turnover24h)
                         .slice(0, params.topN)
                         .map(t => t.symbol);
@@ -2274,6 +2911,7 @@ Max Drawdown  : ${(maxDD * 100).toFixed(2)}%`;
 
         // Load config and journal
         this.config.loadFromStorage();
+        this.config.reputationInit?.();
         this.journal.load();
         // Apply compact mode on load
         try{ if (this.DOMElements.uiCompact?.checked) document.body.classList.add('compact'); }catch{}
@@ -2326,13 +2964,34 @@ Max Drawdown  : ${(maxDD * 100).toFixed(2)}%`;
         if (this.DOMElements.NW_refresh) this.DOMElements.NW_refresh.onclick = () => this.news.render();
         const nwAuto = this.DOMElements.NW_auto; if (nwAuto){ nwAuto.addEventListener('change', ()=>{ if (nwAuto.checked) this.news.startAuto(); else this.news.stopAuto(); }); }
 
+        // Sanitize symbol list input
+        const symEl = this.DOMElements.symbolList;
+        if (symEl) symEl.addEventListener('change', () => {
+            const clean = symEl.value
+                .toUpperCase()
+                .replace(/[^\w,]/g, ',')
+                .split(',')
+                .map(s => s.trim())
+                .filter(Boolean)
+                .join(',');
+            if (clean !== symEl.value) symEl.value = clean;
+            this.config.load();
+            this.config.saveToStorage();
+        });
+
         // Panic Sell button & hotkey (Shift+P)
         if (this.DOMElements.panicSell) this.DOMElements.panicSell.onclick = async () => {
             try{
                 const { state, api, ui } = BybitBotApp; const pos = state.currentPosition; if (!state.isInPosition || !pos?.sym) return;
                 ui.logLive('Panic Sell initiated...', 'warn');
-                const qtyExit = pos.sellQty || pos.qty; await api.sell(pos.sym, qtyExit);
-                BybitBotApp.liveBot.handlePositionExit(pos.entry, 'Panic Sell');
+                const qtyExit = pos.sellQty || pos.qty;
+                await api.sell(pos.sym, qtyExit);
+                let exitPx = pos.entry;
+                try {
+                    const t = await api.pub('/v5/market/tickers', { category: 'spot', symbol: pos.sym });
+                    if (t?.retCode === 0) exitPx = +t.result.list[0].lastPrice || exitPx;
+                } catch {}
+                BybitBotApp.liveBot.handlePositionExit(exitPx, 'Panic Sell');
             }catch(e){ BybitBotApp.ui.logLive('Panic Sell error: '+e.message, 'error'); }
         };
         window.addEventListener('keydown', (ev)=>{ if (ev.shiftKey && (ev.key==='P' || ev.key==='p')) this.DOMElements.panicSell?.click(); });
@@ -2343,12 +3002,142 @@ Max Drawdown  : ${(maxDD * 100).toFixed(2)}%`;
         if (this.DOMElements['btn-tg-send']) this.DOMElements['btn-tg-send'].onclick = () => this.telegram.sendTest();
         const vBtn = document.getElementById('btn-tg-validate'); if (vBtn) vBtn.onclick = () => this.telegram.validate();
         const dBtn = document.getElementById('btn-tg-detect'); if (dBtn) dBtn.onclick = () => this.telegram.detectChatId();
-    }
+        const sHB = ()=>{ const E=BybitBotApp.DOMElements; if (E['TG_onStatus']?.checked) BybitBotApp.telegram.startHeartbeat(); else BybitBotApp.telegram.stopHeartbeat(); };
+        ;['TG_onStatus','TG_statusMin'].forEach(id=>{ const el = BybitBotApp.DOMElements[id]; if (el) el.addEventListener('change', sHB); });
+        sHB();
+    },
+
+    // --- Reputation store ---
+    reputation: {
+        map: {},
+        load(){ try{ this.map = JSON.parse(localStorage.getItem('bb_sym_rep')||'{}'); }catch{ this.map = {}; } },
+        save(){ try{ localStorage.setItem('bb_sym_rep', JSON.stringify(this.map)); }catch{} },
+        bump(sym, delta){ this.map[sym] = (this.map[sym]||0) + delta; this.save(); }
+    },
+
+    // --- Adaptive telemetry (rolling 90m) ---
+    adapt: {
+        win: [],
+        push(e){ this.win.push({ ...e }); const t = Date.now() - 90*60*1000; this.win = this.win.filter(x => x.ts >= t); },
+        stats(){
+            const W = this.win.slice(); if (!W.length) return { F:0, H:0, P:0 };
+            const took = W.filter(x=>x.took).length;
+            const tSpan = (W.at(-1).ts - (W[0]?.ts||W.at(-1).ts)) / 3600000;
+            const F = took / Math.max(tSpan || 0, 0.25);
+            const H = took ? (W.filter(x=>x.took && (x.pnl||0) > 0).length / took) : 0;
+            const pSum = W.filter(x=>x.took).reduce((s,x)=> s + Math.max(0, x.pnl||0), 0);
+            const lSum = Math.abs(W.filter(x=>x.took).reduce((s,x)=> s + Math.min(0, x.pnl||0), 0));
+            const P = lSum > 0 ? (pSum / lSum) : 0;
+            return { F, H, P };
+        }
+    },
 };
 
 // --- Start the application ---
 window.addEventListener('DOMContentLoaded', () => BybitBotApp.init());
 
+// Runtime UI reorganizer for Live tab
+(function(){
+function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
+ready(function(){
+const live = document.getElementById('tab-live');
+if(!live) return;
+const grid = live.querySelector(':scope > .grid');
+if(!grid) return;
+
+// 1) Move Strategy View card to the top and wrap canvas
+const stratCard = Array.from(grid.children).find(el => el.querySelector('b')?.textContent?.trim() === 'Strategy View');
+if (stratCard) {
+  grid.insertBefore(stratCard, grid.firstElementChild);
+  const canvas = stratCard.querySelector('#liveStrategyChart');
+  if (canvas && !(canvas.parentElement && canvas.parentElement.classList && canvas.parentElement.classList.contains('chart-box'))){
+    const box = document.createElement('div'); box.className='chart-box'; box.style.marginTop='10px';
+    canvas.parentElement.insertBefore(box, canvas); box.appendChild(canvas);
+  }
+}
+
+// 2) Collapse API & Strategy cards
+const targets = Array.from(grid.children).filter(card => {
+  const t = card.querySelector('b')?.textContent?.trim() || '';
+  return t.startsWith('2) Strategy') || t.startsWith('1) API');
+});
+targets.forEach(card => {
+  const titleEl = card.querySelector('b'); if(!titleEl) return;
+  const title = titleEl.textContent.trim();
+  const details = document.createElement('details');
+  details.className = 'card col-12 collapse';
+  const sum = document.createElement('summary'); sum.textContent = title; details.appendChild(sum);
+  const body = document.createElement('div');
+  titleEl.remove();
+  while(card.firstChild){ body.appendChild(card.firstChild); }
+  details.appendChild(body);
+  grid.replaceChild(details, card);
+});
+
+// 3) Auto-apply compact UI
+try{
+  const uiCompact = document.getElementById('uiCompact');
+  if (uiCompact && !uiCompact.checked){ uiCompact.checked = true; uiCompact.dispatchEvent(new Event('change')); }
+}catch{}
+
+// 4) Ensure chart resizes when switching back to Live tab
+try{
+  const tabs = document.querySelectorAll('.tab');
+  tabs.forEach(t => t.addEventListener('click', () => {
+    if (t.dataset.tab === 'live') {
+      try { BybitBotApp.ui.liveStratInstance?.resize(); } catch {}
+    }
+  }));
+}catch{}
+});
+})();
+
+// PATCH 3 — Layout: 3-up row and merge Telegram into API card
+(function(){
+function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
+ready(function(){
+  const live = document.getElementById('tab-live'); if(!live) return;
+  const grid = live.querySelector(':scope > .grid'); if(!grid) return;
+
+  const findCardByTitle = (txt) => Array.from(grid.children).find(el => el.querySelector('b')?.textContent?.trim() === txt);
+  const strat = findCardByTitle('Strategy View');
+  const log   = findCardByTitle('Live Log');
+  const jour  = findCardByTitle('Journal & Performance (Live)');
+  const setCol = (el, span) => { if (!el) return; ['col-3','col-4','col-5','col-6','col-7','col-8','col-12'].forEach(c=>el.classList.remove(c)); el.classList.add('col-'+span); };
+
+  setCol(strat, 6); setCol(log, 3); setCol(jour, 3);
+  if (strat) grid.insertBefore(strat, grid.firstElementChild);
+  if (log)   grid.insertBefore(log, strat?.nextElementSibling || grid.firstElementChild);
+  if (jour)  grid.insertBefore(jour, log?.nextElementSibling || strat?.nextElementSibling || grid.firstElementChild);
+
+  try{
+    const logBox = document.getElementById('logLive');
+    if (logBox){ logBox.style.height = 'auto'; logBox.classList.add('fixed-scroll'); }
+  }catch{}
+
+  try{
+    const jourCard = jour; const table = document.getElementById('journalLive');
+    if (jourCard && table){ let wrap = jourCard.querySelector('.journal-clip'); if (!wrap){ wrap = document.createElement('div'); wrap.className = 'journal-clip'; table.parentElement.insertBefore(wrap, table); wrap.appendChild(table); } }
+  }catch{}
+
+  const teleCard = findCardByTitle('Telegram Alerts');
+  const apiDetails = Array.from(grid.children).find(el => el.matches('details.card.collapse') && el.querySelector('summary')?.textContent?.trim().startsWith('1) API'));
+  if (teleCard && apiDetails){
+    const body = apiDetails.querySelector('div');
+    const teleTitle = teleCard.querySelector('b');
+    const teleContent = document.createElement('div');
+    const frag = document.createDocumentFragment();
+    Array.from(teleCard.childNodes).forEach(n => { if (n !== teleTitle) frag.appendChild(n); });
+    teleContent.appendChild(frag);
+    const sep = document.createElement('hr'); sep.style.margin = '12px 0';
+    const h = document.createElement('div'); h.style.fontWeight = '600'; h.style.margin = '4px 0 8px'; h.textContent = 'Telegram Alerts';
+    body.appendChild(sep); body.appendChild(h); body.appendChild(teleContent);
+    teleCard.remove();
+  }
+});
+})();
+
 </script>
 </body>
 </html>
+
