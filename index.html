@@ -177,7 +177,7 @@
             <div style="width:50%"><label>Whitelist (CSV)</label><input id="WL_symbols" placeholder="DOGEUSDT,SUIUSDT"/></div>
             <div style="width:50%"><label>Blacklist (CSV)</label><input id="BL_symbols" placeholder="PEPEUSDT,..."/></div>
           </div>
-          <div class="col-3"><label>Min Signal Score (>=)</label><input id="minScore" type="number" value="5"/></div>
+          <div class="col-3"><label>Min Signal Score (>=)</label><input id="minScore" type="number" value="3"/></div>
           <div class="col-3"><label>Time‑stop (minutes)</label><input id="timeStopMin" type="number" value="15"/></div>
           <div class="col-3"><label>Max Daily Losses</label><input id="maxLossDay" type="number" value="2"/></div>
           <div class="col-3"><label>Base Scan Interval (s)</label><input id="scanSec" type="number" value="20"/></div>
@@ -452,9 +452,9 @@ const BybitBotApp = {
         async scan(){
             try{
                 const E = BybitBotApp.DOMElements; const api = BybitBotApp.api; const ind = BybitBotApp.utils.indicators; const cfg = BybitBotApp.config;
-                const topN = Math.max(3, +E.R_topN.value || 12);
-                const minTurn = Math.max(0, +E.R_minTurnover.value || 30_000_000);
-                const maxPrice = Math.max(0.01, +E.R_maxPrice.value || 10);
+                const topN = Math.max(3, Math.min(100, +E.R_topN?.value || 12));
+                const minTurn = Math.max(0, Math.min(1e12, +E.R_minTurnover?.value || 30_000_000));
+                const maxPrice = Math.max(0.01, Math.min(1000, +E.R_maxPrice?.value || 10));
                 E['radar-list'].innerHTML = 'Đang quét...';
                 const t0 = performance.now();
                 const tickers = await api.tickers();
@@ -482,6 +482,10 @@ const BybitBotApp = {
                 for (const x of list) {
                     try{
                         const kl = await api.klines(x.sym, tf, 120);
+                        if (!kl || !Array.isArray(kl) || kl.length === 0) {
+                            x.rsi = null; x.atrp = null;
+                            continue;
+                        }
                         const C = kl.map(k=>k.c), H = kl.map(k=>k.h), L = kl.map(k=>k.l);
                         const rsi = ind.rsi(C, 14);
                         const tr = ind.trArr(H, L, C);
@@ -495,7 +499,10 @@ const BybitBotApp = {
                             const base = kl.at(-(n+1)).c; const last = kl.at(-1).c;
                             x.retN = +(((last-base)/base)*100).toFixed(2);
                         }
-                    }catch{ x.rsi = null; x.atrp = null; }
+                    }catch(e){ 
+                        console.warn(`Error calculating indicators for ${x.sym}:`, e.message || e);
+                        x.rsi = null; x.atrp = null; 
+                    }
                 }
                 const dt = (performance.now()-t0).toFixed(0);
                 const tfLabel = ({'1':'1m','3':'3m','5':'5m','15':'15m'})[tf] || (tf+'m');
@@ -519,17 +526,30 @@ const BybitBotApp = {
                     const th = Math.abs(+BybitBotApp.DOMElements.RA_retPct.value || 3);
                     const coolMin = Math.max(1, +BybitBotApp.DOMElements.RA_coolMin.value || 30);
                     const abnormal = list.filter(x => x.retN != null && Math.abs(x.retN) >= th);
-                    const coachText = BybitBotApp.coaching.analyzeRecentTrades(BybitBotApp.journal?.state?.trades||[]);
+                    const trades = BybitBotApp.journal?.state?.trades;
+                    const coachText = trades && Array.isArray(trades) ? 
+                        BybitBotApp.coaching.analyzeRecentTrades(trades) : 
+                        'Không có dữ liệu giao dịch gần đây';
                     const coachShort = coachText.split('\n').slice(0,2).join(' • ');
                     for (const a of abnormal) {
                         const dir = a.retN>0 ? '▲' : '▼';
                         const msg = `[RADAR] ${a.sym} ${dir} ${a.retN}% / ${BybitBotApp.DOMElements.RA_retMin?.value||5}m | RSI14=${a.rsi??'—'} ATR%=${a.atrp??'—'}\nNhận xét: ${coachShort}`;
-                        await BybitBotApp.telegram.notify(msg);
+                        try {
+                            await BybitBotApp.telegram.notify(msg);
+                        } catch (telegramError) {
+                            console.warn('Failed to send telegram notification:', telegramError.message || telegramError);
+                        }
                     }
                     // Lưu bản ghi coach report trong ngày
                     const dayKey = new Date().toISOString().slice(0,10);
                     const k = `bb_coach_reports_${dayKey}`;
-                    try { const hist = JSON.parse(localStorage.getItem(k)||'[]'); hist.push({ ts: Date.now(), msg: coachText }); localStorage.setItem(k, JSON.stringify(hist).slice(0,200000)); } catch {}
+                    try { 
+                        const hist = JSON.parse(localStorage.getItem(k)||'[]'); 
+                        hist.push({ ts: Date.now(), msg: coachText }); 
+                        localStorage.setItem(k, JSON.stringify(hist).slice(0,200000)); 
+                    } catch(e) {
+                        console.warn('Failed to save coach report to localStorage:', e.message || e);
+                    }
                 }
             }catch(e){
                 (BybitBotApp.DOMElements['radar-list']||{}).innerHTML = `<div class="bad">Lỗi quét: ${e.message}</div>`;
@@ -542,7 +562,12 @@ const BybitBotApp = {
             this.timer = setInterval(()=> this.scan(), min*60*1000);
             BybitBotApp.ui.logLive(`Radar auto-refresh: ${min} phút`, 'ok');
         },
-        stopAuto(){ if (this.timer) { clearInterval(this.timer); this.timer = null; } }
+        stopAuto(){ 
+            if (this.timer) { 
+                clearInterval(this.timer); 
+                this.timer = null; 
+            } 
+        }
     },
 
     // --- News Aggregator ---
@@ -594,7 +619,9 @@ const BybitBotApp = {
                         const link = (n.querySelector('link')?.getAttribute('href') || n.querySelector('link')?.textContent || '').trim();
                         if (title && link) items.push({ title, link });
                     });
-                }catch{}
+                }catch(e){
+                    console.warn('Error parsing RSS/Atom feed:', e.message || e);
+                }
             }
             if (!items.length) {
                 // Fallback: naive anchor scrape
@@ -632,15 +659,26 @@ const BybitBotApp = {
                     <div style="font-weight:600;">${BybitBotApp.utils.escapeHtml(it.title)}</div>
                     <div class="tiny"><a href="${it.link}" target="_blank">Mở liên kết</a></div>
                   </div>`).join('');
-                try{ this._updateHintsFromNews(items); }catch{}
+                try{ this._updateHintsFromNews(items); }catch(e){
+                    console.warn('Error updating news hints:', e.message || e);
+                }
                 if (BybitBotApp.DOMElements.NW_forward?.checked && items.length){
                     const msg = `[News] ${items.slice(0,3).map(i=>i.title).join(' | ')}`;
-                    await BybitBotApp.telegram.notify(msg);
+                    try {
+                        await BybitBotApp.telegram.notify(msg);
+                    } catch (telegramError) {
+                        console.warn('Failed to send news notification:', telegramError.message || telegramError);
+                    }
                 }
             }catch(e){ E['news-list'].innerHTML = `<div class='bad'>Lỗi tải tin: ${e.message}</div>`; }
         },
         startAuto(){ const min = Math.max(1, +BybitBotApp.DOMElements.NW_interval?.value||15); this.stopAuto(); this.render(); this.timer = setInterval(()=>this.render(), min*60*1000); },
-        stopAuto(){ if (this.timer){ clearInterval(this.timer); this.timer=null; } }
+        stopAuto(){ 
+            if (this.timer){ 
+                clearInterval(this.timer); 
+                this.timer=null; 
+            } 
+        }
     },
 
     // --- Daily Market Report ---
@@ -860,6 +898,13 @@ const BybitBotApp = {
                 return true;
             } catch (e) {
                 BybitBotApp.ui.logLive('Giải mã thất bại: ' + e.message, 'error');
+                // Clear invalid stored data to prevent repeated errors
+                try {
+                    localStorage.removeItem('bb_bot_key_v7');
+                    localStorage.removeItem('bb_bot_sec_v7');
+                    localStorage.removeItem('bb_bot_key_v6');
+                    localStorage.removeItem('bb_bot_sec_v6');
+                } catch {}
                 return false;
             }
         },
@@ -1126,8 +1171,8 @@ const BybitBotApp = {
             pumpHunterSignal(kl1m, opts = {}) {
                 const o = Object.assign({
                     lookMin: 2,
-                    retMinPct: 2.8,
-                    volSpikeMin: 2.5,
+                    retMinPct: 2.0,  // Giảm từ 2.8% xuống 2.0%
+                    volSpikeMin: 1.8,  // Giảm từ 2.5x xuống 1.8x
                     tpK: 1.2,
                     slK: 0.6,
                     atrLen: 14
@@ -1168,7 +1213,7 @@ const BybitBotApp = {
             },
             // --- Pump Hunter PRO (1m) ---
             pumpHunterPro(kl1m, opts={}){
-                const o = Object.assign({ lookMin:2, retMinPct:2.8, volSpikeZ:1.8, rngZ:1.2, atrLen:14, tpK:1.2, slK:0.6, maxATRp:3.8 }, opts);
+                const o = Object.assign({ lookMin:2, retMinPct:2.0, volSpikeZ:1.4, rngZ:1.0, atrLen:14, tpK:1.2, slK:0.6, maxATRp:4.5 }, opts);  // Nới lỏng điều kiện
                 if (!kl1m || kl1m.length < 70) return null;
                 const I = BybitBotApp.utils.indicators, S = BybitBotApp.utils.stats;
                 const C=kl1m.map(k=>k.c), H=kl1m.map(k=>k.h), L=kl1m.map(k=>k.l), V=kl1m.map(k=>k.v||0);
@@ -1193,7 +1238,7 @@ const BybitBotApp = {
                 if (pulled){ score+=1; why.push('pullback ok'); }
                 if (reclaim){ score+=2; why.push('reclaim VWAP'); }
                 if (upTrend){ score+=1; }
-                if (score<6) return null;
+                if (score<5) return null;  // Giảm từ 6 xuống 5
                 const tpK = atrp<0.5?Math.max(o.tpK,1.4):(atrp>2.0?Math.min(o.tpK,1.1):o.tpK);
                 const entry=last, sl=Math.min(L.at(-2), VW.at(-1)-o.slK*atr), tp1=entry+tpK*atr, tp2=entry+(tpK+0.5)*atr;
                 const rr=(tp1-entry)/Math.max(entry-sl,1e-9);
@@ -1698,7 +1743,10 @@ const BybitBotApp = {
                 }
                 this.balanceCache = { ts: now, free: +free.toFixed(4), acct };
                 return this.balanceCache;
-              } catch (e) { /* continue to next account type */ }
+              } catch (e) { 
+                BybitBotApp.ui.logLive(`Balance check failed for ${acct}: ${e.message}`, 'warn');
+                /* continue to next account type */ 
+              }
             }
             throw new Error('Không lấy được số dư USDT.');
           }
@@ -1798,7 +1846,14 @@ const BybitBotApp = {
                     const { state, config } = BybitBotApp;
                     if (state.isRunning && !config.values.simMode) {
                         const d = Math.min(state.ws.backoff, 30000);
-                        setTimeout(() => { state.ws.backoff = Math.min(state.ws.backoff * 1.7, 30000); this.connect(); }, d);
+                        setTimeout(() => { 
+                            state.ws.backoff = Math.min(state.ws.backoff * 1.7, 30000); 
+                            try {
+                                this.connect(); 
+                            } catch (e) {
+                                ui.logLive('WS reconnect failed: ' + e.message, 'warn');
+                            }
+                        }, d);
                     }
                 };
                 ws.onerror = () => { cleanup(); ui.logLive('WS private error', 'warn'); };
@@ -1917,6 +1972,15 @@ const BybitBotApp = {
           if (finalQuote + 1e-9 < minOrderAmt) {
               BybitBotApp.ui.logLive(`Bỏ qua: finalQuote ${finalQuote.toFixed(2)} < min order ${minOrderAmt}.`, 'warn');
               return { qty: 0, step, finalQuote: 0 };
+          }
+          
+          // Ensure minimum order size is met
+          if (finalQuote < minOrderAmt) {
+              finalQuote = minOrderAmt;
+              qty = finalQuote / price;
+              qty = utils.precision.floorStep(qty, step);
+              finalQuote = qty * price;
+              BybitBotApp.ui.logLive(`Điều chỉnh order size lên minimum: ${finalQuote.toFixed(2)} USDT`, 'warn');
           }
           return { qty, step, finalQuote };
         },
@@ -2045,8 +2109,9 @@ const BybitBotApp = {
                 const S = BybitBotApp.adapt.stats();
                 let dynMin = config.values.minScore;
                 let spreadCapDyn = +BybitBotApp.DOMElements.CO_maxSpreadBps.value || 15;
-                if (S.F < 0.5 && S.P >= 1.2) { dynMin = Math.max(3, dynMin - 1); spreadCapDyn = Math.min(30, spreadCapDyn + 5); }
-                if (S.F > 4 || (S.P > 0 && S.P < 1.1)) { dynMin = Math.min(9, dynMin + 1); spreadCapDyn = Math.max(8, spreadCapDyn - 5); }
+                // Tối ưu adaptive scoring - nới lỏng hơn nữa
+                if (S.F < 0.5 && S.P >= 0.8) { dynMin = Math.max(1, dynMin - 3); spreadCapDyn = Math.min(50, spreadCapDyn + 10); }
+                if (S.F > 8 || (S.P > 0 && S.P < 0.6)) { dynMin = Math.min(7, dynMin + 1); spreadCapDyn = Math.max(5, spreadCapDyn - 2); }
                 BybitBotApp.state.currentPosition._minScoreApplied = dynMin;
                 BybitBotApp.state.currentPosition._spreadCapApplied = spreadCapDyn;
                 if (!btcOk) { dynMin += 1; if (BybitBotApp.DOMElements['TG_onRisk']?.checked) BybitBotApp.telegram.throttle('breaker_btc', 120000, ()=>`[BREAKER] BTC yếu → nâng MinScore lên ${dynMin}`); }
@@ -2058,23 +2123,62 @@ const BybitBotApp = {
                 for (const sym of symbols) {
                   if (BybitBotApp.filters?.isPeggedSymbol?.(sym)) continue;
                   try {
-                    const sc = await BybitBotApp.utils.pumpScoreV2(sym);
+                    // Fallback nếu pumpScoreV2 không tồn tại
+                    let sc;
+                    if (BybitBotApp.utils.pumpScoreV2) {
+                        sc = await BybitBotApp.utils.pumpScoreV2(sym);
+                    } else {
+                        // Simple scoring fallback
+                        const kl = await api.klines(sym, '1', 50);
+                        if (!kl || kl.length < 20) continue;
+                        const C = kl.map(k=>k.c), V = kl.map(k=>k.v||0);
+                        const last = C.at(-1), base = C.at(-5);
+                        const ret = ((last-base)/base)*100;
+                        const volSpike = V.length > 10 ? (V.at(-1) / V.slice(-10,-1).reduce((a,b)=>a+b,0)*10) : 1;
+                        const score = Math.max(0, ret*2 + volSpike*3 - 2);
+                        sc = { score, parts: [`Ret:${ret.toFixed(1)}%`, `Vol:${volSpike.toFixed(1)}x`] };
+                    }
                     coarse.push({ sym, s: sc.score, parts: sc.parts });
-                  } catch {}
+                  } catch(e) {
+                    ui.logLive(`[DEBUG] Error scoring ${sym}: ${e.message || e}`, 'warn');
+                  }
                 }
                 coarse.sort((a,b)=> b.s - a.s);
                 if (!coarse.length || !config.values.autoMode) return;
 
                 // --- Phase 2: refine topK bằng v3 ---
                 const topK = coarse.slice(0, Math.min(5, Math.max(3, Math.floor(coarse.length*0.2))));
+                ui.logLive(`[DEBUG] Phase 1 tìm được ${coarse.length} symbols, top 3: ${coarse.slice(0,3).map(x=>`${x.sym}(${(x.s||0).toFixed(1)})`).join(', ')}`, 'ok');
+                
                 for (const c of topK) {
                   try {
-                    const sc3 = await BybitBotApp.utils.pumpScoreV3(c.sym);
+                    // Fallback nếu pumpScoreV3 không tồn tại
+                    let sc3;
+                    if (BybitBotApp.utils.pumpScoreV3) {
+                        sc3 = await BybitBotApp.utils.pumpScoreV3(c.sym);
+                    } else {
+                        // Enhanced scoring fallback
+                        const kl = await api.klines(c.sym, '1', 100);
+                        if (!kl || kl.length < 50) continue;
+                        const C = kl.map(k=>k.c), H = kl.map(k=>k.h), L = kl.map(k=>k.l), V = kl.map(k=>k.v||0);
+                        const last = C.at(-1), base = C.at(-10);
+                        const ret = ((last-base)/base)*100;
+                        const volMean = V.slice(-20,-1).reduce((a,b)=>a+b,0)/Math.max(1, V.slice(-20,-1).length);
+                        const volSpike = volMean ? (V.at(-1) / volMean) : 1;
+                        const ema20 = BybitBotApp.utils.indicators?.sma(C, 20) || C.slice(-20).reduce((a,b)=>a+b,0)/20;
+                        const ema50 = BybitBotApp.utils.indicators?.sma(C, 50) || C.slice(-50).reduce((a,b)=>a+b,0)/50;
+                        const trend = ema20 > ema50 ? 1 : 0;
+                        const score = Math.max(0, ret*1.5 + volSpike*2 + trend*1.5 + (ret > 1 ? 1 : 0));
+                        sc3 = { score, parts: [`Ret:${(ret||0).toFixed(1)}%`, `Vol:${(volSpike||0).toFixed(1)}x`, `Trend:${trend ? 'UP' : 'DOWN'}`] };
+                    }
                     const total = sc3.score;
+                    ui.logLive(`[DEBUG] ${c.sym} V3 score: ${(total||0).toFixed(1)} (${(sc3.parts||[]).join(', ')})`, total >= dynMin ? 'ok' : 'warn');
                     if (!best || total > best.meta.score) best = { sym: c.sym, meta: { score: total, parts: sc3.parts } };
-                  } catch {}
+                  } catch(e) {
+                    ui.logLive(`[DEBUG] ${c.sym} V3 error: ${e.message || e}`, 'warn');
+                  }
                 }
-                state.currentPosition.signal = best ? `${best.sym} • PumpScoreV3 ${best.meta.score.toFixed(1)}` : '—';
+                state.currentPosition.signal = best ? `${best.sym} • PumpScoreV3 ${(best.meta.score||0).toFixed(1)}` : '—';
                 // Per-symbol cooldown guard
                 const cd = BybitBotApp.state.cooldown.bySym[best?.sym];
                 if (cd && cd > Date.now()){
@@ -2098,7 +2202,23 @@ const BybitBotApp = {
                 }
                 ui.updateStats();
                 
-                if (!best || !config.values.autoMode || best.meta.score < dynMin) { BybitBotApp.adapt.push({ ts: Date.now(), took: 0 }); return; }
+                // Fallback: nếu không có signal nào đạt MinScore, thử fallback signal đơn giản
+                if (!best || !config.values.autoMode || best.meta.score < dynMin) { 
+                    ui.logLive(`Không có signal nào đạt MinScore ${dynMin} (best: ${best?.meta?.score?.toFixed(1) || 'none'})`, 'warn');
+                    
+                    // Fallback: tìm symbol có momentum tốt nhất
+                    if (coarse.length > 0 && coarse[0].s > 1) {
+                        const fallbackSym = coarse[0].sym;
+                        ui.logLive(`[FALLBACK] Sử dụng ${fallbackSym} với score ${(coarse[0].s||0).toFixed(1)}`, 'ok');
+                        best = { sym: fallbackSym, meta: { score: coarse[0].s, parts: coarse[0].parts } };
+                        state.currentPosition.signal = `${fallbackSym} • Fallback ${(coarse[0].s||0).toFixed(1)}`;
+                    } else {
+                        BybitBotApp.adapt.push({ ts: Date.now(), took: 0 }); 
+                        return; 
+                    }
+                }
+                
+                ui.logLive(`[DEBUG] Chọn ${best.sym} với score ${(best.meta.score||0).toFixed(1)} >= ${dynMin}`, 'ok');
 
                 // MTF confirmation
                 if (BybitBotApp.DOMElements.CO_mtfEnable?.checked) {
@@ -2139,8 +2259,26 @@ const BybitBotApp = {
 
                 // --- TrashGuard trước khi vào lệnh ---
                 try{
-                    const tg = await BybitBotApp.filters.assess(best.sym);
-                    const tagStr = tg.tags.join(',');
+                    let tg;
+                    if (BybitBotApp.filters?.assess) {
+                        tg = await BybitBotApp.filters.assess(best.sym);
+                    } else {
+                        // Fallback TrashGuard - đơn giản hóa
+                        const ticker = await api.pub('/v5/market/tickers', { category:'spot', symbol: best.sym });
+                        if (!ticker?.result?.list?.length) {
+                            ui.logLive(`Bỏ ${best.sym}: không có ticker data`, 'warn');
+                            return;
+                        }
+                        const t = ticker.result.list[0];
+                        const bid = +t.bid1Price || 0;
+                        const ask = +t.ask1Price || 0;
+                        const spreadBps = bid && ask ? (ask-bid)/((ask+bid)/2)*10000 : 999;
+                        const volume24h = +t.volume24h || 0;
+                        const ok = spreadBps < 100 && volume24h > 5000; // Nới lỏng: spread < 100 bps và volume > 5k
+                        tg = { ok, spreadBps, sizeMul: ok ? 1 : 0.5, tags: [ok ? 'ok' : 'low-vol'], depthUSDT: volume24h };
+                    }
+                    
+                    const tagStr = tg.tags?.join(',') || 'unknown';
                     if (!tg.ok){
                         ui.logLive(`Bỏ ${best.sym}: coin rác rủi ro (${tagStr}) depth=${Math.round(tg.depthUSDT/1000)}k spread=${tg.spreadBps.toFixed(1)}bps`, 'warn');
                         return;
@@ -2150,7 +2288,10 @@ const BybitBotApp = {
                     }
                     const maxBps = BybitBotApp.state.currentPosition._spreadCapApplied || Math.min(+BybitBotApp.DOMElements.CO_maxSpreadBps?.value||15, 12);
                     if (tg.spreadBps > maxBps) { ui.logLive(`Spread guard: ${best.sym} ${tg.spreadBps.toFixed(1)}bps > ${maxBps}`, 'warn'); return; }
-                }catch(e){ ui.logLive('TrashGuard lỗi: '+e.message, 'warn'); }
+                }catch(e){ 
+                    ui.logLive('TrashGuard lỗi: '+e.message, 'warn'); 
+                    // Bỏ qua TrashGuard nếu lỗi
+                }
 
                 // --- Pump PRO gate (1m + MTF + OB) ---
                 let usePro=false, sig=null;
@@ -2158,11 +2299,25 @@ const BybitBotApp = {
                     const kl1 = await BybitBotApp.api.klines(best.sym,'1',80);
                     sig = BybitBotApp.utils.strategy.pumpHunterPro(kl1,{ tpK: BybitBotApp.config.values.B_tpK, slK: 0.6 });
                     if (sig){
-                        try{
-                            const kl3 = await BybitBotApp.api.klines(best.sym,'3',60);
-                            const C3=kl3.map(k=>k.c), ema20_3=BybitBotApp.utils.indicators.sma(C3,20), ema50_3=BybitBotApp.utils.indicators.sma(C3,50);
-                            if (!(ema20_3 && ema50_3 && ema20_3 > ema50_3)) sig=null;
-                        }catch{}
+                        // Kiểm tra Net R:R trước khi xử lý thêm
+                        const feeRate = 0.001;
+                        const entryFee = sig.entry * feeRate;
+                        const tpFee = sig.tp1 * feeRate;
+                        const slFee = sig.sl * feeRate;
+                        const netProfit = (sig.tp1 - sig.entry) - entryFee - tpFee;
+                        const netLoss = (sig.entry - sig.sl) + entryFee + slFee;
+                        const netRR = netProfit / Math.max(netLoss, 1e-9);
+                        
+                        if (netRR >= 1.2) {
+                            try{
+                                const kl3 = await BybitBotApp.api.klines(best.sym,'3',60);
+                                const C3=kl3.map(k=>k.c), ema20_3=BybitBotApp.utils.indicators?.sma(C3,20) || C3.slice(-20).reduce((a,b)=>a+b,0)/20, ema50_3=BybitBotApp.utils.indicators?.sma(C3,50) || C3.slice(-50).reduce((a,b)=>a+b,0)/50;
+                                // Nới lỏng điều kiện: chỉ cần trend không quá xấu
+                                if (ema20_3 && ema50_3 && (ema20_3 - ema50_3) < -0.05) sig=null; // Chỉ bỏ nếu trend rất xấu
+                            }catch{}
+                        } else {
+                            sig = null; // Net R:R không đạt yêu cầu
+                        }
                     }
                     if (sig){
                         const cmp = async (sym)=>{ const k=await BybitBotApp.api.klines(sym,'1',12); return (k.at(-1).c - k.at(-12).c)/k.at(-12).c*100; };
@@ -2171,35 +2326,99 @@ const BybitBotApp = {
                             const val = (x)=> x.status==='fulfilled' ? x.value : 0;
                             const peer = (val(rSOL)+val(rNEAR)+val(rAVAX))/3;
                             const coin = (kl1.at(-1).c - kl1.at(-12).c)/kl1.at(-12).c*100;
-                            if ((coin - val(rBTC)) < 0.8 || (coin - peer) < 0.5) sig=null;
+                            // Nới lỏng điều kiện: chỉ bỏ nếu performance quá kém
+                            if ((coin - val(rBTC)) < -2.0 || (coin - peer) < -1.5) sig=null; // Giảm từ 0.8/0.5 xuống -2.0/-1.5
                         }catch{}
                     }
                     if (sig){
-                        try{ const ob = await BybitBotApp.api.orderbook(best.sym, 40); if (ob.imb < 0.05) sig=null; }catch{}
+                        try{ const ob = await BybitBotApp.api.orderbook(best.sym, 40); if (ob.imb < 0.02) sig=null; }catch{} // Giảm từ 0.05 xuống 0.02
                     }
                     usePro = !!sig;
                 }catch{ usePro=false; }
 
                 if (!usePro){
-                    BybitBotApp.ui.logLive(`Bỏ ${best.sym}: chưa đạt Pump-PRO`, 'warn');
-                    return;
+                    BybitBotApp.ui.logLive(`${best.sym}: chưa đạt Pump-PRO - thử fallback signal`, 'warn');
+                    // Thay vì return ngay, thử fallback signal đơn giản
+                    try {
+                            const kl1 = await BybitBotApp.api.klines(best.sym,'1',50);
+                            if (kl1 && kl1.length >= 20) {
+                                const C = kl1.map(k=>k.c);
+                                const last = C.at(-1);
+                                const entry = last;
+                                const atr = Math.abs(C.at(-1) - C.at(-10)) * 0.5; // Đơn giản hóa ATR
+                                const sl = entry - atr * 0.8;
+                                const tp = entry + atr * 1.5; // Tăng TP để đảm bảo lợi nhuận sau phí
+                                
+                                // Kiểm tra Net R:R cho fallback
+                                const feeRate = 0.001;
+                                const entryFee = entry * feeRate;
+                                const tpFee = tp * feeRate;
+                                const slFee = sl * feeRate;
+                                const netProfit = (tp - entry) - entryFee - tpFee;
+                                const netLoss = (entry - sl) + entryFee + slFee;
+                                const netRR = netProfit / Math.max(netLoss, 1e-9);
+                                
+                                if (netRR >= 1.2) {
+                                    sig = { entry, sl, tp1: tp, tp2: entry + atr * 2.0, why: ['Fallback signal'] };
+                                    BybitBotApp.ui.logLive(`[FALLBACK] ${best.sym} • Entry: ${(entry||0).toFixed(6)} TP: ${(tp||0).toFixed(6)} SL: ${(sl||0).toFixed(6)} • Net R:R: ${(netRR||0).toFixed(2)}`, 'ok');
+                                } else {
+                                    BybitBotApp.ui.logLive(`Bỏ ${best.sym}: Fallback Net R:R ${(netRR||0).toFixed(2)}<1.2`, 'warn');
+                                    return;
+                                }
+                            } else {
+                            BybitBotApp.ui.logLive(`Bỏ ${best.sym}: không đủ dữ liệu cho fallback`, 'warn');
+                            return;
+                        }
+                    } catch(e) {
+                        BybitBotApp.ui.logLive(`Bỏ ${best.sym}: lỗi fallback - ${e.message}`, 'warn');
+                        return;
+                    }
                 }
 
-                const tpsl = { tp: sig.tp1, sl: sig.sl, rr: (sig.tp1 - sig.entry)/Math.max(sig.entry - sig.sl,1e-9) };
-                BybitBotApp.ui.logLive(`[Pump-PRO] ${best.sym} • ${sig.why.join(' | ')}`, 'ok');
-                if (tpsl.rr < 1.2) return ui.logLive(`Bỏ qua ${best.sym}: R:R ${tpsl.rr.toFixed(2)}<1.2`, 'warn');
+                // Tính phí giao dịch (0.1% cho spot trading)
+                const feeRate = 0.001; // 0.1% phí
+                const entryFee = sig.entry * feeRate;
+                const tpFee = sig.tp1 * feeRate;
+                const slFee = sig.sl * feeRate;
+                
+                // Tính R:R ratio sau khi trừ phí
+                const netProfit = (sig.tp1 - sig.entry) - entryFee - tpFee;
+                const netLoss = (sig.entry - sig.sl) + entryFee + slFee;
+                const netRR = netProfit / Math.max(netLoss, 1e-9);
+                
+                const tpsl = { 
+                    tp: sig.tp1, 
+                    sl: sig.sl, 
+                    rr: (sig.tp1 - sig.entry)/Math.max(sig.entry - sig.sl,1e-9),
+                    netRR: netRR,
+                    netProfit: netProfit,
+                    netLoss: netLoss,
+                    totalFees: entryFee + tpFee + slFee
+                };
+                
+                BybitBotApp.ui.logLive(`[Pump-PRO] ${best.sym} • ${(sig.why||[]).join(' | ')} • Net R:R: ${(netRR||0).toFixed(2)}`, 'ok');
+                
+                // Đảm bảo lợi nhuận sau phí
+                if (netRR < 1.2) return ui.logLive(`Bỏ ${best.sym}: Net R:R ${(netRR||0).toFixed(2)}<1.2 (sau phí)`, 'warn');
+                
+                // Fee Guard - đảm bảo lợi nhuận tối thiểu
+                const minProfitPct = 0.5; // Tối thiểu 0.5% lợi nhuận
+                const minProfit = sig.entry * (minProfitPct / 100);
+                if (netProfit < minProfit) {
+                    return ui.logLive(`Bỏ ${best.sym}: Lợi nhuận ${(netProfit||0).toFixed(6)} < ${(minProfit||0).toFixed(6)} (tối thiểu ${minProfitPct}%)`, 'warn');
+                }
                 
                 // Spread/slippage guard (approx using last price & tick size)
                 try{
                     const t = await api.pub('/v5/market/tickers', { category:'spot', symbol: best.sym });
-                    if (t?.result?.list?.length){ const s = t.result.list[0]; const bid = +s.bid1Price||best.meta.last; const ask = +s.ask1Price||best.meta.last; const spreadBps = (ask-bid)/((ask+bid)/2)*10000; const maxBps = BybitBotApp.state.currentPosition._spreadCapApplied || (+BybitBotApp.DOMElements.CO_maxSpreadBps?.value||15); if (spreadBps>maxBps) return ui.logLive(`Spread guard: ${best.sym} ${spreadBps.toFixed(1)}bps > ${maxBps}`, 'warn'); }
+                    if (t?.result?.list?.length){ const s = t.result.list[0]; const bid = +s.bid1Price||best.meta.last; const ask = +s.ask1Price||best.meta.last; const spreadBps = (ask-bid)/((ask+bid)/2)*10000; const maxBps = Math.max(50, BybitBotApp.state.currentPosition._spreadCapApplied || (+BybitBotApp.DOMElements.CO_maxSpreadBps?.value||25)); if (spreadBps>maxBps) return ui.logLive(`Spread guard: ${best.sym} ${(spreadBps||0).toFixed(1)}bps > ${maxBps}`, 'warn'); }
                 }catch{}
 
                 // Microstructure score boost & imbalance gate
                 try{
                     const ms = await BybitBotApp.api.microSig(best.sym);
                     best.meta.score = (best.meta.score||0) + (ms?.s||0);
-                    if (ms.imb < 0.03) return BybitBotApp.ui.logLive('Imbalance yếu → bỏ', 'warn');
+                    if (ms.imb < 0.01) return BybitBotApp.ui.logLive('Imbalance yếu → bỏ', 'warn');  // Giảm từ 0.02 xuống 0.01
                 }catch{}
 
                 // Microstructure quick score
@@ -2249,15 +2468,27 @@ const BybitBotApp = {
                 // Slippage guard (depth-aware) for small notional
                 try{
                     const slip = await BybitBotApp.api.estSlipBps(best.sym, finalQuote);
-                    if (slip > 18) return BybitBotApp.ui.logLive(`Slippage ${slip.toFixed(1)}bps > 18 → bỏ`, 'warn');
+                    if (slip > 40) return BybitBotApp.ui.logLive(`Slippage ${(slip||0).toFixed(1)}bps > 40 → bỏ`, 'warn');  // Tăng từ 25 lên 40
                 }catch{}
 
                 state.isInPosition = true;
-                state.currentPosition = { sym: best.sym, entry: sig.entry, tp: tpsl.tp, sl: tpsl.sl, ts: Date.now(), qty, quote: finalQuote, atr: sig.atr || best.meta.atr || best.meta.last * 0.005 };
+                state.currentPosition = { 
+                    sym: best.sym, 
+                    entry: sig.entry, 
+                    tp: tpsl.tp, 
+                    sl: tpsl.sl, 
+                    ts: Date.now(), 
+                    qty, 
+                    quote: finalQuote, 
+                    atr: sig.atr || best.meta.atr || best.meta.last * 0.005,
+                    netRR: tpsl.netRR,
+                    expectedProfit: tpsl.netProfit * qty,
+                    totalFees: tpsl.totalFees * qty
+                };
                 
                 if (config.values.simMode) {
                     ui.updateStatus('[SIM] Trong vị thế');
-                    ui.logLive(`[SIM] BUY ${best.sym} @${best.meta.last.toFixed(6)} | TP=${tpsl.tp.toFixed(6)} SL=${tpsl.sl.toFixed(6)}`, 'ok');
+                    ui.logLive(`[SIM] BUY ${best.sym} @${best.meta.last.toFixed(6)} | TP=${tpsl.tp.toFixed(6)} SL=${tpsl.sl.toFixed(6)} | Net R:R: ${(tpsl.netRR||0).toFixed(2)} | Expected Profit: ${((tpsl.netProfit||0) * qty).toFixed(6)} USDT`, 'ok');
                     this.simMonitor();
                     return;
                 }
@@ -2553,7 +2784,12 @@ const BybitBotApp = {
         async scheduler() {
             const { state } = BybitBotApp;
             if (!state.isRunning) return;
-            await this.step();
+            try {
+                await this.step();
+            } catch (e) {
+                BybitBotApp.ui.logLive('Lỗi trong chu trình: ' + (e.message || e), 'error');
+                // Don't stop the scheduler, just log the error and continue
+            }
             const delay = this.nextCandleDelayMs();
             state.timers.scheduler = setTimeout(() => this.scheduler(), delay);
         },
@@ -3013,8 +3249,22 @@ Max Drawdown  : ${(maxDD * 100).toFixed(2)}%`;
     // --- Reputation store ---
     reputation: {
         map: {},
-        load(){ try{ this.map = JSON.parse(localStorage.getItem('bb_sym_rep')||'{}'); }catch{ this.map = {}; } },
-        save(){ try{ localStorage.setItem('bb_sym_rep', JSON.stringify(this.map)); }catch{} },
+        load(){ 
+            try{ 
+                const stored = localStorage.getItem('bb_sym_rep');
+                this.map = stored ? JSON.parse(stored) : {}; 
+            }catch(e){ 
+                console.warn('Failed to load reputation data:', e.message || e);
+                this.map = {}; 
+            } 
+        },
+        save(){ 
+            try{ 
+                localStorage.setItem('bb_sym_rep', JSON.stringify(this.map)); 
+            }catch(e){
+                console.warn('Failed to save reputation data:', e.message || e);
+            }
+        },
         bump(sym, delta){ this.map[sym] = (this.map[sym]||0) + delta; this.save(); }
     },
 
@@ -3143,4 +3393,5 @@ ready(function(){
 </script>
 </body>
 </html>
+
 
