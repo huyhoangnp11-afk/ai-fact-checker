@@ -812,7 +812,15 @@
 
         <div class="form-group">
           <label>Chat ID</label>
-          <input type="text" id="tgChat" placeholder="123456789">
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="tgChat" placeholder="123456789" style="flex: 1;">
+            <button onclick="BybitBot.autoDetectChatId()" class="btn btn-secondary" style="padding: 8px 12px; white-space: nowrap;">
+              🔍 Auto Detect
+            </button>
+          </div>
+          <small style="color: var(--text-dim); font-size: 10px; margin-top: 4px; display: block;">
+            💡 Gửi bất kỳ tin nhắn nào đến bot, sau đó nhấn "Auto Detect"
+          </small>
         </div>
 
         <div class="form-group">
@@ -3020,6 +3028,108 @@ Price: $${analysis.price.toFixed(2)}
       this.log('📱 Sent to Telegram', 'success');
     } catch (error) {
       this.log(`❌ Telegram error: ${error.message}`, 'error');
+    }
+  },
+
+  // ═══════════════════════════════════════════════════════════
+  // 🔍 AUTO DETECT TELEGRAM CHAT ID
+  // ═══════════════════════════════════════════════════════════
+  
+  async autoDetectChatId() {
+    this.log('🔍 Đang tìm kiếm Chat ID...', 'info');
+    
+    const token = document.getElementById('tgToken')?.value;
+    
+    if (!token) {
+      this.log('❌ Vui lòng nhập Bot Token trước!', 'error');
+      alert('❌ Vui lòng nhập Bot Token trước khi Auto Detect!');
+      return;
+    }
+    
+    try {
+      // STEP 1: Delete webhook first (fix for "Conflict: can't use getUpdates while webhook is active")
+      this.log('🔧 Đang xóa webhook (nếu có)...', 'info');
+      const deleteWebhookUrl = `https://api.telegram.org/bot${token}/deleteWebhook`;
+      
+      try {
+        await fetch(deleteWebhookUrl, { method: 'POST' });
+        this.log('✅ Đã xóa webhook (nếu có)', 'success');
+      } catch (webhookError) {
+        console.warn('Webhook deletion warning:', webhookError);
+        // Continue anyway, webhook might not exist
+      }
+      
+      // STEP 2: Fetch updates from Telegram
+      const url = `https://api.telegram.org/bot${token}/getUpdates?limit=10`;
+      this.log('📡 Đang fetch updates từ Telegram...', 'info');
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (!data.ok) {
+        this.log(`❌ Telegram API error: ${data.description}`, 'error');
+        alert(`❌ Bot Token không hợp lệ!\n\n${data.description}`);
+        return;
+      }
+      
+      if (!data.result || data.result.length === 0) {
+        this.log('⚠️ Không tìm thấy tin nhắn nào!', 'warning');
+        alert('⚠️ Không tìm thấy tin nhắn!\n\n📱 Hướng dẫn:\n1. Mở Telegram\n2. Tìm bot của bạn (@YourBot)\n3. Gửi bất kỳ tin nhắn nào (ví dụ: /start)\n4. Quay lại đây và nhấn "Auto Detect" lại');
+        return;
+      }
+      
+      // Get the most recent message
+      const lastUpdate = data.result[data.result.length - 1];
+      let chatId = null;
+      let username = 'Unknown';
+      
+      // Try to get chat_id from message or callback_query
+      if (lastUpdate.message) {
+        chatId = lastUpdate.message.chat.id;
+        username = lastUpdate.message.from.first_name || lastUpdate.message.from.username || 'User';
+      } else if (lastUpdate.callback_query) {
+        chatId = lastUpdate.callback_query.message.chat.id;
+        username = lastUpdate.callback_query.from.first_name || lastUpdate.callback_query.from.username || 'User';
+      }
+      
+      if (chatId) {
+        // Fill in the input
+        document.getElementById('tgChat').value = chatId;
+        
+        this.log('✅ Đã tìm thấy Chat ID!', 'success');
+        this.log(`👤 User: ${username}`, 'info');
+        this.log(`🆔 Chat ID: ${chatId}`, 'success');
+        
+        // Send test message
+        try {
+          const testUrl = `https://api.telegram.org/bot${token}/sendMessage`;
+          await fetch(testUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: chatId,
+              text: `✅ *Chat ID Detected!*\n\n👤 User: ${username}\n🆔 Chat ID: \`${chatId}\`\n\n💼 LIVED Bot đã kết nối thành công!\n🔔 Bạn sẽ nhận được thông báo trading tại đây.`,
+              parse_mode: 'Markdown'
+            })
+          });
+          
+          this.log('📱 Đã gửi tin nhắn xác nhận đến Telegram!', 'success');
+          
+          alert(`✅ Phát hiện Chat ID thành công!\n\n👤 User: ${username}\n🆔 Chat ID: ${chatId}\n\n📱 Kiểm tra Telegram để xác nhận!`);
+          
+        } catch (error) {
+          console.error('Error sending test message:', error);
+        }
+        
+      } else {
+        this.log('❌ Không thể lấy Chat ID từ updates', 'error');
+        alert('❌ Không thể lấy Chat ID!\n\nVui lòng thử lại sau khi gửi tin nhắn mới đến bot.');
+      }
+      
+    } catch (error) {
+      this.log(`❌ Lỗi khi auto detect: ${error.message}`, 'error');
+      console.error('Auto detect error:', error);
+      alert(`❌ Lỗi khi phát hiện Chat ID!\n\n${error.message}\n\nVui lòng kiểm tra:\n1. Bot Token có đúng không?\n2. Đã gửi tin nhắn đến bot chưa?\n3. Kết nối internet có ổn định không?`);
     }
   },
 
