@@ -987,9 +987,9 @@
         <div class="form-row">
           <div class="form-group">
             <label>Max Positions <span class="badge badge-warning">AGGRESSIVE 🚀</span></label>
-            <input type="number" id="maxPositions" value="5" min="1" max="10">
+            <input type="number" id="maxPositions" value="10" min="1" max="20">
             <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">
-              Trade tối đa bao nhiêu coin cùng lúc (Default: 5 - More profit!)
+              Trade tối đa bao nhiêu coin cùng lúc (Default: 10 - Revenge Mode Ready!)
             </div>
           </div>
 
@@ -1757,8 +1757,8 @@ const BybitBot = {
       maxSpread: 0.3,
       btcFilter: true,
       tradingFee: 0.1, // Default: 0.1% per trade (Bybit spot)
-      // Risk Management (AGGRESSIVE MODE - Profit > Safety)
-      maxPositions: 5, // Max concurrent positions (increased for more opportunities)
+      // Risk Management (AGGRESSIVE MODE - Profit > Safety + Revenge Mode Ready)
+      maxPositions: 10, // Max concurrent positions (revenge mode ready)
       maxDrawdownPercent: 30, // Stop if -30% (higher risk tolerance)
       dailyLossLimit: 200, // Max -200 USDT per day (higher ceiling)
       riskPerTrade: 3 // Risk 3% of balance per trade (aggressive)
@@ -2656,26 +2656,107 @@ const BybitBot = {
       if (macdData.trend === 'BEARISH') { confidence -= 10; }
       if (bb.position === 'UPPER') { confidence -= 10; }
       if (rsiValue > 70) { confidence -= 15; }
+      
+      // ═══════════════════════════════════════════════════════════
+      // 🎯 BOUNCE SIGNAL DETECTION: "Đặt vị thế dựa vào tín hiệu nảy"
+      // ═══════════════════════════════════════════════════════════
+      
+      let bounceSignal = null;
+      let bounceStrength = 0;
+      
+      // 1. RSI OVERSOLD BOUNCE (nảy từ oversold → LONG)
+      if (rsiValue < 35 && rsiValue > 25) {
+        // RSI đang thoát khỏi oversold zone
+        bounceSignal = 'LONG_BOUNCE';
+        bounceStrength = 20;
+        confidence += 20;
+        reasons.push('🎯 RSI bounce từ oversold (LONG setup)');
+      } else if (rsiValue < 30) {
+        // RSI deep oversold (wait for bounce)
+        bounceSignal = 'WAIT_FOR_BOUNCE';
+        bounceStrength = 10;
+        confidence += 10;
+        reasons.push('⏳ RSI oversold, chờ tín hiệu nảy');
+      }
+      
+      // 2. RSI OVERBOUGHT BOUNCE (nảy từ overbought → SHORT)
+      if (rsiValue > 65 && rsiValue < 75) {
+        // RSI đang thoát khỏi overbought zone
+        bounceSignal = 'SHORT_BOUNCE';
+        bounceStrength = 20;
+        confidence -= 20; // Negative for SHORT signal
+        reasons.push('🎯 RSI bounce từ overbought (SHORT setup)');
+      } else if (rsiValue > 70) {
+        // RSI deep overbought (wait for bounce down)
+        bounceSignal = 'WAIT_FOR_BOUNCE_DOWN';
+        bounceStrength = 10;
+        confidence -= 10;
+        reasons.push('⏳ RSI overbought, chờ tín hiệu nảy xuống');
+      }
+      
+      // 3. BOLLINGER BAND BOUNCE
+      if (bb.position === 'LOWER') {
+        // Price ở BB lower → Bounce up expected
+        bounceSignal = 'BB_BOUNCE_LONG';
+        bounceStrength += 15;
+        confidence += 15;
+        reasons.push('📊 BB Lower band bounce (LONG)');
+      } else if (bb.position === 'UPPER') {
+        // Price ở BB upper → Bounce down expected
+        bounceSignal = 'BB_BOUNCE_SHORT';
+        bounceStrength += 15;
+        confidence -= 15;
+        reasons.push('📊 BB Upper band bounce (SHORT)');
+      }
+      
+      // 4. PRICE ACTION BOUNCE (simple detection)
+      const recentCandles = closes.slice(-5);
+      const minPrice = Math.min(...recentCandles);
+      const maxPrice = Math.max(...recentCandles);
+      const priceRange = maxPrice - minPrice;
+      const currentPos = (currentPrice - minPrice) / priceRange;
+      
+      if (currentPos < 0.2 && closes[closes.length-1] > closes[closes.length-2]) {
+        // Price ở bottom và đang nảy lên
+        bounceSignal = 'PRICE_BOUNCE_LONG';
+        bounceStrength += 10;
+        confidence += 10;
+        reasons.push('💹 Price bounce từ bottom (LONG)');
+      } else if (currentPos > 0.8 && closes[closes.length-1] < closes[closes.length-2]) {
+        // Price ở top và đang nảy xuống
+        bounceSignal = 'PRICE_BOUNCE_SHORT';
+        bounceStrength += 10;
+        confidence -= 10;
+        reasons.push('💹 Price bounce từ top (SHORT)');
+      }
 
       // Final signal (AGGRESSIVE - Lower thresholds for more trades!)
       if (confidence >= 50) {
         signal = 'BUY';
         strength = 'STRONG';
-      } else if (confidence >= 30) { // Lowered from 40 to 30
+      } else if (confidence >= 30) {
         signal = 'BUY';
         strength = 'MODERATE';
-      } else if (confidence >= 15) { // New tier for weak signals
+      } else if (confidence >= 15) {
         signal = 'BUY';
         strength = 'WEAK';
       } else if (confidence <= -40) {
         signal = 'SELL';
+        strength = 'STRONG';
+      } else if (confidence <= -25) {
+        signal = 'SELL';
         strength = 'MODERATE';
+      } else if (confidence <= -15) {
+        signal = 'SELL';
+        strength = 'WEAK';
       }
 
       return {
         symbol,
         price: currentPrice,
         trend,
+        bounceSignal, // 🎯 Bounce signal type
+        bounceStrength, // 🎯 Bounce strength score
         trendStrength: trendStrength.toFixed(2),
         ema20,
         ema50,
@@ -3455,10 +3536,10 @@ Price: $${analysis.price.toFixed(2)}
       }
 
       BybitBot.log(`✅ Found ${symbols.length} USDT pairs`, 'success');
-      BybitBot.log(`🎯 Analyzing top ${Math.min(20, symbols.length)} by volume...`, 'info');
+      BybitBot.log(`⚡ Analyzing top ${Math.min(15, symbols.length)} by volume (FAST!)...`, 'info');
 
       const results = [];
-      const topSymbols = symbols.slice(0, 20); // Scan top 20 by volume
+      const topSymbols = symbols.slice(0, 15); // ⚡ Scan top 15 by volume (faster!)
 
       for (let i = 0; i < topSymbols.length; i++) {
         const sym = topSymbols[i];
@@ -3491,8 +3572,8 @@ Price: $${analysis.price.toFixed(2)}
           BybitBot.log(`[${i + 1}/${topSymbols.length}] ${sym.symbol}: Score ${score.toFixed(1)}`,
                       score > 70 ? 'success' : score > 50 ? 'info' : 'warning');
 
-          // Rate limiting
-          await BybitBot.sleep(100);
+          // ⚡ REAL-TIME: Faster rate limiting (50ms for speed!)
+          await BybitBot.sleep(50);
 
         } catch (error) {
           console.error(`Error analyzing ${sym.symbol}:`, error);
@@ -3512,7 +3593,53 @@ Price: $${analysis.price.toFixed(2)}
         BybitBot.log(`📈 Trend: ${best.analysis.trend}`, best.analysis.trend === 'BULLISH' ? 'success' : 'warning');
         BybitBot.log(`⚡ RSI: ${best.analysis.rsi}`, 'info');
         BybitBot.log(`🎯 Signal: ${best.analysis.signal} (${best.analysis.strength})`,
-                    best.analysis.signal === 'BUY' ? 'success' : 'warning');
+                    best.analysis.signal === 'BUY' ? 'success' : best.analysis.signal === 'SELL' ? 'error' : 'warning');
+        
+        // 🎯 Show bounce signal if detected
+        if (best.analysis.bounceSignal && best.analysis.bounceStrength > 0) {
+          BybitBot.log(``, 'info');
+          BybitBot.log(`🎯 BOUNCE DETECTED! (Strength: ${best.analysis.bounceStrength})`, 'success');
+          
+          if (best.analysis.bounceSignal.includes('LONG')) {
+            BybitBot.log(`   📈 Type: LONG BOUNCE (Nảy lên!)`, 'success');
+          } else if (best.analysis.bounceSignal.includes('SHORT')) {
+            BybitBot.log(`   📉 Type: SHORT BOUNCE (Nảy xuống!)`, 'warning');
+          }
+          
+          if (best.analysis.bounceSignal.includes('RSI')) {
+            BybitBot.log(`   🎯 Source: RSI signal`, 'info');
+          }
+          if (best.analysis.bounceSignal.includes('BB')) {
+            BybitBot.log(`   🎯 Source: Bollinger Band`, 'info');
+          }
+          if (best.analysis.bounceSignal.includes('PRICE')) {
+            BybitBot.log(`   🎯 Source: Price Action`, 'info');
+          }
+        }
+        
+        // ═══════════════════════════════════════════════════════════
+        // 🚀 MOMENTUM INFO: "Canh vị thế theo đà của tín hiệu"
+        // ═══════════════════════════════════════════════════════════
+        
+        if (best.analysis.momentum) {
+          BybitBot.log(``, 'info');
+          BybitBot.log(`🚀 MOMENTUM: ${best.analysis.momentum.strength}`, 
+                      best.analysis.momentum.hasGoodMomentum ? 'success' : 'warning');
+          BybitBot.log(`   Score: +${best.analysis.momentum.points} points`, 'info');
+          
+          if (best.analysis.momentum.reasons.length > 0) {
+            best.analysis.momentum.reasons.forEach(reason => {
+              BybitBot.log(`   ${reason}`, 'info');
+            });
+          }
+          
+          if (!best.analysis.momentum.hasGoodMomentum) {
+            BybitBot.log(`   ⚠️ Momentum yếu - Chờ đà mạnh hơn!`, 'warning');
+          } else {
+            BybitBot.log(`   ✅ Đà TỐT - Có thể vào lệnh!`, 'success');
+          }
+        }
+        
         BybitBot.log('═══════════════════════════════════════', 'success');
 
         return best;
@@ -3533,8 +3660,16 @@ Price: $${analysis.price.toFixed(2)}
       if (rsi >= 40 && rsi <= 60) score += 20; // Sweet spot
       else if (rsi >= 30 && rsi <= 70) score += 10;
 
-      // Signal & Strength (25 points)
+      // ═══════════════════════════════════════════════════════════
+      // 🔄 Signal & Strength (25 points) - BOTH LONG & SHORT!
+      // ═══════════════════════════════════════════════════════════
       if (analysis.signal === 'BUY') {
+        // LONG signals
+        if (analysis.strength === 'STRONG') score += 25;
+        else if (analysis.strength === 'MODERATE') score += 15;
+        else score += 5;
+      } else if (analysis.signal === 'SELL') {
+        // 🔄 SHORT signals (equally valid!)
         if (analysis.strength === 'STRONG') score += 25;
         else if (analysis.strength === 'MODERATE') score += 15;
         else score += 5;
@@ -3557,11 +3692,101 @@ Price: $${analysis.price.toFixed(2)}
         if (orderbook.spread > 0.5) score -= 10; // Too wide spread
       }
 
-      // Price momentum (bonus)
-      if (marketData.priceChange24h > 5) score += 5; // Rising
-      else if (marketData.priceChange24h < -5) score -= 5; // Falling
+      // ═══════════════════════════════════════════════════════════
+      // 🚀 MOMENTUM SCORING: "Canh vị thế theo đà của tín hiệu"
+      // ═══════════════════════════════════════════════════════════
+      
+      const momentumScore = this.calculateMomentumScore(analysis, marketData);
+      score += momentumScore.points;
+      
+      // Store momentum info for logging
+      analysis.momentum = momentumScore;
 
       return Math.max(0, Math.min(100, score));
+    },
+    
+    // ═══════════════════════════════════════════════════════════
+    // 🎯 MOMENTUM SCORER: Đo lường ĐÀ của signal
+    // ═══════════════════════════════════════════════════════════
+    
+    calculateMomentumScore(analysis, marketData) {
+      let points = 0;
+      let strength = 'WEAK';
+      const reasons = [];
+      
+      // 1. VOLUME SPIKE (Max 15 points)
+      const volRatio = parseFloat(analysis.volumeRatio) || 1;
+      if (volRatio >= 2.0) {
+        points += 15;
+        reasons.push(`📈 Volume spike 2x+ (${volRatio.toFixed(1)}x)`);
+      } else if (volRatio >= 1.5) {
+        points += 10;
+        reasons.push(`📊 Volume tăng 1.5x (${volRatio.toFixed(1)}x)`);
+      } else if (volRatio >= 1.2) {
+        points += 5;
+        reasons.push(`📊 Volume tăng nhẹ (${volRatio.toFixed(1)}x)`);
+      }
+      
+      // 2. PRICE ACCELERATION (Max 10 points)
+      const priceChange = marketData.priceChange24h || 0;
+      if (priceChange > 10) {
+        points += 10;
+        reasons.push(`🚀 Price tăng mạnh (+${priceChange.toFixed(1)}%)`);
+      } else if (priceChange > 5) {
+        points += 7;
+        reasons.push(`📈 Price tăng (+${priceChange.toFixed(1)}%)`);
+      } else if (priceChange > 2) {
+        points += 4;
+        reasons.push(`📊 Price tăng nhẹ (+${priceChange.toFixed(1)}%)`);
+      }
+      
+      // 3. RSI MOMENTUM (Max 10 points)
+      const rsi = parseFloat(analysis.rsi) || 50;
+      if (rsi >= 55 && rsi <= 70) {
+        points += 10;
+        reasons.push(`⚡ RSI có momentum (${rsi.toFixed(0)})`);
+      } else if (rsi >= 50 && rsi < 55) {
+        points += 5;
+        reasons.push(`📊 RSI trung tính tích cực (${rsi.toFixed(0)})`);
+      }
+      
+      // 4. TREND ALIGNMENT (Max 10 points)
+      if (analysis.trend === 'BULLISH' && priceChange > 0 && volRatio > 1.0) {
+        points += 10;
+        reasons.push(`🎯 Trend + Price + Volume aligned!`);
+      } else if (analysis.trend === 'BULLISH') {
+        points += 5;
+        reasons.push(`📈 Bullish trend`);
+      }
+      
+      // 5. STRENGTH MULTIPLIER (Max 10 points)
+      if (analysis.strength === 'STRONG') {
+        points += 10;
+        reasons.push(`💪 Signal STRONG`);
+      } else if (analysis.strength === 'MODERATE') {
+        points += 5;
+        reasons.push(`📊 Signal MODERATE`);
+      }
+      
+      // Determine momentum strength
+      if (points >= 40) {
+        strength = '🔥 EXTREME';
+      } else if (points >= 30) {
+        strength = '🚀 STRONG';
+      } else if (points >= 20) {
+        strength = '📈 GOOD';
+      } else if (points >= 10) {
+        strength = '📊 MODERATE';
+      } else {
+        strength = '💤 WEAK';
+      }
+      
+      return {
+        points,
+        strength,
+        reasons,
+        hasGoodMomentum: points >= 5  // Ultra low: 5 points! "Cứ đặt vị thế"
+      };
     }
   },
 
@@ -3666,12 +3891,13 @@ Price: $${analysis.price.toFixed(2)}
 
   marketSelector: {
 
-    decide(analysis, klines) {
+    decide(analysis, klines, positionCounts = {}) {
       const atrPct = parseFloat(analysis.atrPct) || 2;
       const rsi = parseFloat(analysis.rsi) || 50;
       const trend = analysis.trend;
       const volumeRatio = parseFloat(analysis.volumeRatio) || 1;
       const quickProfitMode = BybitBot.state.config.quickProfitMode;
+      const simMode = BybitBot.state.simMode;
 
       // Calculate trend strength
       const trendStrength = this.calculateTrendStrength(klines);
@@ -3679,9 +3905,80 @@ Price: $${analysis.price.toFixed(2)}
       let marketType = 'SPOT';
       let leverage = 1;
       let reason = '';
+      
+      // ═══════════════════════════════════════════════════════════
+      // 🚀 AGGRESSIVE SIM MODE: QUẨY MẠNH HẾT CỠ!
+      // ═══════════════════════════════════════════════════════════
+      
+      const isSimAggressive = simMode;  // SIM = No risk = GO HARD!
+      
+      if (isSimAggressive) {
+        BybitBot.log(``, 'info');
+        BybitBot.log(`🚀 AGGRESSIVE SIM MODE: QUẨY MẠNH HẾT CỠ!`, 'warning');
+        BybitBot.log(`   💀 No risk = Max leverage = Max profit!`, 'success');
+      }
+      
+      // ═══════════════════════════════════════════════════════════
+      // 🎯 PORTFOLIO LIMITS: 2 FUTURES + 3 SPOT
+      // ═══════════════════════════════════════════════════════════
+      
+      const currentFutures = positionCounts.futures || 0;
+      const currentSpot = positionCounts.spot || 0;
+      const maxFutures = 2;
+      const maxSpot = 3;
+      
+      const futuresFull = currentFutures >= maxFutures;
+      const spotFull = currentSpot >= maxSpot;
+      
+      BybitBot.log(``, 'info');
+      BybitBot.log(`🎯 Portfolio Limits Check:`, 'info');
+      BybitBot.log(`   FUTURES: ${currentFutures}/${maxFutures} ${futuresFull ? '❌ FULL' : '✅'}`, futuresFull ? 'warning' : 'success');
+      BybitBot.log(`   SPOT: ${currentSpot}/${maxSpot} ${spotFull ? '❌ FULL' : '✅'}`, spotFull ? 'warning' : 'success');
+      
+      // ═══════════════════════════════════════════════════════════
+      // 🎯 ENFORCE: 2 FUTURES + 3 SPOT PRIORITY
+      // ═══════════════════════════════════════════════════════════
+      
+      // If FUTURES full → Force SPOT
+      if (futuresFull && !spotFull) {
+        BybitBot.log(``, 'warning');
+        BybitBot.log(`⚠️ FUTURES slots FULL → Force SPOT!`, 'warning');
+        marketType = 'SPOT';
+        leverage = 1;
+        reason = 'FUTURES slots full (2/2) - Force SPOT';
+        
+        return { marketType, leverage, reason, details: {
+          atrPct: atrPct.toFixed(2),
+          trendStrength: trendStrength.toFixed(2),
+          rsi: rsi,
+          volumeRatio: volumeRatio.toFixed(2)
+        }};
+      }
+      
+      // If SPOT full → Force FUTURES
+      if (spotFull && !futuresFull) {
+        BybitBot.log(``, 'warning');
+        BybitBot.log(`⚠️ SPOT slots FULL → Force FUTURES!`, 'warning');
+        marketType = 'FUTURES';
+        leverage = isSimAggressive ? 15 : 5; // Aggressive in SIM
+        reason = 'SPOT slots full (3/3) - Force FUTURES';
+        
+        return { marketType, leverage, reason, details: {
+          atrPct: atrPct.toFixed(2),
+          trendStrength: trendStrength.toFixed(2),
+          rsi: rsi,
+          volumeRatio: volumeRatio.toFixed(2)
+        }};
+      }
+      
+      // If both full → ERROR!
+      if (futuresFull && spotFull) {
+        BybitBot.log(`❌ ALL SLOTS FULL (2 FUTURES + 3 SPOT)! Can't open position!`, 'error');
+        return { marketType: null, leverage: 1, reason: 'All slots full', details: {} };
+      }
 
       // ⚡ QUICK PROFIT MODE: FORCE FUTURES with HIGH LEVERAGE!
-      if (quickProfitMode) {
+      if (quickProfitMode && !futuresFull) {
         marketType = 'FUTURES';
         // Leverage range: 10-20x based on volatility and trend
         if (atrPct >= 3 && trendStrength >= 0.7) {
@@ -3703,50 +4000,115 @@ Price: $${analysis.price.toFixed(2)}
         }};
       }
 
-      // Decision Logic
+      // ═══════════════════════════════════════════════════════════
+      // 🔥 DECISION LOGIC (AGGRESSIVE SIM MODE PRIORITIZED!)
+      // ═══════════════════════════════════════════════════════════
 
       // AGGRESSIVE MODE: Prefer FUTURES for higher profit potential!
 
-      // 1. Very low volatility → SPOT only
+      // 1. Very low volatility → SPOT only (unless FUTURES priority)
       if (atrPct < 1.0) {
-        marketType = 'SPOT';
-        leverage = 1;
-        reason = 'Very low volatility - SPOT only';
+        // Check priority: If need to fill FUTURES slots, use low leverage
+        if (currentFutures < 1 && !futuresFull) {
+          marketType = 'FUTURES';
+          leverage = isSimAggressive ? 5 : 2; // SIM = more aggressive
+          reason = 'Low vol but filling FUTURES priority (SIM aggressive)';
+        } else {
+          marketType = 'SPOT';
+          leverage = 1;
+          reason = 'Very low volatility - SPOT safe';
+        }
       }
 
-      // 2. Low to moderate volatility → Use FUTURES with low leverage
+      // 2. Low to moderate volatility → FUTURES priority!
       else if (atrPct < 2.0) {
-        marketType = 'FUTURES';
-        leverage = 2; // Start with 2x even at moderate vol
-        reason = 'Moderate vol - FUTURES 2x for profit boost';
+        // Prefer FUTURES if slots available
+        if (!futuresFull) {
+          marketType = 'FUTURES';
+          leverage = isSimAggressive ? 10 : 5; // SIM = 2x leverage!
+          reason = `Moderate vol - FUTURES ${leverage}x ${isSimAggressive ? '(SIM QUẨY!)' : ''}`;
+        } else {
+          marketType = 'SPOT';
+          leverage = 1;
+          reason = 'FUTURES full - Use SPOT';
+        }
       }
 
-      // 3. Good volatility → FUTURES with higher leverage
+      // 3. Good volatility → FUTURES with RISK-BASED leverage
       else if (atrPct >= 2.0 && atrPct < 3.5) {
-        marketType = 'FUTURES';
-        leverage = this.calculateOptimalLeverage(atrPct, trendStrength, rsi, volumeRatio);
-        reason = `Good volatility - FUTURES ${leverage}x`;
+        if (!futuresFull) {
+          marketType = 'FUTURES';
+          
+          // Get confidence and momentum from analysis
+          const confidence = analysis.confidence || 50;
+          const momentum = analysis.momentum?.points || 0;
+          
+          leverage = this.calculateOptimalLeverage(atrPct, trendStrength, rsi, volumeRatio, confidence, momentum);
+          
+          // SIM BOOST: +25% leverage! (reduced from 50% since risk-based already aggressive)
+          if (isSimAggressive) {
+            leverage = Math.min(20, Math.floor(leverage * 1.25));
+            reason = `Good volatility - FUTURES ${leverage}x (Risk-based ${isSimAggressive ? '+ SIM!' : ''})`;
+          } else {
+            reason = `Good volatility - FUTURES ${leverage}x (Risk-based)`;
+          }
+        } else {
+          marketType = 'SPOT';
+          leverage = 1;
+          reason = 'FUTURES full - Use SPOT';
+        }
       }
 
-      // 4. High volatility → FUTURES with max leverage
+      // 4. High volatility → FUTURES with RISK-BASED leverage
       else if (atrPct >= 3.5) {
-        marketType = 'FUTURES';
-        leverage = this.calculateOptimalLeverage(atrPct, trendStrength, rsi, volumeRatio);
-        reason = `High volatility - FUTURES ${leverage}x for max profit!`;
+        if (!futuresFull) {
+          marketType = 'FUTURES';
+          
+          // Get confidence and momentum from analysis
+          const confidence = analysis.confidence || 50;
+          const momentum = analysis.momentum?.points || 0;
+          
+          leverage = this.calculateOptimalLeverage(atrPct, trendStrength, rsi, volumeRatio, confidence, momentum);
+          
+          // SIM: If already max from risk-based, keep it
+          if (isSimAggressive && leverage < 20) {
+            leverage = Math.min(20, Math.floor(leverage * 1.3));
+            reason = `High volatility - FUTURES ${leverage}x (Risk-based + SIM BOOST!)`;
+          } else {
+            reason = `High volatility - FUTURES ${leverage}x (Risk-based${leverage === 20 ? ' FULL MARGIN!' : ''})`;
+          }
+        } else {
+          marketType = 'SPOT';
+          leverage = 1;
+          reason = 'FUTURES full - Use SPOT';
+        }
       }
 
-      // 4. Very high volatility + very strong trend → FUTURES with higher leverage
+      // 5. Extreme volatility + very strong trend → FUTURES max!
       else if (atrPct >= 4 && trendStrength >= 0.8) {
-        marketType = 'FUTURES';
-        leverage = this.calculateOptimalLeverage(atrPct, trendStrength, rsi, volumeRatio);
-        reason = `Extreme setup - FUTURES ${leverage}x`;
+        if (!futuresFull) {
+          marketType = 'FUTURES';
+          leverage = 20; // Always MAX for extreme setups
+          reason = `🔥 EXTREME setup - FUTURES MAX 20x!`;
+        } else {
+          marketType = 'SPOT';
+          leverage = 1;
+          reason = 'FUTURES full - Use SPOT';
+        }
       }
 
-      // 5. Default to SPOT for safety
+      // 6. Default: Fill remaining slots smartly
       else {
-        marketType = 'SPOT';
-        leverage = 1;
-        reason = 'Default safe choice - SPOT';
+        // Fill FUTURES first if available
+        if (currentFutures < maxFutures) {
+          marketType = 'FUTURES';
+          leverage = isSimAggressive ? 8 : 3;
+          reason = `Default - Filling FUTURES priority (${leverage}x)`;
+        } else {
+          marketType = 'SPOT';
+          leverage = 1;
+          reason = 'Default - FUTURES filled, use SPOT';
+        }
       }
 
       return {
@@ -3778,37 +4140,112 @@ Price: $${analysis.price.toFixed(2)}
       return Math.min(1, diff / 3); // 3% difference = max strength
     },
 
-    calculateOptimalLeverage(atrPct, trendStrength, rsi, volumeRatio) {
-      let leverage = 2; // AGGRESSIVE: Start with 2x base instead of 1x
+    calculateOptimalLeverage(atrPct, trendStrength, rsi, volumeRatio, confidence = 50, momentum = 0) {
+      // ═══════════════════════════════════════════════════════════
+      // 🎯 "Dựa vào xác xuất rủi ro nếu ổn thì full margin"
+      // ═══════════════════════════════════════════════════════════
+      
+      BybitBot.log(``, 'info');
+      BybitBot.log(`🎲 RISK-BASED LEVERAGE CALCULATION:`, 'info');
+      BybitBot.log(`   📊 Confidence: ${confidence.toFixed(1)}%`, 'info');
+      BybitBot.log(`   🚀 Momentum: ${momentum} points`, 'info');
+      
+      // Calculate RISK SCORE (0-100, higher = safer)
+      let riskScore = 0;
+      
+      // 1. Confidence (Max 40 points)
+      riskScore += (confidence / 100) * 40;
+      
+      // 2. Momentum (Max 25 points)
+      riskScore += Math.min(25, (momentum / 55) * 25);  // 55 points = max momentum
+      
+      // 3. Trend Strength (Max 20 points)
+      riskScore += (trendStrength || 0) * 20;
+      
+      // 4. Volume (Max 15 points)
+      const volumeScore = Math.min(1, (volumeRatio - 1) / 1); // 1x-2x vol normalized
+      riskScore += volumeScore * 15;
+      
+      riskScore = Math.min(100, riskScore);
+      
+      BybitBot.log(`   🎯 Risk Score: ${riskScore.toFixed(1)}/100`, riskScore >= 70 ? 'success' : riskScore >= 50 ? 'info' : 'warning');
+      
+      // ═══════════════════════════════════════════════════════════
+      // 🔥 LEVERAGE SCALING: Risk Score → Leverage
+      // ═══════════════════════════════════════════════════════════
+      
+      let leverage = 1;
+      let riskLevel = 'UNKNOWN';
+      
+      if (riskScore >= 85) {
+        // EXTREMELY SAFE: FULL MARGIN!
+        leverage = 20;
+        riskLevel = '🔥 PERFECT';
+        BybitBot.log(`   🔥 Risk Score >= 85 → FULL MARGIN 20x!`, 'success');
+      } else if (riskScore >= 75) {
+        // VERY SAFE: High leverage
+        leverage = 15;
+        riskLevel = '💎 EXCELLENT';
+        BybitBot.log(`   💎 Risk Score >= 75 → 15x leverage`, 'success');
+      } else if (riskScore >= 65) {
+        // SAFE: Good leverage
+        leverage = 12;
+        riskLevel = '✅ GOOD';
+        BybitBot.log(`   ✅ Risk Score >= 65 → 12x leverage`, 'success');
+      } else if (riskScore >= 55) {
+        // MODERATE SAFE: Medium leverage
+        leverage = 8;
+        riskLevel = '📊 DECENT';
+        BybitBot.log(`   📊 Risk Score >= 55 → 8x leverage`, 'info');
+      } else if (riskScore >= 45) {
+        // SLIGHTLY RISKY: Lower leverage
+        leverage = 5;
+        riskLevel = '⚠️ OKAY';
+        BybitBot.log(`   ⚠️ Risk Score >= 45 → 5x leverage`, 'warning');
+      } else if (riskScore >= 35) {
+        // RISKY: Minimal leverage
+        leverage = 3;
+        riskLevel = '🔶 RISKY';
+        BybitBot.log(`   🔶 Risk Score >= 35 → 3x leverage`, 'warning');
+      } else {
+        // VERY RISKY: Tiny leverage
+        leverage = 2;
+        riskLevel = '🔴 DANGER';
+        BybitBot.log(`   🔴 Risk Score < 35 → 2x leverage only`, 'error');
+      }
+      
+      // ═══════════════════════════════════════════════════════════
+      // 🎯 FINE-TUNING based on technical factors
+      // ═══════════════════════════════════════════════════════════
+      
+      // RSI extreme penalty (still applies)
+      if (rsi > 80 || rsi < 20) {
+        leverage *= 0.7;
+        BybitBot.log(`   ⚠️ RSI extreme (${rsi}) → -30% leverage`, 'warning');
+      } else if (rsi > 75 || rsi < 25) {
+        leverage *= 0.9;
+        BybitBot.log(`   ⚠️ RSI high (${rsi}) → -10% leverage`, 'warning');
+      }
+      
+      // ATR bonus/penalty
+      if (atrPct >= 4) {
+        leverage *= 1.1; // High vol = more profit potential
+        BybitBot.log(`   📈 High volatility (${atrPct.toFixed(1)}%) → +10% leverage`, 'info');
+      } else if (atrPct < 1.5) {
+        leverage *= 0.8; // Low vol = less profit potential
+        BybitBot.log(`   📉 Low volatility (${atrPct.toFixed(1)}%) → -20% leverage`, 'info');
+      }
 
-      // Base leverage from ATR (AGGRESSIVE - Higher multipliers)
-      if (atrPct >= 5) leverage = 5;
-      else if (atrPct >= 4) leverage = 4;
-      else if (atrPct >= 3) leverage = 3;
-      else if (atrPct >= 2.5) leverage = 3;
-      else if (atrPct >= 2) leverage = 2;
-
-      // Increase if trend is strong (AGGRESSIVE - Bigger bonuses)
-      if (trendStrength >= 0.8) leverage += 2; // Increased from 1
-      else if (trendStrength >= 0.7) leverage += 1.5; // Increased from 0.5
-      else if (trendStrength >= 0.5) leverage += 1;
-
-      // Increase if volume is high (AGGRESSIVE)
-      if (volumeRatio >= 2) leverage += 1; // Increased from 0.5
-      else if (volumeRatio >= 1.5) leverage += 0.5; // Increased from 0.25
-
-      // Reduce RSI penalty (AGGRESSIVE - We accept more risk!)
-      if (rsi > 80 || rsi < 20) leverage *= 0.85; // Reduced penalty
-      else if (rsi > 75 || rsi < 25) leverage *= 0.95; // Minimal penalty
-
-      // Cap leverage at 10x (AGGRESSIVE - Higher profit potential!)
-      leverage = Math.min(10, leverage);
-
-      // Floor at 1x
-      leverage = Math.max(1, leverage);
-
-      // Round to 0.5x increments
-      leverage = Math.round(leverage * 2) / 2;
+      // Cap and floor
+      leverage = Math.min(20, Math.max(1, leverage));
+      
+      // Round to integer for cleaner UI
+      leverage = Math.round(leverage);
+      
+      BybitBot.log(``, 'info');
+      BybitBot.log(`🎯 FINAL LEVERAGE: ${leverage}x (${riskLevel})`, leverage >= 15 ? 'success' : leverage >= 8 ? 'info' : 'warning');
+      BybitBot.log(`   Logic: Risk ${riskScore.toFixed(1)} → ${leverage}x`, 'info');
+      BybitBot.log(``, 'info');
 
       return leverage;
     },
@@ -4164,14 +4601,452 @@ Price: $${analysis.price.toFixed(2)}
           break;
         }
 
-        // Wait before next iteration
-        await this.sleep(5000); // 5 seconds
+        // ⚡ REAL-TIME: Ultra fast iteration (1 second!)
+        await this.sleep(1000); // 1 second for SMOOTH real-time updates!
 
       } catch (error) {
         this.log(`❌ Error: ${error.message}`, 'error');
-        await this.sleep(10000);
+        await this.sleep(3000); // 3 seconds on error (faster recovery)
       }
     }
+  },
+
+  // ═══════════════════════════════════════════════════════════
+  // 🌊 MARKET REGIME DETECTOR: "Phát hiện tình hình thị trường"
+  // ═══════════════════════════════════════════════════════════
+  detectMarketRegime(analysis, klines) {
+    const atrPct = parseFloat(analysis.atrPct) || 2;
+    const volumeRatio = parseFloat(analysis.volumeRatio) || 1;
+    const trend = analysis.trend || 'NEUTRAL';
+    const trendStrength = Math.abs(parseFloat(analysis.trendStrength)) || 0;
+    
+    // Calculate price range (last 20 candles)
+    const recentCandles = klines.slice(-20);
+    const highs = recentCandles.map(k => k.high);
+    const lows = recentCandles.map(k => k.low);
+    const highest = Math.max(...highs);
+    const lowest = Math.min(...lows);
+    const priceRange = ((highest - lowest) / lowest) * 100;
+    
+    let regime = 'QUIET';
+    let strategy = '';
+    let description = '';
+    let tpMultiplier = 1.5;
+    let slMultiplier = 0.75;
+    
+    // ═══════════════════════════════════════════════════════════
+    // REGIME 1: TRENDING MARKET (Follow the trend)
+    // ═══════════════════════════════════════════════════════════
+    if (trendStrength > 0.4 && (trend === 'UPTREND' || trend === 'DOWNTREND')) {
+      regime = 'TRENDING';
+      strategy = 'Trend Following';
+      description = `${trend} mạnh - Follow xu hướng`;
+      tpMultiplier = 2.5;  // Wider TP (ride trend)
+      slMultiplier = 1.2;  // Wider SL (avoid whipsaw)
+    }
+    
+    // ═══════════════════════════════════════════════════════════
+    // REGIME 2: RANGING MARKET (Buy low, sell high)
+    // ═══════════════════════════════════════════════════════════
+    else if (priceRange < 3 && trendStrength < 0.3 && atrPct < 3) {
+      regime = 'RANGING';
+      strategy = 'Range Trading / Mean Reversion';
+      description = 'Sideway - Scalp trong range';
+      tpMultiplier = 1.0;  // Tight TP (quick scalp)
+      slMultiplier = 0.6;  // Tight SL (range bound)
+    }
+    
+    // ═══════════════════════════════════════════════════════════
+    // REGIME 3: VOLATILE MARKET (Breakout)
+    // ═══════════════════════════════════════════════════════════
+    else if (atrPct > 4 || volumeRatio > 2.5) {
+      regime = 'VOLATILE';
+      strategy = 'Breakout / High Volatility';
+      description = 'Biến động cao - Canh breakout';
+      tpMultiplier = 2.0;  // Aggressive TP (big moves)
+      slMultiplier = 0.7;  // Tight SL (fast stops)
+    }
+    
+    // ═══════════════════════════════════════════════════════════
+    // REGIME 4: QUIET MARKET (Conservative)
+    // ═══════════════════════════════════════════════════════════
+    else {
+      regime = 'QUIET';
+      strategy = 'Conservative / Wait for Setup';
+      description = 'Thị trường yên tĩnh - Chờ setup tốt';
+      tpMultiplier = 1.5;  // Standard TP
+      slMultiplier = 0.75; // Standard SL
+    }
+    
+    return {
+      regime,
+      strategy,
+      description,
+      tpMultiplier,
+      slMultiplier,
+      metrics: {
+        atrPct: atrPct.toFixed(2),
+        volumeRatio: volumeRatio.toFixed(2),
+        trendStrength: trendStrength.toFixed(2),
+        priceRange: priceRange.toFixed(2)
+      }
+    };
+  },
+
+  // ═══════════════════════════════════════════════════════════
+  // 🎯 SIGNAL CLASSIFIER: "Phân loại tín hiệu"
+  // ═══════════════════════════════════════════════════════════
+  classifySignal(analysis, klines, direction) {
+    const rsi = parseFloat(analysis.rsi) || 50;
+    const trend = analysis.trend || 'NEUTRAL';
+    const trendStrength = parseFloat(analysis.trendStrength) || 0;
+    const volumeRatio = parseFloat(analysis.volumeRatio) || 1;
+    const macdHistogram = parseFloat(analysis.macdHistogram) || 0;
+    const bounceSignal = analysis.bounceSignal;
+    const bounceStrength = analysis.bounceStrength || 0;
+    
+    // Calculate price momentum (last 5 candles)
+    const recentCandles = klines.slice(-5);
+    const priceChange = recentCandles.length >= 2 
+      ? ((recentCandles[recentCandles.length - 1].close - recentCandles[0].close) / recentCandles[0].close) * 100
+      : 0;
+    
+    // ═══════════════════════════════════════════════════════════
+    // SIGNAL TYPE 1: BOUNCE (Nảy từ support/resistance)
+    // ═══════════════════════════════════════════════════════════
+    if (bounceSignal && bounceStrength >= 15) {
+      return {
+        type: 'BOUNCE',
+        description: '🎯 Bounce từ support/resistance - Clear invalidation point',
+        strategy: 'Tight SL (clear fail point), Quick TP (1:2 R:R)',
+        tpMultiplier: 1.0,  // 1x ATR for TP (quick profit)
+        slMultiplier: 0.5,  // 0.5x ATR for SL (tight)
+        entryTiming: 'IMMEDIATE',
+        confidence: 'HIGH'
+      };
+    }
+    
+    // ═══════════════════════════════════════════════════════════
+    // SIGNAL TYPE 2: STRONG TREND (Trend rõ ràng)
+    // ═══════════════════════════════════════════════════════════
+    if (Math.abs(trendStrength) > 0.5 && 
+        ((trend === 'UPTREND' && direction === 'LONG') || (trend === 'DOWNTREND' && direction === 'SHORT'))) {
+      return {
+        type: 'TREND_FOLLOW',
+        description: '📈 Strong trend - Ride the wave',
+        strategy: 'Wider SL (avoid whipsaw), Higher TP (catch trend)',
+        tpMultiplier: 2.5,  // 2.5x ATR for TP (ride trend)
+        slMultiplier: 1.2,  // 1.2x ATR for SL (wider)
+        entryTiming: 'PULLBACK',
+        confidence: 'HIGH'
+      };
+    }
+    
+    // ═══════════════════════════════════════════════════════════
+    // SIGNAL TYPE 3: REVERSAL (Đảo chiều)
+    // ═══════════════════════════════════════════════════════════
+    if ((rsi < 30 && direction === 'LONG') || (rsi > 70 && direction === 'SHORT')) {
+      return {
+        type: 'REVERSAL',
+        description: '🔄 Reversal từ extreme - Wait for confirmation',
+        strategy: 'Medium SL (wait confirmation), Conservative TP',
+        tpMultiplier: 1.5,  // 1.5x ATR for TP (conservative)
+        slMultiplier: 0.8,  // 0.8x ATR for SL (medium)
+        entryTiming: 'CONFIRMED',
+        confidence: 'MEDIUM'
+      };
+    }
+    
+    // ═══════════════════════════════════════════════════════════
+    // SIGNAL TYPE 4: BREAKOUT (Phá vỡ level)
+    // ═══════════════════════════════════════════════════════════
+    if (volumeRatio > 2.0 && Math.abs(priceChange) > 1.5) {
+      return {
+        type: 'BREAKOUT',
+        description: '💥 Breakout với volume - Strong momentum',
+        strategy: 'SL below/above breakout, Aggressive TP',
+        tpMultiplier: 2.0,  // 2x ATR for TP (aggressive)
+        slMultiplier: 0.7,  // 0.7x ATR for SL (below breakout)
+        entryTiming: 'ON_BREAK',
+        confidence: 'HIGH'
+      };
+    }
+    
+    // ═══════════════════════════════════════════════════════════
+    // SIGNAL TYPE 5: VOLUME SPIKE (Bơm volume đột ngột)
+    // ═══════════════════════════════════════════════════════════
+    if (volumeRatio > 3.0) {
+      return {
+        type: 'VOLUME_SPIKE',
+        description: '📊 Volume spike - Quick scalp opportunity',
+        strategy: 'Very tight SL, Quick exit (1:1.5 R:R)',
+        tpMultiplier: 0.9,  // 0.9x ATR for TP (quick exit)
+        slMultiplier: 0.6,  // 0.6x ATR for SL (very tight)
+        entryTiming: 'IMMEDIATE',
+        confidence: 'MEDIUM'
+      };
+    }
+    
+    // ═══════════════════════════════════════════════════════════
+    // SIGNAL TYPE 6: MACD CROSS (MACD cắt signal)
+    // ═══════════════════════════════════════════════════════════
+    if (Math.abs(macdHistogram) > 0.1 &&
+        ((macdHistogram > 0 && direction === 'LONG') || (macdHistogram < 0 && direction === 'SHORT'))) {
+      return {
+        type: 'MACD_CROSS',
+        description: '⚡ MACD signal - Early trend entry',
+        strategy: 'Medium SL, Standard TP (1:2 R:R)',
+        tpMultiplier: 1.6,  // 1.6x ATR for TP (standard)
+        slMultiplier: 0.8,  // 0.8x ATR for SL (medium)
+        entryTiming: 'ON_CROSS',
+        confidence: 'MEDIUM'
+      };
+    }
+    
+    // ═══════════════════════════════════════════════════════════
+    // SIGNAL TYPE 7: WEAK TREND (Trend yếu)
+    // ═══════════════════════════════════════════════════════════
+    if (Math.abs(trendStrength) < 0.3) {
+      return {
+        type: 'RANGE_BOUND',
+        description: '📊 Range-bound market - Scalp mode',
+        strategy: 'Tight SL/TP, Quick in/out (1:1.5 R:R)',
+        tpMultiplier: 1.0,  // 1x ATR for TP (scalp)
+        slMultiplier: 0.7,  // 0.7x ATR for SL (tight)
+        entryTiming: 'CONFIRMED',
+        confidence: 'LOW'
+      };
+    }
+    
+    // ═══════════════════════════════════════════════════════════
+    // DEFAULT: STANDARD SIGNAL
+    // ═══════════════════════════════════════════════════════════
+    return {
+      type: 'STANDARD',
+      description: '📊 Standard signal - Balanced approach',
+      strategy: 'Standard SL/TP (1:2 R:R)',
+      tpMultiplier: 1.5,  // 1.5x ATR for TP
+      slMultiplier: 0.75, // 0.75x ATR for SL
+      entryTiming: 'NORMAL',
+      confidence: 'MEDIUM'
+    };
+  },
+
+  // ═══════════════════════════════════════════════════════════
+  // 🧠 SMART TP/SL CALCULATOR: "SL thông minh hơn"
+  // ═══════════════════════════════════════════════════════════
+  calculateSmartTPSL(price, direction, analysis, klines, leverage) {
+    this.log(``, 'info');
+    this.log(`🧠 Calculating SMART TP/SL...`, 'info');
+    
+    // ═══════════════════════════════════════════════════════════
+    // 🌊 DETECT MARKET REGIME & SELECT STRATEGY
+    // ═══════════════════════════════════════════════════════════
+    const marketRegime = this.detectMarketRegime(analysis, klines);
+    
+    this.log(``, 'info');
+    this.log(`🌊 MARKET REGIME DETECTED:`, 'success');
+    this.log(`   Regime: ${marketRegime.regime}`, 'success');
+    this.log(`   Strategy: ${marketRegime.strategy}`, 'info');
+    this.log(`   ${marketRegime.description}`, 'info');
+    this.log(`   Metrics:`, 'info');
+    this.log(`      ATR: ${marketRegime.metrics.atrPct}%`, 'info');
+    this.log(`      Volume: ${marketRegime.metrics.volumeRatio}x`, 'info');
+    this.log(`      Trend Strength: ${marketRegime.metrics.trendStrength}`, 'info');
+    this.log(`      Price Range: ${marketRegime.metrics.priceRange}%`, 'info');
+    this.log(``, 'info');
+    
+    // Get ATR from analysis (volatility measure)
+    const atrPct = parseFloat(analysis.atrPct) || 2;
+    const rsi = parseFloat(analysis.rsi) || 50;
+    
+    // Extract recent candles for swing analysis
+    const recentCandles = klines.slice(-20);
+    const closes = recentCandles.map(k => k.close);
+    const highs = recentCandles.map(k => k.high);
+    const lows = recentCandles.map(k => k.low);
+    
+    let slPercent, tpPercent;
+    let method = '';
+    let reason = '';
+    
+    // ═══════════════════════════════════════════════════════════
+    // 🎯 SIGNAL-SPECIFIC STRATEGY: DISABLED for INSTANT PROFIT MODE
+    // ═══════════════════════════════════════════════════════════
+    
+    // INSTANT PROFIT MODE: TP không quan trọng vì chốt ngay khi có lời!
+    // Chỉ cần SL an toàn để tránh loss lớn
+    
+    // const signalType = this.classifySignal(analysis, klines, direction);
+    // this.log(``, 'info');
+    // this.log(`🎯 SIGNAL TYPE: ${signalType.type}`, 'success');
+    // this.log(`   ${signalType.description}`, 'info');
+    // this.log(`   Strategy: ${signalType.strategy}`, 'info');
+    
+    this.log(``, 'info');
+    this.log(`💰 INSTANT PROFIT MODE ACTIVE!`, 'success');
+    this.log(`   Strategy: Chốt ngay khi có lời bất kỳ!`, 'success');
+    this.log(`   TP: Không cần (auto close khi profit > 0)`, 'info');
+    this.log(`   SL: An toàn để tránh loss lớn`, 'info');
+    
+    // ═══════════════════════════════════════════════════════════
+    // STRATEGY 1: ATR-BASED SL + MARKET REGIME ADJUSTMENT
+    // ═══════════════════════════════════════════════════════════
+    
+    // Base SL/TP on ATR, then apply market regime multipliers
+    let atrBasedSL = atrPct * marketRegime.slMultiplier; // Adjusted for regime
+    let atrBasedTP = atrPct * marketRegime.tpMultiplier; // Adjusted for regime
+    
+    this.log(`   📊 ATR: ${atrPct.toFixed(2)}%`, 'info');
+    this.log(`   🌊 Regime-adjusted SL: ${atrBasedSL.toFixed(2)}% (${marketRegime.slMultiplier}x)`, marketRegime.regime === 'TRENDING' ? 'warning' : 'info');
+    this.log(`   🌊 Regime-adjusted TP: ${atrBasedTP.toFixed(2)}% (${marketRegime.tpMultiplier}x)`, marketRegime.regime === 'TRENDING' ? 'success' : 'info');
+    
+    // ═══════════════════════════════════════════════════════════
+    // STRATEGY 2: SWING-BASED SL (Recent swing low/high)
+    // ═══════════════════════════════════════════════════════════
+    
+    let swingBasedSL, swingBasedTP;
+    
+    if (direction === 'LONG') {
+      // LONG: Find recent swing low for SL
+      const recentLows = lows.slice(-10);
+      const swingLow = Math.min(...recentLows);
+      swingBasedSL = ((price - swingLow) / price) * 100;
+      
+      // TP = 2x risk
+      swingBasedTP = swingBasedSL * 2;
+      
+      this.log(`   📉 Recent Swing Low: $${swingLow.toFixed(2)}`, 'info');
+      this.log(`   📉 Swing-based SL: ${swingBasedSL.toFixed(2)}%`, 'info');
+      
+    } else { // SHORT
+      // SHORT: Find recent swing high for SL
+      const recentHighs = highs.slice(-10);
+      const swingHigh = Math.max(...recentHighs);
+      swingBasedSL = ((swingHigh - price) / price) * 100;
+      
+      // TP = 2x risk
+      swingBasedTP = swingBasedSL * 2;
+      
+      this.log(`   📈 Recent Swing High: $${swingHigh.toFixed(2)}`, 'info');
+      this.log(`   📈 Swing-based SL: ${swingBasedSL.toFixed(2)}%`, 'info');
+    }
+    
+    // ═══════════════════════════════════════════════════════════
+    // STRATEGY 3: LEVERAGE-ADJUSTED SL
+    // ═══════════════════════════════════════════════════════════
+    
+    // Higher leverage = Tighter SL to manage risk
+    let leverageMultiplier = 1.0;
+    if (leverage >= 15) {
+      leverageMultiplier = 0.5; // 50% tighter for 15x+
+    } else if (leverage >= 10) {
+      leverageMultiplier = 0.6; // 40% tighter for 10x+
+    } else if (leverage >= 5) {
+      leverageMultiplier = 0.75; // 25% tighter for 5x+
+    }
+    
+    this.log(`   ⚡ Leverage: ${leverage}x → ${(leverageMultiplier * 100).toFixed(0)}% SL multiplier`, 'info');
+    
+    // ═══════════════════════════════════════════════════════════
+    // STRATEGY 4: BOUNCE-AWARE SL
+    // ═══════════════════════════════════════════════════════════
+    
+    let bounceAdjustment = 0;
+    if (analysis.bounceSignal && analysis.bounceStrength > 0) {
+      // If bounce signal, SL can be tighter (bounce level acts as support/resistance)
+      bounceAdjustment = -0.2; // 20% tighter
+      this.log(`   🎯 Bounce signal detected → 20% tighter SL`, 'success');
+    }
+    
+    // ═══════════════════════════════════════════════════════════
+    // STRATEGY 5: RSI-BASED ADJUSTMENT
+    // ═══════════════════════════════════════════════════════════
+    
+    let rsiAdjustment = 0;
+    if (direction === 'LONG' && rsi < 35) {
+      // Oversold LONG = can use tighter SL (bounce expected)
+      rsiAdjustment = -0.15;
+      this.log(`   📊 RSI oversold (${rsi}) → 15% tighter SL`, 'info');
+    } else if (direction === 'SHORT' && rsi > 65) {
+      // Overbought SHORT = can use tighter SL (bounce expected)
+      rsiAdjustment = -0.15;
+      this.log(`   📊 RSI overbought (${rsi}) → 15% tighter SL`, 'info');
+    }
+    
+    // ═══════════════════════════════════════════════════════════
+    // FINAL DECISION: Choose best SL method
+    // ═══════════════════════════════════════════════════════════
+    
+    // Start with ATR-based
+    slPercent = atrBasedSL;
+    tpPercent = atrBasedTP;
+    method = 'ATR-based';
+    reason = `Volatility: ${atrPct.toFixed(2)}%`;
+    
+    // Use swing-based if it's reasonable (not too wide)
+    if (swingBasedSL > 0 && swingBasedSL < atrBasedSL * 1.5) {
+      slPercent = swingBasedSL;
+      tpPercent = swingBasedTP;
+      method = 'Swing-based';
+      reason = `SL at recent swing ${direction === 'LONG' ? 'low' : 'high'}`;
+      this.log(`   ✅ Using Swing-based SL (better than ATR)`, 'success');
+    } else if (swingBasedSL > atrBasedSL * 1.5) {
+      this.log(`   ⚠️ Swing SL too wide (${swingBasedSL.toFixed(2)}%), using ATR instead`, 'warning');
+    }
+    
+    // Apply leverage adjustment
+    slPercent *= leverageMultiplier;
+    
+    // Apply bounce adjustment
+    if (bounceAdjustment !== 0) {
+      slPercent *= (1 + bounceAdjustment);
+      method += ' + Bounce';
+    }
+    
+    // Apply RSI adjustment
+    if (rsiAdjustment !== 0) {
+      slPercent *= (1 + rsiAdjustment);
+      method += ' + RSI';
+    }
+    
+    // Apply minimum/maximum limits
+    const minSL = 0.3; // Min 0.3%
+    const maxSL = 3.0; // Max 3.0%
+    const minTP = 0.5; // Min 0.5%
+    const maxTP = 5.0; // Max 5.0%
+    
+    slPercent = Math.max(minSL, Math.min(maxSL, slPercent));
+    tpPercent = Math.max(minTP, Math.min(maxTP, tpPercent));
+    
+    // Calculate actual prices
+    let tp, sl;
+    if (direction === 'LONG') {
+      tp = price * (1 + tpPercent / 100);
+      sl = price * (1 - slPercent / 100);
+    } else { // SHORT
+      tp = price * (1 - tpPercent / 100);
+      sl = price * (1 + slPercent / 100);
+    }
+    
+    // Calculate Risk/Reward ratio
+    const riskReward = tpPercent / slPercent;
+    
+    this.log(``, 'info');
+    this.log(`✅ FINAL SMART TP/SL:`, 'success');
+    this.log(`   Method: ${method}`, 'success');
+    this.log(`   SL: ${slPercent.toFixed(2)}% (adaptive!)`, 'success');
+    this.log(`   TP: ${tpPercent.toFixed(2)}% (${riskReward.toFixed(2)}x risk)`, 'success');
+    
+    return {
+      tp,
+      sl,
+      tpPercent,
+      slPercent,
+      riskReward,
+      method,
+      reason
+    };
   },
 
   closePositionById(positionId, exitPrice, reason) {
@@ -4180,8 +5055,17 @@ Price: $${analysis.price.toFixed(2)}
 
     const pos = this.state.positions[index];
 
-    // Calculate gross PnL (before fees)
-    const grossPnlPct = ((exitPrice - pos.entry) / pos.entry) * 100;
+    // ═══════════════════════════════════════════════════════════
+    // 🔄 Calculate gross PnL (handle LONG and SHORT)
+    // ═══════════════════════════════════════════════════════════
+    let grossPnlPct;
+    if (pos.direction === 'SHORT') {
+      // SHORT: Profit when price goes DOWN
+      grossPnlPct = ((pos.entry - exitPrice) / pos.entry) * 100;
+    } else {
+      // LONG: Profit when price goes UP
+      grossPnlPct = ((exitPrice - pos.entry) / pos.entry) * 100;
+    }
     const grossPnlUSDT = pos.size * (grossPnlPct / 100);
 
     // Calculate exit fee
@@ -4234,6 +5118,11 @@ Price: $${analysis.price.toFixed(2)}
     this.log('═══════════════════════════════════════', netPnlUSDT >= 0 ? 'success' : 'error');
     this.log(`${netPnlUSDT >= 0 ? '✅' : '❌'} POSITION CLOSED - ${reason}`, netPnlUSDT >= 0 ? 'success' : 'error');
     this.log(`Symbol: ${pos.symbol}`, 'info');
+    this.log(`Direction: ${pos.direction}${pos.isReversed ? ' 🔄 (REVERSED)' : ''}`, 'info');
+    if (pos.isReversed) {
+      this.log(`   Original Signal: ${pos.baseDirection}`, 'warning');
+      this.log(`   Reversed Mode was active!`, 'warning');
+    }
     this.log(`Entry: $${pos.entry.toFixed(pos.entry < 1 ? 6 : 2)}`, 'info');
     this.log(`Exit: $${exitPrice.toFixed(exitPrice < 1 ? 6 : 2)}`, 'info');
     this.log(`Gross PnL: ${grossPnlPct >= 0 ? '+' : ''}${grossPnlPct.toFixed(2)}% (${grossPnlUSDT >= 0 ? '+' : ''}${grossPnlUSDT.toFixed(2)} USDT)`, 'info');
@@ -4287,20 +5176,99 @@ Active: ${this.state.positions.length}/${this.state.config.maxPositions}
   async scanMarket() {
     this.log('🔍 Scanning market...', 'info');
 
-    // Check risk manager first
-    const riskCheck = this.riskManager.canOpenPosition();
-    if (!riskCheck.allowed) {
-      this.log(`⚠️ Cannot open position: ${riskCheck.reason}`, 'warning');
-      return;
+    // ═══════════════════════════════════════════════════════════
+    // 💥 CHECK FOR LOSING POSITIONS: "Gồng lỗ bằng vị thế mới"
+    // ═══════════════════════════════════════════════════════════
+    
+    let hasLosingPosition = false;
+    let totalUnrealizedLoss = 0;
+    let maxLossPercent = 0;
+    
+    for (const pos of this.state.positions) {
+      if (pos.unrealizedPnL < 0) {
+        hasLosingPosition = true;
+        totalUnrealizedLoss += pos.unrealizedPnL;
+        const lossPct = Math.abs((pos.unrealizedPnL / pos.actualCapital) * 100);
+        if (lossPct > maxLossPercent) {
+          maxLossPercent = lossPct;
+        }
+      }
+    }
+    
+    // 🔥 REVENGE TRADING MODE: Vào thêm vị thế nếu đang lỗ!
+    const revengeMode = hasLosingPosition && maxLossPercent >= 0.5; // Loss >= 0.5%
+    
+    if (revengeMode) {
+      this.log(``, 'error');
+      this.log(`💥💥💥 REVENGE MODE ACTIVATED! 💥💥💥`, 'error');
+      this.log(`   Có vị thế đang lỗ: ${totalUnrealizedLoss.toFixed(2)} USDT`, 'error');
+      this.log(`   Max Loss: ${maxLossPercent.toFixed(2)}%`, 'error');
+      this.log(`   🔥 VÀO THÊM VỊ THẾ ĐỂ BÙ LỖ!`, 'warning');
+      this.log(``, 'error');
+    }
+
+    // Check risk manager first (skip if revenge mode)
+    if (!revengeMode) {
+      const riskCheck = this.riskManager.canOpenPosition();
+      if (!riskCheck.allowed) {
+        this.log(`⚠️ Cannot open position: ${riskCheck.reason}`, 'warning');
+        return;
+      }
+    } else {
+      this.log(`⚠️ Skipping risk check - REVENGE MODE!`, 'warning');
     }
 
     // Use real Bybit API to scan market
     const best = await this.autoScanner.scanMarket();
 
-    // ⚡ QUICK PROFIT MODE: Vào ngay khi có BẤT KỲ signal nào!
-    const scoreThreshold = this.state.config.quickProfitMode ? 0 : 35;
+    // ═══════════════════════════════════════════════════════════
+    // 🔍 ENTRY CRITERIA: Flexible Entry with Dynamic Sizing
+    // ═══════════════════════════════════════════════════════════
+    
+    let requireStrongSignal = false; // Chấp nhận mọi signal (STRONG/MODERATE/WEAK)
+    let minConfidence = 40;          // Giảm từ 60% → 40%
+    let scoreThreshold = 15;         // Giảm từ 30 → 15
+    
+    // 💥 REVENGE MODE: EVEN MORE AGGRESSIVE!
+    if (revengeMode) {
+      requireStrongSignal = false; // Accept ANY signal
+      minConfidence = 30;           // Much lower confidence
+      scoreThreshold = 10;          // Much lower score
+      
+      this.log(`🔥 REVENGE MODE THRESHOLDS:`, 'warning');
+      this.log(`   Signal: ANY (không cần STRONG)`, 'warning');
+      this.log(`   Confidence: >= ${minConfidence}%`, 'warning');
+      this.log(`   Score: >= ${scoreThreshold}`, 'warning');
+      this.log(`   🎯 MỤC TIÊU: Vào nhiều lệnh để bù lỗ!`, 'error');
+      this.log(``, 'warning');
+    } else {
+      // Normal mode: Flexible but reasonable
+      this.log(`💡 FLEXIBLE ENTRY MODE:`, 'info');
+      this.log(`   Signal: ANY (STRONG/MODERATE/WEAK OK!)`, 'success');
+      this.log(`   Confidence: >= ${minConfidence}% (nới lỏng)`, 'info');
+      this.log(`   Score: >= ${scoreThreshold} (thấp hơn)`, 'info');
+      this.log(`   💰 Size động: Confidence thấp = Lệnh nhỏ`, 'info');
+      this.log(``, 'info');
+    }
 
-    if (best && best.score >= scoreThreshold) { // AGGRESSIVE: Lower threshold from 50 to 35 for more trades!
+    this.log(``, 'info');
+    this.log(`🔍 FOLLOW TECHNICAL ANALYSIS MODE!`, 'success');
+    this.log(`   Entry: Signal ${requireStrongSignal ? 'STRONG' : 'ANY'} + Confidence >= ${minConfidence}%`, 'info');
+    this.log(`   Score Threshold: ${scoreThreshold}`, 'info');
+    this.log(``, 'success');
+    this.log(`🎯 PRO STOP LOSS MANAGEMENT ACTIVE!`, 'success');
+    this.log(`   1️⃣ Instant Profit: Chốt ngay khi có lời`, 'success');
+    this.log(`   2️⃣ Trailing Stop: Bảo vệ lợi nhuận tự động`, 'success');
+    this.log(`   3️⃣ Time Stop: Max 60 phút/vị thế`, 'info');
+    this.log(`   4️⃣ Volatility Stop: Chặt hơn khi ATR cao`, 'info');
+    this.log(`   5️⃣ Standard SL: An toàn cuối cùng`, 'info');
+    if (revengeMode) {
+      this.log(``, 'warning');
+      this.log(`   🔥 REVENGE MODE: Vào thêm vị thế khi đang lỗ!`, 'error');
+    }
+    this.log(``, 'success');
+
+    if (best && best.score >= scoreThreshold) {
       // Check if already have this symbol
       const existingPosition = this.state.positions.find(p => p.symbol === best.symbol);
       if (existingPosition) {
@@ -4314,17 +5282,85 @@ Active: ${this.state.positions.length}/${this.state.config.maxPositions}
       // Perform detailed technical analysis
       const analysis = await this.performTechnicalAnalysis(best.symbol, klines);
 
+      // ═══════════════════════════════════════════════════════════
+      // 🔍 VALIDATE TECHNICAL ANALYSIS: "Nghe theo phân tích"
+      // ═══════════════════════════════════════════════════════════
+      
+      const confidence = Math.abs(analysis.confidence || 0);
+      const signal = analysis.signal;
+      const strength = analysis.strength;
+      
+      this.log(``, 'info');
+      this.log(`🔍 TECHNICAL ANALYSIS VALIDATION:`, 'info');
+      this.log(`   Signal: ${signal}`, signal === 'BUY' || signal === 'SELL' ? 'success' : 'warning');
+      this.log(`   Strength: ${strength}`, strength === 'STRONG' ? 'success' : 'warning');
+      this.log(`   Confidence: ${confidence.toFixed(1)}%`, confidence >= minConfidence ? 'success' : 'warning');
+      
+      // Check if meets technical analysis criteria
+      // No longer reject MODERATE/WEAK signals - accept all!
+      
+      if (confidence < minConfidence) {
+        this.log(`❌ REJECTED: Confidence thấp (${confidence.toFixed(1)}% < ${minConfidence}%)`, 'error');
+        this.log(`   ⏳ Chờ confidence cao hơn...`, 'warning');
+        return;
+      }
+      
+      if (signal !== 'BUY' && signal !== 'SELL') {
+        this.log(`❌ REJECTED: Signal không rõ ràng (${signal})`, 'error');
+        this.log(`   ⏳ Chờ signal BUY/SELL...`, 'warning');
+        return;
+      }
+      
+      // Calculate position size multiplier based on signal quality
+      let sizeMultiplier = 1.0;
+      if (strength === 'STRONG') {
+        sizeMultiplier = 1.0; // Full size
+      } else if (strength === 'MODERATE') {
+        sizeMultiplier = 0.7; // 70% size
+      } else if (strength === 'WEAK') {
+        sizeMultiplier = 0.5; // 50% size (lệnh nhỏ)
+      }
+      
+      // Further adjust by confidence level
+      if (confidence < 50) {
+        sizeMultiplier *= 0.7; // Additional 30% reduction for low confidence
+      }
+      
+      this.log(``, 'success');
+      if (revengeMode) {
+        this.log(`🔥 REVENGE MODE: TECHNICAL ANALYSIS APPROVED!`, 'error');
+        this.log(`   ${signal} ${strength} (${confidence.toFixed(1)}% confidence)`, 'warning');
+        this.log(`   💥 VÀO LỆNH ĐỂ BÙ LỖ!`, 'error');
+      } else {
+        this.log(`✅ TECHNICAL ANALYSIS APPROVED!`, 'success');
+        this.log(`   ${signal} ${strength} (${confidence.toFixed(1)}% confidence)`, 'success');
+        this.log(`   💰 Position Size: ${(sizeMultiplier * 100).toFixed(0)}% (dynamic)`, strength === 'WEAK' ? 'warning' : 'success');
+        this.log(`   → VÀO LỆNH (lệnh ${strength === 'STRONG' ? 'lớn' : strength === 'MODERATE' ? 'vừa' : 'nhỏ'})!`, 'success');
+      }
+      this.log(``, 'success');
+      
+      // Pass size multiplier to enterPosition
+      analysis.sizeMultiplier = sizeMultiplier;
+
       this.log(`✅ Signal found: ${best.symbol} @ $${best.price.toFixed(best.price < 1 ? 6 : 2)}`, 'success');
 
-      // Enter position with enhanced logic
-      this.enterPosition(best.symbol, best.price, analysis, klines);
+      // Enter position with enhanced logic (pass revenge mode info)
+      this.enterPosition(best.symbol, best.price, analysis, klines, revengeMode);
     } else {
       this.log('⏳ No good signals found, waiting...', 'warning');
     }
   },
 
-  enterPosition(symbol, price, analysis, klines) {
+  enterPosition(symbol, price, analysis, klines, revengeMode = false) {
     const balance = this.state.simMode ? this.state.simBalance : this.state.initialBalance;
+    
+    // Log revenge mode entry
+    if (revengeMode) {
+      this.log(``, 'error');
+      this.log(`🔥 VÀO VỊ THẾ REVENGE MODE ĐỂ BÙ LỖ!`, 'error');
+      this.log(`   Mục tiêu: Thu hồi lỗ từ vị thế khác`, 'warning');
+      this.log(``, 'error');
+    }
 
     // 1. Calculate optimal position size
     const sizeData = this.positionSizer.calculateSize(
@@ -4333,10 +5369,35 @@ Active: ${this.state.positions.length}/${this.state.config.maxPositions}
       symbol,
       analysis
     );
-    const size = sizeData.size;
+    let size = sizeData.size;
+    
+    // Apply dynamic size multiplier based on signal strength
+    if (analysis.sizeMultiplier && analysis.sizeMultiplier < 1.0) {
+      const originalSize = size;
+      size = size * analysis.sizeMultiplier;
+      this.log(``, 'info');
+      this.log(`💰 DYNAMIC SIZING APPLIED:`, 'info');
+      this.log(`   Original: ${originalSize.toFixed(2)} USDT`, 'info');
+      this.log(`   Multiplier: ${(analysis.sizeMultiplier * 100).toFixed(0)}%`, 'warning');
+      this.log(`   Final Size: ${size.toFixed(2)} USDT (lệnh nhỏ hơn)`, 'success');
+      this.log(``, 'info');
+    }
 
-    // 2. Decide market type (SPOT vs FUTURES) and leverage
-    const marketDecision = this.marketSelector.decide(analysis, klines);
+    // 2. Count current positions by type (for 2 FUTURES + 3 SPOT priority)
+    let currentFutures = 0;
+    let currentSpot = 0;
+    if (this.state.positions && this.state.positions.length > 0) {
+      currentFutures = this.state.positions.filter(p => p.marketType === 'FUTURES').length;
+      currentSpot = this.state.positions.filter(p => p.marketType === 'SPOT').length;
+    }
+    
+    const positionCounts = {
+      futures: currentFutures,
+      spot: currentSpot
+    };
+
+    // 3. Decide market type (SPOT vs FUTURES) and leverage
+    const marketDecision = this.marketSelector.decide(analysis, klines, positionCounts);
 
     const qty = size / price;
 
@@ -4348,22 +5409,86 @@ Active: ${this.state.positions.length}/${this.state.config.maxPositions}
     const effectiveSize = marketDecision.marketType === 'FUTURES' ? size * marketDecision.leverage : size;
     const effectiveQty = marketDecision.marketType === 'FUTURES' ? qty * marketDecision.leverage : qty;
 
+    // ═══════════════════════════════════════════════════════════
+    // 🔄 Determine position direction: LONG or SHORT
+    // ═══════════════════════════════════════════════════════════
+    
+    // Calculate current win rate
+    const wins = this.state.trades.filter(t => t.pnl > 0).length;
+    const total = this.state.trades.length;
+    const winRate = total > 0 ? ((wins / total) * 100) : 50;
+    
+    // 🔄 REVERSE MODE: Nếu win rate < 40%, đảo ngược tín hiệu!
+    let baseDirection = analysis.signal === 'SELL' ? 'SHORT' : 'LONG';
+    let direction = baseDirection;
+    let isReversed = false;
+    
+    if (total >= 5 && winRate < 40) {
+      // Reverse logic: BUY → SHORT, SELL → LONG
+      direction = baseDirection === 'LONG' ? 'SHORT' : 'LONG';
+      isReversed = true;
+      
+      this.log(``, 'error');
+      this.log(`🔄 REVERSE MODE ACTIVATED! (Win Rate: ${winRate.toFixed(1)}%)`, 'error');
+      this.log(`   Bot đang sai liên tục → Làm NGƯỢC LẠI!`, 'warning');
+      this.log(`   Original Signal: ${analysis.signal} (${baseDirection})`, 'info');
+      this.log(`   Reversed To: ${direction}`, 'success');
+      this.log(`   Logic: "Nếu sai mãi, làm ngược lại có thể đúng!"`, 'info');
+      this.log(``, 'error');
+    } else if (total >= 5 && winRate >= 40 && winRate < 50) {
+      this.log(`⚠️ Win Rate thấp (${winRate.toFixed(1)}%), sắp kích hoạt Reverse Mode!`, 'warning');
+    }
+    
+    // ═══════════════════════════════════════════════════════════
+    // 🧠 SMART TP/SL: "SL thông minh hơn"
+    // ═══════════════════════════════════════════════════════════
+    const smartLevels = this.calculateSmartTPSL(
+      price, 
+      direction, 
+      analysis, 
+      klines, 
+      marketDecision.leverage
+    );
+    
+    const tp = smartLevels.tp;
+    const sl = smartLevels.sl;
+    
+    this.log(``, 'info');
+    this.log(`🧠 SMART TP/SL CALCULATED:`, 'success');
+    this.log(`   Method: ${smartLevels.method}`, 'info');
+    this.log(`   TP: $${tp.toFixed(price < 1 ? 6 : 2)} (${smartLevels.tpPercent.toFixed(2)}%)`, 'success');
+    this.log(`   SL: $${sl.toFixed(price < 1 ? 6 : 2)} (${smartLevels.slPercent.toFixed(2)}%)`, 'error');
+    this.log(`   Risk/Reward: 1:${smartLevels.riskReward.toFixed(2)}`, 'info');
+    if (smartLevels.reason) {
+      this.log(`   💡 Reason: ${smartLevels.reason}`, 'info');
+    }
+    
     const position = {
       id: Date.now() + '_' + symbol,
       symbol,
+      direction, // 🔄 LONG or SHORT (may be reversed)
+      baseDirection, // 🔄 Original direction from signal
+      isReversed, // 🔄 True if reversed due to low win rate
+      isRevengeMode: revengeMode, // 🔥 True if entered to compensate losses
       entry: price,
       qty: effectiveQty,
       size: effectiveSize,
       actualCapital: size, // Real capital used (before leverage)
       entryTime: Date.now(),
-      tp: price * (1 + this.state.config.takeProfit / 100),
-      sl: price * (1 - this.state.config.stopLoss / 100),
+      tp,
+      sl,
       entryFee: entryFee,
       unrealizedPnL: 0,
       currentPrice: price,
       marketType: marketDecision.marketType,
       leverage: marketDecision.leverage,
       positionSizing: sizeData.breakdown,
+      smartLevels: { // 🧠 Smart TP/SL info
+        method: smartLevels.method,
+        tpPercent: smartLevels.tpPercent,
+        slPercent: smartLevels.slPercent,
+        riskReward: smartLevels.riskReward
+      },
       analysisSnapshot: {
         signal: analysis.signal,
         strength: analysis.strength,
@@ -4379,9 +5504,10 @@ Active: ${this.state.positions.length}/${this.state.config.maxPositions}
     this.updatePriceChart(price, symbol);
 
     this.log('═══════════════════════════════════════════════════════', 'success');
-    this.log(`📈 POSITION ${this.state.positions.length}/${this.state.config.maxPositions} OPENED`, 'success');
+    this.log(`${direction === 'SHORT' ? '📉' : '📈'} POSITION ${this.state.positions.length}/${this.state.config.maxPositions} OPENED`, 'success');
     this.log('═══════════════════════════════════════════════════════', 'success');
     this.log(`📌 Symbol: ${symbol}`, 'info');
+    this.log(`🔄 Direction: ${direction} ${direction === 'SHORT' ? '(Nảy xuống)' : '(Nảy lên)'}`, direction === 'SHORT' ? 'warning' : 'success');
     this.log(`💰 Entry Price: $${price.toFixed(price < 1 ? 6 : 2)}`, 'info');
     this.log(``, 'info');
     this.log(`💼 Market Type: ${marketDecision.marketType}`, marketDecision.marketType === 'FUTURES' ? 'warning' : 'success');
@@ -4401,8 +5527,6 @@ Active: ${this.state.positions.length}/${this.state.config.maxPositions}
     }
     this.log(``, 'info');
     this.log(`💸 Entry Fee: ${entryFee.toFixed(4)} USDT (${feeRate}%)`, 'warning');
-    this.log(`🎯 TP: $${position.tp.toFixed(price < 1 ? 6 : 2)} (+${this.state.config.takeProfit}%)`, 'success');
-    this.log(`🛑 SL: $${position.sl.toFixed(price < 1 ? 6 : 2)} (-${this.state.config.stopLoss}%)`, 'error');
     this.log(`📊 Signal: ${analysis.signal} (${analysis.strength}, ${analysis.confidence}% conf)`, 'info');
     this.log('═══════════════════════════════════════════════════════', 'success');
 
@@ -4413,21 +5537,34 @@ Active: ${this.state.positions.length}/${this.state.config.maxPositions}
     // Send to Telegram
     const tgEnabled = document.getElementById('tgEnabled')?.checked;
     if (tgEnabled) {
+      let reverseInfo = '';
+      if (isReversed) {
+        reverseInfo = `
+🔄 REVERSE MODE ACTIVE!
+Win Rate: ${winRate.toFixed(1)}% (< 40%)
+Original: ${analysis.signal} (${baseDirection})
+Trading: ${direction} (REVERSED!)
+━━━━━━━━━━━━━━━━━`;
+      }
+      
       const message = `
-🚀 POSITION OPENED
+🚀 POSITION OPENED${isReversed ? ' 🔄' : ''}
 
 ${symbol}
 ━━━━━━━━━━━━━━━━━
+Direction: ${direction}${isReversed ? ' (REVERSED)' : ''}
 Market: ${marketDecision.marketType}${marketDecision.leverage > 1 ? ' ' + marketDecision.leverage + 'x' : ''}
 Entry: $${price.toFixed(price < 1 ? 6 : 2)}
 Size: ${size.toFixed(2)} USDT${marketDecision.leverage > 1 ? ' (' + effectiveSize.toFixed(2) + ' effective)' : ''}
 
-TP: $${position.tp.toFixed(price < 1 ? 6 : 2)} (+${this.state.config.takeProfit}%)
-SL: $${position.sl.toFixed(price < 1 ? 6 : 2)} (-${this.state.config.stopLoss}%)
+TP: $${position.tp.toFixed(price < 1 ? 6 : 2)} (+${smartLevels.tpPercent.toFixed(2)}%)
+SL: $${position.sl.toFixed(price < 1 ? 6 : 2)} (-${smartLevels.slPercent.toFixed(2)}%)
+Method: ${smartLevels.method}
+R:R = 1:${smartLevels.riskReward.toFixed(2)}
 
 Signal: ${analysis.signal} (${analysis.confidence}%)
 Reasons: ${analysis.reasons ? analysis.reasons.slice(0, 2).join(', ') : 'N/A'}
-
+${reverseInfo}
 ${marketDecision.leverage > 1 ? '⚠️ ' + marketDecision.reason : ''}
       `.trim();
 
@@ -4451,8 +5588,17 @@ ${marketDecision.leverage > 1 ? '⚠️ ' + marketDecision.reason : ''}
       // Update position current price
       pos.currentPrice = currentPrice;
 
-      // Calculate gross PnL
-      const grossPnlPct = ((currentPrice - pos.entry) / pos.entry) * 100;
+      // ═══════════════════════════════════════════════════════════
+      // 🔄 Calculate gross PnL (handle LONG and SHORT)
+      // ═══════════════════════════════════════════════════════════
+      let grossPnlPct;
+      if (pos.direction === 'SHORT') {
+        // SHORT: Profit when price goes DOWN
+        grossPnlPct = ((pos.entry - currentPrice) / pos.entry) * 100;
+      } else {
+        // LONG: Profit when price goes UP
+        grossPnlPct = ((currentPrice - pos.entry) / pos.entry) * 100;
+      }
       const grossPnlUSDT = pos.size * (grossPnlPct / 100);
 
       // Calculate potential exit fee
@@ -4468,28 +5614,141 @@ ${marketDecision.leverage > 1 ? '⚠️ ' + marketDecision.reason : ''}
       pos.unrealizedPnL = unrealizedNetPnL;
       totalUnrealizedPnL += unrealizedNetPnL;
 
-      // ⚡ QUICK PROFIT MODE: Trailing stop siêu chặt để bảo vệ lợi nhuận!
-      if (this.state.config.quickProfitMode && grossPnlPct > 0) {
-        // Nếu đang lời > 0.3%, set trailing stop = 0.2% để thoát nhanh nếu đảo chiều
-        if (grossPnlPct >= 0.3) {
-          const trailingStopPrice = currentPrice * 0.998; // 0.2% trailing
-          if (!pos.trailingStopPrice || trailingStopPrice > pos.trailingStopPrice) {
-            pos.trailingStopPrice = trailingStopPrice;
-          }
-
-          // Nếu price drop dưới trailing stop → close ngay!
-          if (currentPrice <= pos.trailingStopPrice) {
-            this.closePositionById(pos.id, currentPrice, '⚡ QUICK PROFIT: Trailing Stop Hit (Bảo vệ lời)');
-            continue;
+      // ═══════════════════════════════════════════════════════════
+      // 🎯 PRO STOP LOSS MANAGEMENT: "Quản lý cắt lỗ như pro"
+      // ═══════════════════════════════════════════════════════════
+      
+      const leverage = pos.leverage || 1;
+      const holdingTime = Date.now() - pos.entryTime;
+      const holdingMinutes = Math.floor(holdingTime / 60000);
+      
+      // Initialize trailing stop if not exists
+      if (!pos.trailingStopPrice) {
+        pos.trailingStopPrice = pos.sl; // Start with original SL
+        pos.highestPrice = pos.direction === 'LONG' ? currentPrice : pos.entry;
+        pos.lowestPrice = pos.direction === 'SHORT' ? currentPrice : pos.entry;
+      }
+      
+      // ═══════════════════════════════════════════════════════════
+      // 1️⃣ INSTANT PROFIT TAKING (Small Wins)
+      // ═══════════════════════════════════════════════════════════
+      
+      if (unrealizedNetPnL > 0) {
+        const realProfitPct = (unrealizedNetPnL / pos.actualCapital) * 100;
+        
+        // Close immediately on any profit
+        this.log(`💰 INSTANT PROFIT: ${realProfitPct.toFixed(2)}% → CHỐT NGAY!`, 'success');
+        this.closePositionById(pos.id, currentPrice, `💰 INSTANT PROFIT (+${realProfitPct.toFixed(2)}%)`);
+        continue;
+      }
+      
+      // ═══════════════════════════════════════════════════════════
+      // 2️⃣ PRO TRAILING STOP LOSS
+      // ═══════════════════════════════════════════════════════════
+      
+      // Update highest/lowest price
+      if (pos.direction === 'LONG') {
+        if (currentPrice > pos.highestPrice) {
+          pos.highestPrice = currentPrice;
+          
+          // Trail stop loss (keep it 50% of initial SL distance behind)
+          const initialSLDistance = Math.abs(pos.entry - pos.sl);
+          const trailingDistance = initialSLDistance * 0.5; // 50% of original SL
+          pos.trailingStopPrice = pos.highestPrice - trailingDistance;
+          
+          // Ensure trailing stop is always above original SL
+          if (pos.trailingStopPrice > pos.sl) {
+            this.log(`📈 Trailing SL updated: $${pos.trailingStopPrice.toFixed(2)} (following price)`, 'info');
           }
         }
+        
+        // Check trailing stop
+        if (currentPrice <= pos.trailingStopPrice && pos.trailingStopPrice > pos.sl) {
+          this.log(`🎯 PRO TRAILING STOP HIT! Protected gains.`, 'warning');
+          this.closePositionById(pos.id, currentPrice, '🎯 TRAILING STOP (Pro)');
+          continue;
+        }
+      } else { // SHORT
+        if (currentPrice < pos.lowestPrice) {
+          pos.lowestPrice = currentPrice;
+          
+          const initialSLDistance = Math.abs(pos.sl - pos.entry);
+          const trailingDistance = initialSLDistance * 0.5;
+          pos.trailingStopPrice = pos.lowestPrice + trailingDistance;
+          
+          if (pos.trailingStopPrice < pos.sl) {
+            this.log(`📉 Trailing SL updated: $${pos.trailingStopPrice.toFixed(2)} (following price)`, 'info');
+          }
+        }
+        
+        if (currentPrice >= pos.trailingStopPrice && pos.trailingStopPrice < pos.sl) {
+          this.log(`🎯 PRO TRAILING STOP HIT! Protected gains.`, 'warning');
+          this.closePositionById(pos.id, currentPrice, '🎯 TRAILING STOP (Pro)');
+          continue;
+        }
       }
-
-      // Check TP/SL
-      if (currentPrice >= pos.tp) {
-        this.closePositionById(pos.id, currentPrice, 'TP HIT');
-      } else if (currentPrice <= pos.sl) {
-        this.closePositionById(pos.id, currentPrice, 'SL HIT');
+      
+      // ═══════════════════════════════════════════════════════════
+      // 3️⃣ TIME-BASED STOP (Don't hold losers forever)
+      // ═══════════════════════════════════════════════════════════
+      
+      const maxHoldingMinutes = 60; // Max 1 hour per position
+      
+      if (holdingMinutes >= maxHoldingMinutes && unrealizedNetPnL < 0) {
+        this.log(`⏰ TIME STOP: Held ${holdingMinutes} min, cutting loss`, 'warning');
+        this.closePositionById(pos.id, currentPrice, `⏰ TIME STOP (${holdingMinutes}min)`);
+        continue;
+      }
+      
+      // ═══════════════════════════════════════════════════════════
+      // 4️⃣ VOLATILITY-ADJUSTED STOP (Tighten on high vol)
+      // ═══════════════════════════════════════════════════════════
+      
+      const atrPct = parseFloat(pos.analysisSnapshot?.atrPct) || 2;
+      
+      if (atrPct > 5 && unrealizedNetPnL < 0) {
+        // High volatility = Tighter stop (50% of original)
+        const tightSL = pos.direction === 'LONG' 
+          ? pos.entry - (pos.entry - pos.sl) * 0.5
+          : pos.entry + (pos.sl - pos.entry) * 0.5;
+        
+        const hitTightSL = pos.direction === 'LONG' 
+          ? currentPrice <= tightSL
+          : currentPrice >= tightSL;
+        
+        if (hitTightSL) {
+          this.log(`📊 VOLATILITY STOP: ATR ${atrPct.toFixed(1)}% → Tight SL`, 'warning');
+          this.closePositionById(pos.id, currentPrice, `📊 VOLATILITY STOP (ATR ${atrPct.toFixed(1)}%)`);
+          continue;
+        }
+      }
+      
+      // ═══════════════════════════════════════════════════════════
+      // 5️⃣ STANDARD STOP LOSS (Final Safety Net)
+      // ═══════════════════════════════════════════════════════════
+      
+      const hitSL = pos.direction === 'LONG' 
+        ? currentPrice <= pos.sl
+        : currentPrice >= pos.sl;
+      
+      if (hitSL) {
+        this.log(`🛑 STOP LOSS HIT - Professional exit`, 'error');
+        this.closePositionById(pos.id, currentPrice, '🛑 STOP LOSS (Standard)');
+        continue;
+      }
+      
+      // ═══════════════════════════════════════════════════════════
+      // 6️⃣ TAKE PROFIT (Fallback)
+      // ═══════════════════════════════════════════════════════════
+      
+      const hitTP = pos.direction === 'LONG'
+        ? currentPrice >= pos.tp
+        : currentPrice <= pos.tp;
+      
+      if (hitTP) {
+        this.log(`🎯 TAKE PROFIT HIT!`, 'success');
+        this.closePositionById(pos.id, currentPrice, '🎯 TAKE PROFIT');
+        continue;
       }
     }
 
@@ -4504,8 +5763,17 @@ ${marketDecision.leverage > 1 ? '⚠️ ' + marketDecision.reason : ''}
   closePosition(exitPrice, reason) {
     const pos = this.state.currentPosition;
 
-    // Calculate gross PnL (before fees)
-    const grossPnlPct = ((exitPrice - pos.entry) / pos.entry) * 100;
+    // ═══════════════════════════════════════════════════════════
+    // 🔄 Calculate gross PnL (handle LONG and SHORT)
+    // ═══════════════════════════════════════════════════════════
+    let grossPnlPct;
+    if (pos.direction === 'SHORT') {
+      // SHORT: Profit when price goes DOWN
+      grossPnlPct = ((pos.entry - exitPrice) / pos.entry) * 100;
+    } else {
+      // LONG: Profit when price goes UP
+      grossPnlPct = ((exitPrice - pos.entry) / pos.entry) * 100;
+    }
     const grossPnlUSDT = pos.size * (grossPnlPct / 100);
 
     // Calculate exit fee
@@ -4875,19 +6143,19 @@ Balance: ${this.state.simMode ? this.state.simBalance.toFixed(2) : 'N/A'} USDT
     }
 
     this.log('🔄 Starting UI updates...', 'info');
-    this.log('📊 Technical Analysis & News: Every 10s', 'info');
+    this.log('⚡ Technical Analysis & News: Every 2s (REAL-TIME!)', 'success');
 
     // Update immediately
     this.updateTechnicalAnalysisUI();
     this.updateNewsSentimentUI();
 
-    // Set interval for continuous updates
+    // ⚡ REAL-TIME: Set interval for SMOOTH continuous updates
     this.uiUpdateInterval = setInterval(() => {
       if (this.state.isRunning) {
         this.updateTechnicalAnalysisUI();
         this.updateNewsSentimentUI();
       }
-    }, 10000); // Every 10s
+    }, 2000); // Every 2s for REAL-TIME updates!
   },
 
   stopUIUpdates() {
@@ -5044,10 +6312,16 @@ Balance: ${this.state.simMode ? this.state.simBalance.toFixed(2) : 'N/A'} USDT
       const marketBadge = pos.marketType === 'FUTURES'
         ? `<span class="badge badge-warning" style="font-size: 10px;">FUTURES ${pos.leverage}x</span>`
         : `<span class="badge badge-success" style="font-size: 10px;">SPOT</span>`;
+      
+      // Direction badge with reverse indicator
+      const directionEmoji = pos.direction === 'LONG' ? '📈' : '📉';
+      const directionColor = pos.direction === 'LONG' ? 'success' : 'warning';
+      const reverseIndicator = pos.isReversed ? ' 🔄' : '';
+      const directionBadge = `<span class="badge badge-${directionColor}" style="font-size: 10px;">${directionEmoji} ${pos.direction}${reverseIndicator}</span>`;
 
       return `
         <tr>
-          <td><strong>${pos.symbol}</strong><br>${marketBadge}</td>
+          <td><strong>${pos.symbol}</strong><br>${marketBadge} ${directionBadge}</td>
           <td>$${pos.entry.toFixed(pos.entry < 1 ? 6 : 2)}</td>
           <td>$${pos.currentPrice.toFixed(pos.currentPrice < 1 ? 6 : 2)}</td>
           <td>${actualCapital.toFixed(2)}<br><small style="color: var(--text-dim);">${pos.marketType === 'FUTURES' ? '(' + pos.size.toFixed(2) + ' eff.)' : ''}</small></td>
@@ -5195,6 +6469,8 @@ const AutonomousEngine = {
       // Portfolio Management (Thiên tài phân bổ vốn)
       portfolioAllocation: {
         maxPositions: 5,
+        maxFuturesPositions: 2,        // ✅ Ưu tiên 2 FUTURES
+        maxSpotPositions: 3,           // ✅ Ưu tiên 3 SPOT
         targetCapitalPerPosition: 20,  // % vốn cho mỗi position (100/5 = 20%)
         minCapitalPerPosition: 10,     // Min 10%
         maxCapitalPerPosition: 35,     // Max 35% (nếu confidence cao)
@@ -5894,6 +7170,26 @@ const AutonomousEngine = {
       const currentPositions = BybitBot.state.positions?.length || 0;
       const maxPositions = this.state.portfolioAllocation.maxPositions;
       
+      // ═══════════════════════════════════════════════════════════
+      // 🎯 PRIORITY ALLOCATION: 2 FUTURES + 3 SPOT
+      // ═══════════════════════════════════════════════════════════
+      
+      const maxFutures = this.state.portfolioAllocation.maxFuturesPositions;
+      const maxSpot = this.state.portfolioAllocation.maxSpotPositions;
+      
+      // Count current positions by type
+      let currentFutures = 0;
+      let currentSpot = 0;
+      if (BybitBot.state.positions && BybitBot.state.positions.length > 0) {
+        currentFutures = BybitBot.state.positions.filter(p => p.marketType === 'FUTURES').length;
+        currentSpot = BybitBot.state.positions.filter(p => p.marketType === 'SPOT').length;
+      }
+      
+      BybitBot.log(``, 'info');
+      BybitBot.log(`🎯 PORTFOLIO PRIORITY: 2 FUTURES + 3 SPOT`, 'success');
+      BybitBot.log(`   📊 FUTURES: ${currentFutures}/${maxFutures}`, currentFutures < maxFutures ? 'success' : 'warning');
+      BybitBot.log(`   📊 SPOT: ${currentSpot}/${maxSpot}`, currentSpot < maxSpot ? 'success' : 'warning');
+      
       // Calculate capital already allocated
       let allocatedCapital = 0;
       if (BybitBot.state.positions && BybitBot.state.positions.length > 0) {
@@ -5901,8 +7197,9 @@ const AutonomousEngine = {
       }
       const availableCapital = totalCapital - allocatedCapital;
       
+      BybitBot.log(``, 'info');
       BybitBot.log(`💰 Total Capital: $${totalCapital.toFixed(2)}`, 'info');
-      BybitBot.log(`📊 Positions: ${currentPositions}/${maxPositions}`, 'info');
+      BybitBot.log(`📊 Total Positions: ${currentPositions}/${maxPositions}`, 'info');
       BybitBot.log(`🔒 Allocated: $${allocatedCapital.toFixed(2)} (${(allocatedCapital/totalCapital*100).toFixed(1)}%)`, 'warning');
       BybitBot.log(`💵 Available: $${availableCapital.toFixed(2)} (${(availableCapital/totalCapital*100).toFixed(1)}%)`, 'success');
       
@@ -5982,24 +7279,99 @@ const AutonomousEngine = {
       if (riskAssessment.appetite === 'LOW') {
         risk *= 0.5;
         leverage = 1;
-        tp = 0.8;
-        sl = 0.5;
+        tp = 1.5;  // Increased from 0.8
+        sl = 0.8;  // Increased from 0.5
       } else if (riskAssessment.appetite === 'HIGH') {
         risk *= 1.5;
         leverage = 15;
-        tp = 1.0;
-        sl = 1.0;
+        tp = 2.5;  // Increased from 1.0
+        sl = 1.2;  // Increased from 1.0
       } else {
         leverage = 10;
       }
 
-      // Adjust based on volatility
-      if (marketAnalysis.volatility.level === 'HIGH') {
-        tp = 2.0;
-        sl = 1.2;
-      } else if (marketAnalysis.volatility.level === 'LOW') {
-        tp = 0.8;
-        sl = 0.5;
+      // ═══════════════════════════════════════════════════════════
+      // 💥 VOLATILITY-BASED TP/SL (Smart Logic)
+      // ═══════════════════════════════════════════════════════════
+      
+      const volLevel = marketAnalysis.volatility.level;
+      
+      if (volLevel === 'EXTREME' || volLevel === 'HIGH') {
+        // High volatility = Big swings = Bigger TP/SL
+        tp = Math.max(tp, 2.5);  // Min 2.5%
+        sl = Math.max(sl, 1.5);  // Min 1.5%
+        BybitBot.log(`💥 HIGH Volatility → TP: ${tp}% / SL: ${sl}% (big swings!)`, 'success');
+        
+      } else if (volLevel === 'NORMAL') {
+        // Normal volatility = Standard TP/SL
+        tp = Math.max(tp, 1.8);  // Min 1.8%
+        sl = Math.max(sl, 1.0);  // Min 1.0%
+        BybitBot.log(`📊 NORMAL Volatility → TP: ${tp}% / SL: ${sl}% (standard)`, 'info');
+        
+      } else if (volLevel === 'LOW') {
+        // ═══════════════════════════════════════════════════════════
+        // 🎯 LOW VOLATILITY = SCALPING MODE (Canh nến!)
+        // ═══════════════════════════════════════════════════════════
+        BybitBot.log(`⚡ LOW Volatility → SCALPING MODE: Canh nến! TP/SL trong 1 nến!`, 'warning');
+        
+        // Strategy: MICRO TP/SL + HIGH LEVERAGE + HIGH FREQUENCY
+        // "Canh nến mà tp,sl trong 1 nến cũng đc" - User's wisdom!
+        
+        tp = 0.8;  // MICRO TP: 0.8% (trong 1 nến)
+        sl = 0.4;  // MICRO SL: 0.4% (trong 1 nến)
+        
+        // MAXIMIZE leverage for scalping (high frequency = lower risk per trade)
+        if (riskAssessment.appetite === 'HIGH') {
+          leverage = 20;  // MAX leverage for scalping
+          BybitBot.log(`🚀 SCALPING → MAX Leverage: 20x`, 'success');
+        } else {
+          leverage = 15;  // High leverage
+          BybitBot.log(`📈 SCALPING → High Leverage: 15x`, 'info');
+        }
+        
+        // Calculate real profit with leverage
+        const realTPProfit = (tp * leverage).toFixed(1);
+        const realSLRisk = (sl * leverage).toFixed(1);
+        const profitPerTrade = (calculatedSize * tp / 100 * leverage).toFixed(2);
+        
+        // Estimate daily trades (low vol = stable = more scalps)
+        const estimatedDailyTrades = 20;  // Conservative estimate
+        const estimatedDailyProfit = (profitPerTrade * estimatedDailyTrades * 0.6).toFixed(2);  // 60% win rate
+        
+        BybitBot.log(``, 'info');
+        BybitBot.log(`⚡ SCALPING STRATEGY (Canh nến):`, 'success');
+        BybitBot.log(`   📊 TP: ${tp}% × ${leverage}x = ${realTPProfit}% real profit`, 'success');
+        BybitBot.log(`   🛡️ SL: ${sl}% × ${leverage}x = ${realSLRisk}% real risk`, 'warning');
+        BybitBot.log(`   ⚖️ Risk/Reward: ${(realTPProfit / realSLRisk).toFixed(2)}:1`, 'info');
+        BybitBot.log(``, 'info');
+        BybitBot.log(`💰 Profit per trade: $${profitPerTrade}`, 'success');
+        BybitBot.log(`🔄 Estimated: ${estimatedDailyTrades} trades/day`, 'info');
+        BybitBot.log(`💵 Est. daily profit: $${estimatedDailyProfit} (60% WR)`, 'success');
+        BybitBot.log(``, 'info');
+        BybitBot.log(`🎯 Chiến thuật: TP/SL nhỏ + Trade nhiều lần = Lời tích lũy!`, 'success');
+        BybitBot.log(`🕐 Low vol = Stable = Perfect cho scalping!`, 'info');
+        
+        // Keep size normal (or even increase for scalping)
+        calculatedSize *= 1.1;  // +10% size for scalping (lower risk due to tight stops)
+        BybitBot.log(`📈 Size tăng 10% vì scalping có tight stop!`, 'info');
+      }
+      
+      // Ensure reasonable minimums (but allow MICRO for scalping)
+      if (volLevel === 'LOW') {
+        // SCALPING MODE = Allow MICRO TP/SL (canh nến!)
+        tp = Math.max(tp, 0.5);  // Min 0.5% for scalping
+        sl = Math.max(sl, 0.3);  // Min 0.3% for scalping
+        BybitBot.log(`⚡ Scalping: TP/SL MICRO allowed (trong 1 nến OK!)`, 'info');
+        
+      } else if (leverage >= 10) {
+        // High leverage = Tight TP/SL OK
+        tp = Math.max(tp, 1.0);  // Min 1.0% with leverage
+        sl = Math.max(sl, 0.5);  // Min 0.5% with leverage
+        
+      } else {
+        // Low leverage = Need bigger TP/SL
+        tp = Math.max(tp, 1.8);  // Min 1.8% without leverage
+        sl = Math.max(sl, 1.0);  // Min 1.0% without leverage
       }
       
       BybitBot.log(``, 'info');
@@ -6361,8 +7733,8 @@ const AutonomousEngine = {
       try {
         const now = Date.now();
         
-        // Update mỗi 10s
-        if (now - this.state.lastTechUpdate < 10000) {
+        // ⚡ REAL-TIME: Update mỗi 3s (faster!)
+        if (now - this.state.lastTechUpdate < 3000) {
           return this.state.techAnalysisCache;
         }
         
@@ -6457,8 +7829,8 @@ const AutonomousEngine = {
       try {
         const now = Date.now();
         
-        // Update mỗi 30s
-        if (now - this.state.lastNewsUpdate < 30000) {
+        // ⚡ REAL-TIME: Update mỗi 5s (much faster!)
+        if (now - this.state.lastNewsUpdate < 5000) {
           return this.state.newsSentimentCache;
         }
         
@@ -6744,8 +8116,8 @@ const AutonomousEngine = {
         // Update UI
         BybitBot.updateStats();
 
-        // Wait before next cycle (15 seconds for quick reactions)
-        await BybitBot.sleep(15000);
+        // ⚡ REAL-TIME: Ultra fast cycle (2 seconds for instant reactions!)
+        await BybitBot.sleep(2000); // 2 seconds - LIVED reacts FAST!
 
       } catch (error) {
         BybitBot.log(`❌ Autonomous error: ${error.message}`, 'error');
@@ -6777,20 +8149,20 @@ const AutonomousEngine = {
     }
     
     BybitBot.log('🔄 Starting continuous updates...', 'success');
-    BybitBot.log('📊 Technical Analysis: Every 10s', 'info');
-    BybitBot.log('📰 News Sentiment: Every 30s', 'info');
+    BybitBot.log('⚡ Technical Analysis: Every 3s (REAL-TIME!)', 'success');
+    BybitBot.log('⚡ News Sentiment: Every 5s (REAL-TIME!)', 'success');
     
     // Update immediately
     this.decisionBrain.updateTechnicalAnalysis();
     this.decisionBrain.updateNewsSentiment();
     
-    // Set interval for continuous updates
+    // ⚡ REAL-TIME: Set interval for SMOOTH continuous updates
     this.continuousUpdateInterval = setInterval(async () => {
       if (BybitBot.state.autonomousMode) {
         await this.decisionBrain.updateTechnicalAnalysis();
         await this.decisionBrain.updateNewsSentiment();
       }
-    }, 10000); // Every 10s
+    }, 2000); // Every 2s for SMOOTH real-time updates!
   }
 };
 
