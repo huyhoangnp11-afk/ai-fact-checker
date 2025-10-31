@@ -6427,6 +6427,646 @@ Balance: ${this.state.simMode ? this.state.simBalance.toFixed(2) : 'N/A'} USDT
 };
 
 // ═══════════════════════════════════════════════════════════════
+// 🎯 ADVANCED TRADING STRATEGIES MODULE
+// RR 1:3 Minimum | Compound Logic | 15m-4h Timeframe
+// ═══════════════════════════════════════════════════════════════
+
+const TradingStrategies = {
+
+  // ═══════════════════════════════════════════════════════════
+  // 📊 RR CALCULATOR & COMPOUND POSITION SIZER
+  // ═══════════════════════════════════════════════════════════
+
+  riskRewardCalculator: {
+    minRR: 3, // RR tối thiểu 1:3
+    riskPerTradePercent: 20, // 20% mỗi lệnh (aggressive for small accounts)
+
+    calculatePositionSize(balance, entry, stopLoss, riskPercent = null) {
+      const risk = riskPercent || this.riskPerTradePercent;
+      const riskAmount = balance * (risk / 100);
+      const riskPerUnit = Math.abs(entry - stopLoss);
+      const positionSize = riskAmount / riskPerUnit;
+
+      return {
+        positionSize,
+        riskAmount,
+        riskPerUnit,
+        riskPercent: risk
+      };
+    },
+
+    calculateTPSL(entry, direction, minRR = null) {
+      const rr = minRR || this.minRR;
+      let sl, tp;
+
+      if (direction === 'LONG') {
+        // Conservative SL: 2% below entry
+        sl = entry * 0.98;
+        // TP must be at least 3x the risk
+        tp = entry + (entry - sl) * rr;
+      } else {
+        // SHORT
+        sl = entry * 1.02;
+        tp = entry - (sl - entry) * rr;
+      }
+
+      const actualRR = Math.abs(tp - entry) / Math.abs(entry - sl);
+
+      return {
+        entry,
+        stopLoss: sl,
+        takeProfit: tp,
+        riskRewardRatio: actualRR,
+        riskPercent: ((Math.abs(entry - sl) / entry) * 100).toFixed(2),
+        rewardPercent: ((Math.abs(tp - entry) / entry) * 100).toFixed(2)
+      };
+    },
+
+    validateRR(entry, sl, tp) {
+      const risk = Math.abs(entry - sl);
+      const reward = Math.abs(tp - entry);
+      const rr = reward / risk;
+
+      return {
+        isValid: rr >= this.minRR,
+        actualRR: rr.toFixed(2),
+        minRR: this.minRR
+      };
+    }
+  },
+
+  // ═══════════════════════════════════════════════════════════
+  // 📈 CHIẾN LƯỢC #1: EMA50 + FAIR VALUE GAP (FVG)
+  // ═══════════════════════════════════════════════════════════
+
+  strategy1_EMA_FVG: {
+    name: "EMA50 + Fair Value Gap",
+    timeframes: ['15m', '30m', '1h', '4h'],
+
+    detectFVG(candles) {
+      // Fair Value Gap: 3-candle pattern
+      // Bullish FVG: High[i-2] < Low[i] (gap between candle 1 and 3)
+      // Bearish FVG: Low[i-2] > High[i]
+
+      if (candles.length < 3) return null;
+
+      const gaps = [];
+
+      for (let i = 2; i < candles.length; i++) {
+        const candle1 = candles[i - 2];
+        const candle2 = candles[i - 1];
+        const candle3 = candles[i];
+
+        // Bullish FVG
+        if (candle1.high < candle3.low) {
+          const gapSize = candle3.low - candle1.high;
+          const gapPercent = (gapSize / candle1.high) * 100;
+
+          // Ưu tiên gap lớn (> 0.3%)
+          if (gapPercent > 0.3) {
+            gaps.push({
+              type: 'BULLISH',
+              index: i,
+              gapTop: candle3.low,
+              gapBottom: candle1.high,
+              gapSize,
+              gapPercent: gapPercent.toFixed(3),
+              candles: [candle1, candle2, candle3]
+            });
+          }
+        }
+
+        // Bearish FVG
+        if (candle1.low > candle3.high) {
+          const gapSize = candle1.low - candle3.high;
+          const gapPercent = (gapSize / candle1.low) * 100;
+
+          if (gapPercent > 0.3) {
+            gaps.push({
+              type: 'BEARISH',
+              index: i,
+              gapTop: candle1.low,
+              gapBottom: candle3.high,
+              gapSize,
+              gapPercent: gapPercent.toFixed(3),
+              candles: [candle1, candle2, candle3]
+            });
+          }
+        }
+      }
+
+      return gaps.length > 0 ? gaps[gaps.length - 1] : null; // Latest FVG
+    },
+
+    calculateEMA(prices, period = 50) {
+      if (prices.length < period) return null;
+
+      const multiplier = 2 / (period + 1);
+      let ema = prices.slice(0, period).reduce((a, b) => a + b, 0) / period;
+
+      for (let i = period; i < prices.length; i++) {
+        ema = (prices[i] - ema) * multiplier + ema;
+      }
+
+      return ema;
+    },
+
+    identifyTrend(currentPrice, ema50, previousEMA) {
+      if (!ema50 || !previousEMA) return 'UNKNOWN';
+
+      const isAboveEMA = currentPrice > ema50;
+      const emaSlope = ema50 > previousEMA ? 'UP' : 'DOWN';
+
+      if (isAboveEMA && emaSlope === 'UP') return 'BULLISH';
+      if (!isAboveEMA && emaSlope === 'DOWN') return 'BEARISH';
+
+      return 'SIDEWAYS';
+    },
+
+    analyze(candles, currentPrice) {
+      if (candles.length < 50) {
+        return { signal: 'WAIT', reason: 'Insufficient data for EMA50' };
+      }
+
+      // Calculate EMA50
+      const closePrices = candles.map(c => c.close);
+      const ema50 = this.calculateEMA(closePrices, 50);
+      const previousEMA = this.calculateEMA(closePrices.slice(0, -1), 50);
+
+      // Identify trend
+      const trend = this.identifyTrend(currentPrice, ema50, previousEMA);
+
+      if (trend === 'SIDEWAYS' || trend === 'UNKNOWN') {
+        return {
+          signal: 'WAIT',
+          reason: 'Market sideways - EMA flat',
+          ema50,
+          trend
+        };
+      }
+
+      // Detect FVG
+      const fvg = this.detectFVG(candles);
+
+      if (!fvg) {
+        return {
+          signal: 'WAIT',
+          reason: 'No valid FVG found',
+          ema50,
+          trend
+        };
+      }
+
+      // Check if pullback is happening
+      const isPullbackToFVG = (trend === 'BULLISH' && fvg.type === 'BULLISH') ||
+                              (trend === 'BEARISH' && fvg.type === 'BEARISH');
+
+      if (!isPullbackToFVG) {
+        return {
+          signal: 'WAIT',
+          reason: 'FVG type does not match trend',
+          ema50,
+          trend,
+          fvg
+        };
+      }
+
+      // Check if price is at FVG zone
+      const atFVGZone = currentPrice >= fvg.gapBottom && currentPrice <= fvg.gapTop;
+
+      if (!atFVGZone) {
+        return {
+          signal: 'WAIT',
+          reason: 'Price not at FVG zone yet',
+          ema50,
+          trend,
+          fvg,
+          waitingForPrice: `${fvg.gapBottom.toFixed(2)} - ${fvg.gapTop.toFixed(2)}`
+        };
+      }
+
+      // CONFLUENCE: Check if FVG is near EMA50 (bonus points!)
+      const fvgMidpoint = (fvg.gapTop + fvg.gapBottom) / 2;
+      const nearEMA = Math.abs(fvgMidpoint - ema50) / ema50 < 0.01; // Within 1%
+
+      // ✅ ENTRY SIGNAL!
+      const signal = trend === 'BULLISH' ? 'LONG' : 'SHORT';
+      const entry = currentPrice;
+      const sl = trend === 'BULLISH' ? fvg.gapBottom * 0.998 : fvg.gapTop * 1.002;
+
+      // Calculate TP with RR 1:3
+      const risk = Math.abs(entry - sl);
+      const tp = trend === 'BULLISH' ? entry + risk * 3 : entry - risk * 3;
+
+      return {
+        signal,
+        reason: `${trend} trend + FVG pullback${nearEMA ? ' + EMA confluence' : ''}`,
+        confidence: nearEMA ? 85 : 75,
+        entry,
+        stopLoss: sl,
+        takeProfit: tp,
+        rr: TradingStrategies.riskRewardCalculator.validateRR(entry, sl, tp),
+        ema50,
+        trend,
+        fvg,
+        confluence: nearEMA ? '✅ EMA50 touched' : '⚠️ No EMA confluence'
+      };
+    }
+  },
+
+  // ═══════════════════════════════════════════════════════════
+  // 📊 CHIẾN LƯỢC #2: VOLUME OSCILLATOR REVERSAL
+  // ═══════════════════════════════════════════════════════════
+
+  strategy2_VolumeOscillator: {
+    name: "Volume Oscillator Reversal",
+    timeframes: ['15m', '30m', '1h', '4h'],
+    spikeThreshold: 30, // VO > 30%
+
+    calculateVO(volumes, shortPeriod = 5, longPeriod = 10) {
+      if (volumes.length < longPeriod) return null;
+
+      const shortMA = volumes.slice(-shortPeriod).reduce((a, b) => a + b, 0) / shortPeriod;
+      const longMA = volumes.slice(-longPeriod).reduce((a, b) => a + b, 0) / longPeriod;
+
+      const vo = ((shortMA - longMA) / longMA) * 100;
+
+      return {
+        value: vo,
+        shortMA,
+        longMA,
+        isSpike: vo > this.spikeThreshold,
+        aboveMidline: vo > 0,
+        belowMidline: vo < 0
+      };
+    },
+
+    detectReversal(candles, volumes) {
+      if (candles.length < 20 || volumes.length < 20) {
+        return { signal: 'WAIT', reason: 'Insufficient data' };
+      }
+
+      // Calculate current and previous VO
+      const currentVO = this.calculateVO(volumes);
+      const previousVO = this.calculateVO(volumes.slice(0, -1));
+
+      if (!currentVO || !previousVO) {
+        return { signal: 'WAIT', reason: 'Cannot calculate VO' };
+      }
+
+      // STEP 1: Check for volume spike
+      const hadSpike = previousVO.isSpike;
+
+      if (!hadSpike) {
+        return {
+          signal: 'WAIT',
+          reason: 'No volume spike detected',
+          vo: currentVO
+        };
+      }
+
+      // STEP 2: Determine trend before spike
+      const recentCandles = candles.slice(-10);
+      const isDowntrend = recentCandles.filter((c, i) =>
+        i > 0 && c.close < recentCandles[i-1].close
+      ).length > 6; // 6 out of 10 candles declining
+
+      const isUptrend = recentCandles.filter((c, i) =>
+        i > 0 && c.close > recentCandles[i-1].close
+      ).length > 6;
+
+      const trendBeforeSpike = isDowntrend ? 'DOWN' : isUptrend ? 'UP' : 'NONE';
+
+      if (trendBeforeSpike === 'NONE') {
+        return {
+          signal: 'WAIT',
+          reason: 'No clear trend before spike',
+          vo: currentVO
+        };
+      }
+
+      // STEP 3: Check if VO dropped below midline (momentum weakening)
+      const voWeakened = previousVO.aboveMidline && currentVO.belowMidline;
+
+      if (!voWeakened) {
+        return {
+          signal: 'WAIT',
+          reason: 'VO has not weakened yet',
+          vo: currentVO,
+          trendBeforeSpike
+        };
+      }
+
+      // STEP 4: Check for price reversal signal
+      const lastCandle = candles[candles.length - 1];
+      const previousCandle = candles[candles.length - 2];
+
+      const bullishReversal = trendBeforeSpike === 'DOWN' &&
+                              lastCandle.close > previousCandle.high; // Break above
+
+      const bearishReversal = trendBeforeSpike === 'UP' &&
+                              lastCandle.close < previousCandle.low; // Break below
+
+      if (!bullishReversal && !bearishReversal) {
+        return {
+          signal: 'WAIT',
+          reason: 'No price reversal signal yet',
+          vo: currentVO,
+          trendBeforeSpike
+        };
+      }
+
+      // STEP 5: Check if VO is crossing back above midline (confirmation)
+      const voConfirmation = currentVO.aboveMidline;
+
+      if (!voConfirmation) {
+        return {
+          signal: 'WAIT',
+          reason: 'Waiting for VO to cross midline again',
+          vo: currentVO,
+          trendBeforeSpike,
+          reversalSignal: bullishReversal ? 'BULLISH' : 'BEARISH'
+        };
+      }
+
+      // ✅ REVERSAL CONFIRMED!
+      const signal = bullishReversal ? 'LONG' : 'SHORT';
+      const currentPrice = lastCandle.close;
+
+      // Calculate entry, SL, TP
+      const entry = currentPrice;
+      const sl = bullishReversal
+        ? Math.min(...candles.slice(-5).map(c => c.low)) * 0.998
+        : Math.max(...candles.slice(-5).map(c => c.high)) * 1.002;
+
+      const risk = Math.abs(entry - sl);
+      const tp = bullishReversal ? entry + risk * 3 : entry - risk * 3;
+
+      return {
+        signal,
+        reason: `Volume spike → Weakened → ${signal} reversal confirmed`,
+        confidence: 80,
+        entry,
+        stopLoss: sl,
+        takeProfit: tp,
+        rr: TradingStrategies.riskRewardCalculator.validateRR(entry, sl, tp),
+        vo: currentVO,
+        trendBeforeSpike,
+        reversalType: bullishReversal ? 'Bullish' : 'Bearish'
+      };
+    }
+  },
+
+  // ═══════════════════════════════════════════════════════════
+  // 📉 CHIẾN LƯỢC #3: TRENDLINE BREAKOUT + RETEST
+  // ═══════════════════════════════════════════════════════════
+
+  strategy3_TrendlineBreakout: {
+    name: "Trendline Breakout + Retest",
+    timeframes: ['15m', '30m', '1h', '4h'],
+    minTouchPoints: 3,
+
+    detectTrendline(candles, type = 'SUPPORT') {
+      if (candles.length < 20) return null;
+
+      // Find swing points
+      const swings = [];
+      for (let i = 2; i < candles.length - 2; i++) {
+        if (type === 'SUPPORT') {
+          // Swing low
+          if (candles[i].low < candles[i-1].low &&
+              candles[i].low < candles[i-2].low &&
+              candles[i].low < candles[i+1].low &&
+              candles[i].low < candles[i+2].low) {
+            swings.push({ index: i, price: candles[i].low });
+          }
+        } else {
+          // Swing high
+          if (candles[i].high > candles[i-1].high &&
+              candles[i].high > candles[i-2].high &&
+              candles[i].high > candles[i+1].high &&
+              candles[i].high > candles[i+2].high) {
+            swings.push({ index: i, price: candles[i].high });
+          }
+        }
+      }
+
+      if (swings.length < this.minTouchPoints) return null;
+
+      // Simple linear regression to find best fit line
+      // y = mx + b, where x is index, y is price
+      const n = swings.length;
+      const sumX = swings.reduce((sum, s) => sum + s.index, 0);
+      const sumY = swings.reduce((sum, s) => sum + s.price, 0);
+      const sumXY = swings.reduce((sum, s) => sum + s.index * s.price, 0);
+      const sumX2 = swings.reduce((sum, s) => sum + s.index * s.index, 0);
+
+      const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+      const intercept = (sumY - slope * sumX) / n;
+
+      return {
+        type,
+        swings,
+        touchPoints: swings.length,
+        slope,
+        intercept,
+        getTrendlinePrice: (index) => slope * index + intercept
+      };
+    },
+
+    analyze(candles, currentPrice) {
+      if (candles.length < 20) {
+        return { signal: 'WAIT', reason: 'Insufficient data' };
+      }
+
+      // Detect both support and resistance trendlines
+      const supportLine = this.detectTrendline(candles, 'SUPPORT');
+      const resistanceLine = this.detectTrendline(candles, 'RESISTANCE');
+
+      if (!supportLine && !resistanceLine) {
+        return {
+          signal: 'WAIT',
+          reason: 'No valid trendline found (need ≥3 touch points)'
+        };
+      }
+
+      const currentIndex = candles.length - 1;
+
+      // Check for SUPPORT breakout (bearish)
+      if (supportLine && supportLine.touchPoints >= this.minTouchPoints) {
+        const trendlinePrice = supportLine.getTrendlinePrice(currentIndex);
+        const previousPrice = candles[currentIndex - 1].close;
+
+        // Check if breakout happened recently
+        const breakout = previousPrice > trendlinePrice && currentPrice < trendlinePrice;
+        const breakoutPercent = ((trendlinePrice - currentPrice) / trendlinePrice) * 100;
+
+        if (breakout && breakoutPercent > 0.5) {
+          // Check for retest
+          const retest = currentPrice > trendlinePrice * 0.995 &&
+                         currentPrice < trendlinePrice * 1.005;
+
+          if (retest) {
+            // ✅ SHORT SIGNAL!
+            const entry = currentPrice;
+            const sl = trendlinePrice * 1.01; // Just above trendline
+            const risk = Math.abs(entry - sl);
+            const tp = entry - risk * 3;
+
+            return {
+              signal: 'SHORT',
+              reason: 'Support trendline break + retest confirmed',
+              confidence: 80,
+              entry,
+              stopLoss: sl,
+              takeProfit: tp,
+              rr: TradingStrategies.riskRewardCalculator.validateRR(entry, sl, tp),
+              trendline: {
+                type: 'SUPPORT',
+                touchPoints: supportLine.touchPoints,
+                price: trendlinePrice.toFixed(2)
+              }
+            };
+          }
+        }
+      }
+
+      // Check for RESISTANCE breakout (bullish)
+      if (resistanceLine && resistanceLine.touchPoints >= this.minTouchPoints) {
+        const trendlinePrice = resistanceLine.getTrendlinePrice(currentIndex);
+        const previousPrice = candles[currentIndex - 1].close;
+
+        const breakout = previousPrice < trendlinePrice && currentPrice > trendlinePrice;
+        const breakoutPercent = ((currentPrice - trendlinePrice) / trendlinePrice) * 100;
+
+        if (breakout && breakoutPercent > 0.5) {
+          // Check for retest
+          const retest = currentPrice < trendlinePrice * 1.005 &&
+                         currentPrice > trendlinePrice * 0.995;
+
+          if (retest) {
+            // ✅ LONG SIGNAL!
+            const entry = currentPrice;
+            const sl = trendlinePrice * 0.99; // Just below trendline
+            const risk = Math.abs(entry - sl);
+            const tp = entry + risk * 3;
+
+            return {
+              signal: 'LONG',
+              reason: 'Resistance trendline break + retest confirmed',
+              confidence: 80,
+              entry,
+              stopLoss: sl,
+              takeProfit: tp,
+              rr: TradingStrategies.riskRewardCalculator.validateRR(entry, sl, tp),
+              trendline: {
+                type: 'RESISTANCE',
+                touchPoints: resistanceLine.touchPoints,
+                price: trendlinePrice.toFixed(2)
+              }
+            };
+          }
+        }
+      }
+
+      return {
+        signal: 'WAIT',
+        reason: 'No breakout + retest pattern found',
+        supportLine: supportLine ? {
+          touchPoints: supportLine.touchPoints,
+          currentPrice: supportLine.getTrendlinePrice(currentIndex).toFixed(2)
+        } : null,
+        resistanceLine: resistanceLine ? {
+          touchPoints: resistanceLine.touchPoints,
+          currentPrice: resistanceLine.getTrendlinePrice(currentIndex).toFixed(2)
+        } : null
+      };
+    }
+  },
+
+  // ═══════════════════════════════════════════════════════════
+  // 🎯 MASTER ANALYZER - Kết hợp 3 chiến lược
+  // ═══════════════════════════════════════════════════════════
+
+  analyzeCombined(candles, volumes, currentPrice, currentBalance) {
+    BybitBot.log('', 'info');
+    BybitBot.log('🎯 ═══ ANALYZING 3 ADVANCED STRATEGIES (RR 1:3) ═══', 'success');
+
+    // Run all 3 strategies
+    const strategy1 = this.strategy1_EMA_FVG.analyze(candles, currentPrice);
+    const strategy2 = this.strategy2_VolumeOscillator.detectReversal(candles, volumes);
+    const strategy3 = this.strategy3_TrendlineBreakout.analyze(candles, currentPrice);
+
+    BybitBot.log(`📈 Strategy #1 (EMA50+FVG): ${strategy1.signal} - ${strategy1.reason}`,
+                 strategy1.signal !== 'WAIT' ? 'success' : 'warning');
+
+    BybitBot.log(`📊 Strategy #2 (VO Reversal): ${strategy2.signal} - ${strategy2.reason}`,
+                 strategy2.signal !== 'WAIT' ? 'success' : 'warning');
+
+    BybitBot.log(`📉 Strategy #3 (Trendline): ${strategy3.signal} - ${strategy3.reason}`,
+                 strategy3.signal !== 'WAIT' ? 'success' : 'warning');
+
+    // Find best signal
+    const signals = [strategy1, strategy2, strategy3].filter(s => s.signal !== 'WAIT');
+
+    if (signals.length === 0) {
+      return {
+        action: 'WAIT',
+        reason: 'No valid signal from any strategy',
+        strategies: { strategy1, strategy2, strategy3 }
+      };
+    }
+
+    // Pick highest confidence signal
+    const bestSignal = signals.reduce((best, current) =>
+      current.confidence > best.confidence ? current : best
+    );
+
+    // Validate RR
+    if (!bestSignal.rr || !bestSignal.rr.isValid) {
+      return {
+        action: 'WAIT',
+        reason: `Signal found but RR ${bestSignal.rr?.actualRR || 'N/A'} < ${this.riskRewardCalculator.minRR}`,
+        bestSignal
+      };
+    }
+
+    // Calculate position size with compound logic
+    const positionCalc = this.riskRewardCalculator.calculatePositionSize(
+      currentBalance,
+      bestSignal.entry,
+      bestSignal.stopLoss
+    );
+
+    BybitBot.log('', 'info');
+    BybitBot.log(`✅ BEST SIGNAL: ${bestSignal.signal} (Confidence: ${bestSignal.confidence}%)`, 'success');
+    BybitBot.log(`   Entry: ${bestSignal.entry.toFixed(2)}`, 'info');
+    BybitBot.log(`   Stop Loss: ${bestSignal.stopLoss.toFixed(2)}`, 'info');
+    BybitBot.log(`   Take Profit: ${bestSignal.takeProfit.toFixed(2)}`, 'info');
+    BybitBot.log(`   RR: 1:${bestSignal.rr.actualRR} ✅`, 'success');
+    BybitBot.log(`   Position Size: ${positionCalc.positionSize.toFixed(4)} units`, 'info');
+    BybitBot.log(`   Risk Amount: $${positionCalc.riskAmount.toFixed(2)} (${positionCalc.riskPercent}%)`, 'info');
+
+    return {
+      action: bestSignal.signal,
+      reason: bestSignal.reason,
+      confidence: bestSignal.confidence,
+      parameters: {
+        entry: bestSignal.entry,
+        stopLoss: bestSignal.stopLoss,
+        takeProfit: bestSignal.takeProfit,
+        size: positionCalc.positionSize,
+        riskAmount: positionCalc.riskAmount,
+        riskPercent: positionCalc.riskPercent,
+        rr: bestSignal.rr.actualRR
+      },
+      strategies: { strategy1, strategy2, strategy3 },
+      bestStrategy: bestSignal.name || 'Combined'
+    };
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
 // 🔥 LIVED - SURVIVAL TRADING AI
 // "Live or Die" - Thèm khát lợi nhuận để sinh tồn
 // Không có lời = Không tồn tại | Mọi giá để có lời
@@ -7105,7 +7745,74 @@ const AutonomousEngine = {
       }
 
       // ═══════════════════════════════════════════════════════════
-      // QUYẾT ĐỊNH 5: TRADE! (Với tính toán chính xác)
+      // QUYẾT ĐỊNH 4.5: ADVANCED STRATEGIES (RR 1:3 + EMA50/FVG/VO/Trendline)
+      // ═══════════════════════════════════════════════════════════
+
+      BybitBot.log('', 'info');
+      BybitBot.log('🎯 Checking ADVANCED STRATEGIES for high-RR setups...', 'info');
+
+      try {
+        // Get market data for strategies
+        const data15m = await this.getMarketData('15');
+        const data1h = await this.getMarketData('60');
+
+        // Use 1h data for strategies (best for RR 1:3 setups)
+        if (data1h && data1h.candles && data1h.candles.length >= 50) {
+          const candles = data1h.candles;
+          const volumes = candles.map(c => c.volume);
+          const currentPrice = candles[candles.length - 1].close;
+          const currentBalance = BybitBot.state.simMode ? BybitBot.state.simBalance : 1000;
+
+          // Run advanced strategies
+          const advancedSignal = TradingStrategies.analyzeCombined(
+            candles,
+            volumes,
+            currentPrice,
+            currentBalance
+          );
+
+          // If we have a valid signal from advanced strategies, use it!
+          if (advancedSignal.action !== 'WAIT' && advancedSignal.confidence >= minConfidence) {
+            BybitBot.log('', 'info');
+            BybitBot.log('✅ USING ADVANCED STRATEGY SIGNAL!', 'success');
+
+            // Override decision with advanced strategy
+            decision.action = advancedSignal.action === 'LONG' ? 'OPEN_LONG' : 'OPEN_SHORT';
+            decision.reason = `🎯 ADVANCED: ${advancedSignal.reason}`;
+            decision.confidence = advancedSignal.confidence;
+            decision.parameters = {
+              size: advancedSignal.parameters.size * sizeMultiplier,
+              risk: advancedSignal.parameters.riskPercent,
+              leverage: 5,
+              tp: ((Math.abs(advancedSignal.parameters.takeProfit - advancedSignal.parameters.entry) / advancedSignal.parameters.entry) * 100).toFixed(2),
+              sl: ((Math.abs(advancedSignal.parameters.entry - advancedSignal.parameters.stopLoss) / advancedSignal.parameters.entry) * 100).toFixed(2),
+              trailingStop: true,
+              entry: advancedSignal.parameters.entry,
+              stopLoss: advancedSignal.parameters.stopLoss,
+              takeProfit: advancedSignal.parameters.takeProfit,
+              rr: advancedSignal.parameters.rr
+            };
+
+            BybitBot.log(`🎯 Strategy: ${advancedSignal.bestStrategy}`, 'success');
+            BybitBot.log(`💰 Entry: ${advancedSignal.parameters.entry.toFixed(2)}`, 'info');
+            BybitBot.log(`🛡️ Stop Loss: ${advancedSignal.parameters.stopLoss.toFixed(2)} (${decision.parameters.sl}%)`, 'info');
+            BybitBot.log(`🎯 Take Profit: ${advancedSignal.parameters.takeProfit.toFixed(2)} (${decision.parameters.tp}%)`, 'info');
+            BybitBot.log(`📊 Risk/Reward: 1:${advancedSignal.parameters.rr}`, 'success');
+            BybitBot.log(`💸 Risk Amount: $${advancedSignal.parameters.riskAmount.toFixed(2)} (${advancedSignal.parameters.riskPercent}%)`, 'warning');
+            BybitBot.log('', 'info');
+
+            return decision;
+          } else {
+            BybitBot.log('⚠️ No valid advanced strategy signal, falling back to standard logic...', 'warning');
+          }
+        }
+      } catch (error) {
+        BybitBot.log(`⚠️ Advanced strategies error: ${error.message}, continuing with standard logic...`, 'warning');
+        console.error('Advanced strategies error:', error);
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // QUYẾT ĐỊNH 5: TRADE! (Với tính toán chính xác - FALLBACK)
       // ═══════════════════════════════════════════════════════════
       
       BybitBot.log('', 'info');

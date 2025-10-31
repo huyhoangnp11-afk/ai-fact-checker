@@ -1,0 +1,336 @@
+//@version=5
+indicator("🎯 Advanced Trading Strategies (RR 1:3)", overlay=true, max_boxes_count=500, max_lines_count=500)
+
+// ═══════════════════════════════════════════════════════════════
+// 🎯 SETTINGS
+// ═══════════════════════════════════════════════════════════════
+
+// Strategy Selection
+enableStrategy1 = input.bool(true, "📈 Strategy #1: EMA50 + FVG", group="Strategy Selection")
+enableStrategy2 = input.bool(true, "📊 Strategy #2: Volume Oscillator", group="Strategy Selection")
+enableStrategy3 = input.bool(true, "📉 Strategy #3: Trendline Breakout", group="Strategy Selection")
+
+// Risk Management
+minRR = input.float(3.0, "Minimum Risk:Reward Ratio", minval=1.0, step=0.5, group="Risk Management")
+riskPercent = input.float(20.0, "Risk Per Trade (%)", minval=1.0, maxval=100.0, step=1.0, group="Risk Management")
+
+// EMA Settings
+emaLength = input.int(50, "EMA Length", minval=1, group="Strategy #1: EMA + FVG")
+fvgMinGapPercent = input.float(0.3, "Min FVG Gap (%)", minval=0.1, step=0.1, group="Strategy #1: EMA + FVG")
+showFVG = input.bool(true, "Show FVG Zones", group="Strategy #1: EMA + FVG")
+
+// Volume Oscillator Settings
+voShortPeriod = input.int(5, "VO Short Period", minval=1, group="Strategy #2: Volume Oscillator")
+voLongPeriod = input.int(10, "VO Long Period", minval=1, group="Strategy #2: Volume Oscillator")
+voSpikeThreshold = input.float(30.0, "VO Spike Threshold (%)", minval=0, step=5, group="Strategy #2: Volume Oscillator")
+
+// Alert Settings
+enableAlerts = input.bool(true, "Enable Alerts", group="Alerts")
+alertOnRROnly = input.bool(true, "Alert Only if RR ≥ Minimum", group="Alerts")
+
+// ═══════════════════════════════════════════════════════════════
+// 📊 STRATEGY #1: EMA50 + FAIR VALUE GAP (FVG)
+// ═══════════════════════════════════════════════════════════════
+
+// Calculate EMA
+ema50 = ta.ema(close, emaLength)
+
+// Detect Fair Value Gaps
+var box[] bullishFVGs = array.new_box()
+var box[] bearishFVGs = array.new_box()
+
+// Bullish FVG: High[2] < Low[0] (gap between candle 2 bars ago and current)
+bullishGap = high[2] < low
+bullishGapSize = bullishGap ? low - high[2] : 0
+bullishGapPercent = bullishGap ? (bullishGapSize / high[2]) * 100 : 0
+
+// Bearish FVG: Low[2] > High[0]
+bearishGap = low[2] > high
+bearishGapSize = bearishGap ? low[2] - high : 0
+bearishGapPercent = bearishGap ? (bearishGapSize / low[2]) * 100 : 0
+
+// Draw FVG boxes
+if showFVG and enableStrategy1
+    if bullishGap and bullishGapPercent > fvgMinGapPercent
+        fvgBox = box.new(bar_index - 2, high[2], bar_index + 10, low,
+                         border_color=color.new(color.green, 50),
+                         bgcolor=color.new(color.green, 90),
+                         text="Bullish FVG\n" + str.tostring(bullishGapPercent, "#.##") + "%",
+                         text_color=color.green,
+                         text_size=size.small)
+        array.push(bullishFVGs, fvgBox)
+
+    if bearishGap and bearishGapPercent > fvgMinGapPercent
+        fvgBox = box.new(bar_index - 2, low[2], bar_index + 10, high,
+                         border_color=color.new(color.red, 50),
+                         bgcolor=color.new(color.red, 90),
+                         text="Bearish FVG\n" + str.tostring(bearishGapPercent, "#.##") + "%",
+                         text_color=color.red,
+                         text_size=size.small)
+        array.push(bearishFVGs, fvgBox)
+
+// Identify Trend
+emaSlope = ema50 > ema50[1]
+isAboveEMA = close > ema50
+trend = isAboveEMA and emaSlope ? 1 : not isAboveEMA and not emaSlope ? -1 : 0
+
+// Check if price is at FVG zone
+atBullishFVG = close >= high[2] and close <= low and bullishGap and bullishGapPercent > fvgMinGapPercent
+atBearishFVG = close <= low[2] and close >= high and bearishGap and bearishGapPercent > fvgMinGapPercent
+
+// EMA Confluence
+fvgMidBull = bullishGap ? (high[2] + low) / 2 : na
+fvgMidBear = bearishGap ? (low[2] + high) / 2 : na
+nearEMABull = bullishGap and not na(fvgMidBull) ? math.abs(fvgMidBull - ema50) / ema50 < 0.01 : false
+nearEMABear = bearishGap and not na(fvgMidBear) ? math.abs(fvgMidBear - ema50) / ema50 < 0.01 : false
+
+// Generate Signals
+longSignalFVG = enableStrategy1 and trend == 1 and atBullishFVG
+shortSignalFVG = enableStrategy1 and trend == -1 and atBearishFVG
+
+// Calculate TP/SL for FVG signals
+fvgLongEntry = close
+fvgLongSL = high[2] * 0.998
+fvgLongRisk = fvgLongEntry - fvgLongSL
+fvgLongTP = fvgLongEntry + fvgLongRisk * minRR
+fvgLongRR = fvgLongRisk > 0 ? (fvgLongTP - fvgLongEntry) / fvgLongRisk : 0
+
+fvgShortEntry = close
+fvgShortSL = low[2] * 1.002
+fvgShortRisk = fvgShortSL - fvgShortEntry
+fvgShortTP = fvgShortEntry - fvgShortRisk * minRR
+fvgShortRR = fvgShortRisk > 0 ? (fvgShortEntry - fvgShortTP) / fvgShortRisk : 0
+
+// ═══════════════════════════════════════════════════════════════
+// 📊 STRATEGY #2: VOLUME OSCILLATOR REVERSAL
+// ═══════════════════════════════════════════════════════════════
+
+// Calculate Volume Oscillator
+voShortMA = ta.sma(volume, voShortPeriod)
+voLongMA = ta.sma(volume, voLongPeriod)
+vo = ((voShortMA - voLongMA) / voLongMA) * 100
+
+voSpike = vo > voSpikeThreshold
+voAboveMid = vo > 0
+voBelowMid = vo < 0
+
+// Detect trend before spike
+downtrend = ta.falling(close, 7)
+uptrend = ta.rising(close, 7)
+
+// Volume reversal logic
+voWeakened = voAboveMid[1] and voBelowMid
+bullishReversal = downtrend[5] and close > high[1] and voAboveMid
+bearishReversal = uptrend[5] and close < low[1] and voAboveMid
+
+longSignalVO = enableStrategy2 and voSpike[3] and voWeakened[1] and bullishReversal
+shortSignalVO = enableStrategy2 and voSpike[3] and voWeakened[1] and bearishReversal
+
+// Calculate TP/SL for VO signals
+voLongEntry = close
+voLongSL = ta.lowest(low, 5) * 0.998
+voLongRisk = voLongEntry - voLongSL
+voLongTP = voLongEntry + voLongRisk * minRR
+voLongRR = voLongRisk > 0 ? (voLongTP - voLongEntry) / voLongRisk : 0
+
+voShortEntry = close
+voShortSL = ta.highest(high, 5) * 1.002
+voShortRisk = voShortSL - voShortEntry
+voShortTP = voShortEntry - voShortRisk * minRR
+voShortRR = voShortRisk > 0 ? (voShortEntry - voShortTP) / voShortRisk : 0
+
+// ═══════════════════════════════════════════════════════════════
+// 📉 STRATEGY #3: TRENDLINE BREAKOUT + RETEST
+// ═══════════════════════════════════════════════════════════════
+
+// Simplified trendline detection using pivot points
+pivotHigh = ta.pivothigh(high, 5, 5)
+pivotLow = ta.pivotlow(low, 5, 5)
+
+// Breakout detection (simplified for Pine Script)
+breakoutBullish = close > high[1] * 1.005 and close[1] <= high[2]
+breakoutBearish = close < low[1] * 0.995 and close[1] >= low[2]
+
+retestBullish = breakoutBullish[3] and close < high[1] * 1.005 and close > high[1] * 0.995
+retestBearish = breakoutBearish[3] and close > low[1] * 0.995 and close < low[1] * 1.005
+
+longSignalTL = enableStrategy3 and retestBullish
+shortSignalTL = enableStrategy3 and retestBearish
+
+// Calculate TP/SL for Trendline signals
+tlLongEntry = close
+tlLongSL = low[1] * 0.99
+tlLongRisk = tlLongEntry - tlLongSL
+tlLongTP = tlLongEntry + tlLongRisk * minRR
+tlLongRR = tlLongRisk > 0 ? (tlLongTP - tlLongEntry) / tlLongRisk : 0
+
+tlShortEntry = close
+tlShortSL = high[1] * 1.01
+tlShortRisk = tlShortSL - tlShortEntry
+tlShortTP = tlShortEntry - tlShortRisk * minRR
+tlShortRR = tlShortRisk > 0 ? (tlShortEntry - tlShortTP) / tlShortRisk : 0
+
+// ═══════════════════════════════════════════════════════════════
+// 🎯 COMBINED SIGNALS
+// ═══════════════════════════════════════════════════════════════
+
+// Long Signals
+validLongFVG = longSignalFVG and fvgLongRR >= minRR
+validLongVO = longSignalVO and voLongRR >= minRR
+validLongTL = longSignalTL and tlLongRR >= minRR
+
+finalLongSignal = validLongFVG or validLongVO or validLongTL
+
+// Short Signals
+validShortFVG = shortSignalFVG and fvgShortRR >= minRR
+validShortVO = shortSignalVO and voShortRR >= minRR
+validShortTL = shortSignalTL and tlShortRR >= minRR
+
+finalShortSignal = validShortFVG or validShortVO or validShortTL
+
+// ═══════════════════════════════════════════════════════════════
+// 📊 VISUALIZATION
+// ═══════════════════════════════════════════════════════════════
+
+// Plot EMA
+plot(ema50, "EMA50", color=color.new(color.blue, 0), linewidth=2)
+
+// Plot signals
+plotshape(finalLongSignal, "Long Signal", shape.triangleup, location.belowbar,
+          color=color.new(color.green, 0), size=size.normal)
+plotshape(finalShortSignal, "Short Signal", shape.triangledown, location.abovebar,
+          color=color.new(color.red, 0), size=size.normal)
+
+// Signal labels with strategy name
+if validLongFVG
+    label.new(bar_index, low, "📈 FVG LONG\nRR: 1:" + str.tostring(fvgLongRR, "#.#") +
+              "\nTP: " + str.tostring(fvgLongTP, "#.##") +
+              "\nSL: " + str.tostring(fvgLongSL, "#.##"),
+              color=color.new(color.green, 20), textcolor=color.white,
+              style=label.style_label_up, size=size.normal)
+
+if validShortFVG
+    label.new(bar_index, high, "📉 FVG SHORT\nRR: 1:" + str.tostring(fvgShortRR, "#.#") +
+              "\nTP: " + str.tostring(fvgShortTP, "#.##") +
+              "\nSL: " + str.tostring(fvgShortSL, "#.##"),
+              color=color.new(color.red, 20), textcolor=color.white,
+              style=label.style_label_down, size=size.normal)
+
+if validLongVO
+    label.new(bar_index, low, "📊 VO LONG\nRR: 1:" + str.tostring(voLongRR, "#.#") +
+              "\nTP: " + str.tostring(voLongTP, "#.##") +
+              "\nSL: " + str.tostring(voLongSL, "#.##"),
+              color=color.new(color.green, 30), textcolor=color.white,
+              style=label.style_label_up, size=size.normal)
+
+if validShortVO
+    label.new(bar_index, high, "📊 VO SHORT\nRR: 1:" + str.tostring(voShortRR, "#.#") +
+              "\nTP: " + str.tostring(voShortTP, "#.##") +
+              "\nSL: " + str.tostring(voShortSL, "#.##"),
+              color=color.new(color.red, 30), textcolor=color.white,
+              style=label.style_label_down, size=size.normal)
+
+if validLongTL
+    label.new(bar_index, low, "📉 TL LONG\nRR: 1:" + str.tostring(tlLongRR, "#.#") +
+              "\nTP: " + str.tostring(tlLongTP, "#.##") +
+              "\nSL: " + str.tostring(tlLongSL, "#.##"),
+              color=color.new(color.green, 40), textcolor=color.white,
+              style=label.style_label_up, size=size.normal)
+
+if validShortTL
+    label.new(bar_index, high, "📉 TL SHORT\nRR: 1:" + str.tostring(tlShortRR, "#.#") +
+              "\nTP: " + str.tostring(tlShortTP, "#.##") +
+              "\nSL: " + str.tostring(tlShortSL, "#.##"),
+              color=color.new(color.red, 40), textcolor=color.white,
+              style=label.style_label_down, size=size.normal)
+
+// Volume Oscillator in separate pane (optional - user can add as separate indicator)
+// plot(vo, "Volume Oscillator", color=vo > 0 ? color.green : color.red, style=plot.style_histogram)
+// hline(voSpikeThreshold, "Spike Threshold", color=color.orange, linestyle=hline.style_dashed)
+// hline(0, "Midline", color=color.gray, linestyle=hline.style_solid)
+
+// ═══════════════════════════════════════════════════════════════
+// 🔔 ALERTS
+// ═══════════════════════════════════════════════════════════════
+
+if enableAlerts
+    if validLongFVG
+        alert("🎯 FVG LONG Signal!\nEntry: " + str.tostring(close, "#.##") +
+              "\nTP: " + str.tostring(fvgLongTP, "#.##") +
+              "\nSL: " + str.tostring(fvgLongSL, "#.##") +
+              "\nRR: 1:" + str.tostring(fvgLongRR, "#.#"), alert.freq_once_per_bar)
+
+    if validShortFVG
+        alert("🎯 FVG SHORT Signal!\nEntry: " + str.tostring(close, "#.##") +
+              "\nTP: " + str.tostring(fvgShortTP, "#.##") +
+              "\nSL: " + str.tostring(fvgShortSL, "#.##") +
+              "\nRR: 1:" + str.tostring(fvgShortRR, "#.#"), alert.freq_once_per_bar)
+
+    if validLongVO
+        alert("📊 VO LONG Signal!\nEntry: " + str.tostring(close, "#.##") +
+              "\nTP: " + str.tostring(voLongTP, "#.##") +
+              "\nSL: " + str.tostring(voLongSL, "#.##") +
+              "\nRR: 1:" + str.tostring(voLongRR, "#.#"), alert.freq_once_per_bar)
+
+    if validShortVO
+        alert("📊 VO SHORT Signal!\nEntry: " + str.tostring(close, "#.##") +
+              "\nTP: " + str.tostring(voShortTP, "#.##") +
+              "\nSL: " + str.tostring(voShortSL, "#.##") +
+              "\nRR: 1:" + str.tostring(voShortRR, "#.#"), alert.freq_once_per_bar)
+
+    if validLongTL
+        alert("📉 Trendline LONG Signal!\nEntry: " + str.tostring(close, "#.##") +
+              "\nTP: " + str.tostring(tlLongTP, "#.##") +
+              "\nSL: " + str.tostring(tlLongSL, "#.##") +
+              "\nRR: 1:" + str.tostring(tlLongRR, "#.#"), alert.freq_once_per_bar)
+
+    if validShortTL
+        alert("📉 Trendline SHORT Signal!\nEntry: " + str.tostring(close, "#.##") +
+              "\nTP: " + str.tostring(tlShortTP, "#.##") +
+              "\nSL: " + str.tostring(tlShortSL, "#.##") +
+              "\nRR: 1:" + str.tostring(tlShortRR, "#.#"), alert.freq_once_per_bar)
+
+// ═══════════════════════════════════════════════════════════════
+// 📊 DASHBOARD (Table with stats)
+// ═══════════════════════════════════════════════════════════════
+
+var table dashboard = table.new(position.top_right, 2, 8,
+                                border_width=1,
+                                border_color=color.gray,
+                                frame_color=color.gray,
+                                frame_width=1)
+
+if barstate.islast
+    table.cell(dashboard, 0, 0, "🎯 Advanced Strategies", text_color=color.white, bgcolor=color.new(color.blue, 20))
+    table.cell(dashboard, 1, 0, "RR 1:" + str.tostring(minRR, "#.#"), text_color=color.white, bgcolor=color.new(color.blue, 20))
+
+    table.cell(dashboard, 0, 1, "📈 EMA50", text_color=color.white, bgcolor=color.new(color.gray, 50))
+    table.cell(dashboard, 1, 1, str.tostring(ema50, "#.##"), text_color=color.white, bgcolor=color.new(color.gray, 50))
+
+    table.cell(dashboard, 0, 2, "📊 Trend", text_color=color.white, bgcolor=color.new(color.gray, 50))
+    table.cell(dashboard, 1, 2, trend == 1 ? "🔥 Bullish" : trend == -1 ? "❄️ Bearish" : "➡️ Sideways",
+               text_color=trend == 1 ? color.green : trend == -1 ? color.red : color.yellow,
+               bgcolor=color.new(color.gray, 50))
+
+    table.cell(dashboard, 0, 3, "📊 Volume Osc", text_color=color.white, bgcolor=color.new(color.gray, 50))
+    table.cell(dashboard, 1, 3, str.tostring(vo, "#.#") + "%",
+               text_color=vo > 0 ? color.green : color.red,
+               bgcolor=color.new(color.gray, 50))
+
+    table.cell(dashboard, 0, 4, "💰 Risk/Trade", text_color=color.white, bgcolor=color.new(color.gray, 50))
+    table.cell(dashboard, 1, 4, str.tostring(riskPercent, "#") + "%", text_color=color.orange, bgcolor=color.new(color.gray, 50))
+
+    table.cell(dashboard, 0, 5, "Strategy #1", text_color=color.white, bgcolor=color.new(color.gray, 50))
+    table.cell(dashboard, 1, 5, enableStrategy1 ? "✅ ON" : "⛔ OFF",
+               text_color=enableStrategy1 ? color.green : color.red,
+               bgcolor=color.new(color.gray, 50))
+
+    table.cell(dashboard, 0, 6, "Strategy #2", text_color=color.white, bgcolor=color.new(color.gray, 50))
+    table.cell(dashboard, 1, 6, enableStrategy2 ? "✅ ON" : "⛔ OFF",
+               text_color=enableStrategy2 ? color.green : color.red,
+               bgcolor=color.new(color.gray, 50))
+
+    table.cell(dashboard, 0, 7, "Strategy #3", text_color=color.white, bgcolor=color.new(color.gray, 50))
+    table.cell(dashboard, 1, 7, enableStrategy3 ? "✅ ON" : "⛔ OFF",
+               text_color=enableStrategy3 ? color.green : color.red,
+               bgcolor=color.new(color.gray, 50))
