@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Timer, Trophy, Heart, RefreshCw, Volume2, Zap, Star, Crown, Flame, Target, Gift, Sparkles } from 'lucide-react';
+import { Timer, Trophy, Heart, RefreshCw, Volume2, Zap, Star, Crown, Flame, Target, Gift, Sparkles, Play } from 'lucide-react';
 
 // Sound effects using Web Audio API
 const useSound = () => {
@@ -353,6 +353,26 @@ const MemeGame = () => {
         localStorage.setItem('memeGameCoins', coins.toString());
     }, [coins]);
 
+    // Auto-save game progress
+    useEffect(() => {
+        if (gameState === 'playing') {
+            const gameProgress = {
+                currentRound,
+                score,
+                lives,
+                availablePowerUps,
+                difficulty,
+                streak,
+                version: 1, // versioning for future compatibility
+                timestamp: new Date().toISOString()
+            };
+            localStorage.setItem('memeGameSavedProgress', JSON.stringify(gameProgress));
+        } else if (gameState === 'lost' || gameState === 'won') {
+            // Clear progress on game over
+            localStorage.removeItem('memeGameSavedProgress');
+        }
+    }, [currentRound, score, lives, availablePowerUps, difficulty, streak, gameState]);
+
     // Add XP helper
     const addXP = useCallback((amount) => {
         const settings = difficultySettings[difficulty];
@@ -636,7 +656,32 @@ const MemeGame = () => {
         }));
     };
 
+    const continueGame = () => {
+        const saved = localStorage.getItem('memeGameSavedProgress');
+        if (saved) {
+            try {
+                const progress = JSON.parse(saved);
+                setCurrentRound(progress.currentRound);
+                setScore(progress.score);
+                setLives(progress.lives);
+                setAvailablePowerUps(progress.availablePowerUps);
+                setDifficulty(progress.difficulty);
+                setStreak(progress.streak);
+                setGameState('playing');
+                // Ensure correct words etc. are reset for the round
+                setRoundComplete(false);
+                setCombo(0);
+                setSelectedWords([]);
+            } catch (e) {
+                console.error("Failed to load save", e);
+                localStorage.removeItem('memeGameSavedProgress');
+            }
+        }
+    };
+
     const startGame = () => {
+        // Clear old save when starting fresh
+        localStorage.removeItem('memeGameSavedProgress');
         setCurrentRound(0);
         setScore(0);
         setLives(difficultySettings[difficulty].lives);
@@ -665,6 +710,8 @@ const MemeGame = () => {
 
     // Menu Screen
     if (gameState === 'menu') {
+        const hasSavedGame = !!localStorage.getItem('memeGameSavedProgress');
+
         return (
             <motion.div
                 initial={{ opacity: 0 }}
@@ -696,6 +743,30 @@ const MemeGame = () => {
 
                     <h2 style={{ fontSize: '2rem', marginBottom: '0.3rem' }}>Meme Vocabulary</h2>
                     <p style={{ opacity: 0.7, marginBottom: '0.8rem', fontSize: '0.9rem' }}>Nhìn emoji, đoán từ vựng!</p>
+
+                    {/* Continue Button */}
+                    {hasSavedGame && (
+                        <motion.button
+                            className="btn-primary"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={continueGame}
+                            style={{
+                                width: '100%',
+                                marginBottom: '1rem',
+                                background: 'linear-gradient(135deg, #8b5cf6, #d946ef)',
+                                padding: '1rem',
+                                fontSize: '1.2rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '0.5rem',
+                                boxShadow: '0 4px 15px rgba(139, 92, 246, 0.4)'
+                            }}
+                        >
+                            <Play size={24} fill="currentColor" /> Tiếp tục chơi
+                        </motion.button>
+                    )}
 
                     {/* XP Progress Bar */}
                     <div style={{ marginBottom: '1.5rem', padding: '0 1rem' }}>
