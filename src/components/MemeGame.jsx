@@ -395,6 +395,18 @@ const MemeGame = () => {
     useEffect(() => {
         if (currentRound < memeData.length && gameState === 'playing') {
             const current = memeData[currentRound];
+
+            // Safety check: if data is missing, auto-win or skip
+            if (!current || !current.wrongWords) {
+                console.error(`Missing data for round ${currentRound}`, current);
+                if (currentRound < memeData.length - 1) {
+                    setCurrentRound(r => r + 1);
+                } else {
+                    handleGameWon();
+                }
+                return;
+            }
+
             const settings = difficultySettings[difficulty];
             const wrongToShow = current.wrongWords.slice(0, settings.wrongWords);
             const allWords = [...current.correctWords, ...wrongToShow];
@@ -639,6 +651,17 @@ const MemeGame = () => {
     };
 
     const current = gameState === 'playing' ? memeData[currentRound] : null;
+
+    // Safety fallback for render
+    if (gameState === 'playing' && !current) {
+        return (
+            <div className="meme-game-container">
+                <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center' }}>
+                    Loading data... or Data Error for Round {currentRound + 1}
+                </div>
+            </div>
+        );
+    }
 
     // Menu Screen
     if (gameState === 'menu') {
