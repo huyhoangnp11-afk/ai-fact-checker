@@ -1,0 +1,35 @@
+:root {
+  /* Premium Palette */
+  --primary: #FF6B6B; /* Soft Red/Pink */
+  --primary-light: #FF8E8E;
+  --primary-dark: #E05555;
+  
+  --secondary: #6B66FF; /* Soft Purple */
+  --secondary-light: #8E8BFF;
+  
+  --accent: #FFD93D; /* Soft Yellow */
+  
+  --bg-color: #F8F9FA;
+  --text-color: #2D3436;
+  --text-muted: #636E72;
+  
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  
+  --radius-lg: 24px;
+  --radius-md: 16px;
+  --radius-sm: 8px;
+  
+  --font-main: 'Outfit', sans-serif;
+  
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.dark-mode {
+  --bg-color: #1A1A2E;
+  --text-color: #E0E0E0;
+  --text-muted: #A0A0A0;
+  --glass-bg: rgba(26, 26, 46, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.1);
+}

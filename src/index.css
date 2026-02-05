@@ -1,0 +1,364 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+@import './styles/variables.css';
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+
+  /* Subtle gradient background */
+  background: radial-gradient(circle at 10% 20%, rgba(255, 107, 107, 0.1) 0%, transparent 20%),
+    radial-gradient(circle at 90% 80%, rgba(107, 102, 255, 0.1) 0%, transparent 20%);
+  background-attachment: fixed;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  font-family: inherit;
+  border: none;
+  outline: none;
+  cursor: pointer;
+}
+
+/* Glassmorphism Utilities */
+.glass-panel {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: var(--radius-lg);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+  transition: transform 0.2s var(--ease-spring), box-shadow 0.2s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
+}
+
+.btn-secondary {
+  background: white;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+  padding: 10px 22px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.heading-lg {
+  font-size: 2.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 1rem;
+}
+
+.layout-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* ===== MOBILE RESPONSIVE STYLES ===== */
+
+/* Container padding for mobile */
+@media (max-width: 768px) {
+  .layout-container {
+    padding: 12px;
+  }
+
+  .heading-lg {
+    font-size: 1.75rem;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    padding: 10px 18px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .layout-container {
+    padding: 8px;
+  }
+
+  .heading-lg {
+    font-size: 1.5rem;
+  }
+
+  body {
+    font-size: 14px;
+  }
+}
+
+/* MemeGame Specific Mobile Styles */
+.meme-game-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .meme-game-container {
+    padding: 0.25rem;
+  }
+}
+
+/* Meme emoji display - smaller on mobile */
+.meme-emoji-display {
+  font-size: 3rem;
+  padding: 0.5rem;
+}
+
+@media (max-width: 480px) {
+  .meme-emoji-display {
+    font-size: 2.25rem;
+    padding: 0.35rem;
+  }
+}
+
+/* Word grid - 2 columns on mobile */
+.word-options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.6rem;
+}
+
+@media (max-width: 600px) {
+  .word-options-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.4rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .word-options-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.3rem;
+  }
+}
+
+/* Word buttons - touch friendly */
+.word-button {
+  padding: 0.75rem 0.6rem;
+  min-height: 48px;
+  /* Touch friendly minimum */
+  font-size: 0.95rem;
+}
+
+@media (max-width: 480px) {
+  .word-button {
+    padding: 0.6rem 0.4rem;
+    min-height: 44px;
+    font-size: 0.85rem;
+  }
+}
+
+/* Game header stats - horizontal scroll on mobile */
+.game-stats-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+@media (max-width: 480px) {
+  .game-stats-bar {
+    gap: 0.3rem;
+    font-size: 0.85rem;
+  }
+
+  .game-stats-bar .glass-panel {
+    padding: 0.35rem 0.5rem;
+  }
+}
+
+/* Power-ups - smaller on mobile */
+.powerup-button {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 480px) {
+  .powerup-button {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* Level grid on mobile */
+.level-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+}
+
+.level-grid .level-item {
+  width: 36px;
+  height: 36px;
+  font-size: 1rem;
+}
+
+@media (max-width: 480px) {
+  .level-grid .level-item {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+  }
+
+  .level-grid {
+    gap: 0.25rem;
+  }
+}
+
+/* Game modes selector */
+.game-modes-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+@media (max-width: 480px) {
+  .game-modes-grid {
+    gap: 0.35rem;
+  }
+
+  .game-modes-grid button {
+    padding: 0.4rem 0.65rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* Difficulty buttons */
+.difficulty-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+@media (max-width: 480px) {
+  .difficulty-selector button {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.75rem;
+    min-width: auto;
+  }
+}
+
+/* Achievement grid */
+.achievements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 480px) {
+  .achievements-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+  }
+
+  .achievements-grid .achievement-item {
+    padding: 0.5rem;
+  }
+
+  .achievements-grid .achievement-emoji {
+    font-size: 1.5rem;
+  }
+
+  .achievements-grid .achievement-name {
+    font-size: 0.6rem;
+  }
+}
+
+/* Menu panels */
+.menu-panel {
+  padding: 1.5rem;
+}
+
+@media (max-width: 480px) {
+  .menu-panel {
+    padding: 1rem;
+  }
+
+  .menu-panel h2 {
+    font-size: 1.5rem;
+  }
+
+  .menu-panel h3 {
+    font-size: 1.1rem;
+  }
+}
+
+/* Safe area for notch phones */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .meme-game-container {
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Touch feedback */
+@media (hover: none) {
+  .word-button:active {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+
+  .glass-panel:active {
+    opacity: 0.9;
+  }
+}
+
+/* Prevent text selection on game elements */
+.meme-game-container {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Fixed elements positioning for mobile */
+@media (max-width: 480px) {
+  .feedback-toast {
+    bottom: 80px !important;
+    font-size: 0.95rem !important;
+    padding: 0.5rem 1rem !important;
+  }
+}
+
+/* Scrollable areas */
+.scrollable-area {
+  overflow-x: auto;
+}
+
+.scrollable-area::-webkit-scrollbar {
+  display: none;
+}

@@ -1,0 +1,3202 @@
+[
+    {
+        "id": 1,
+        "emoji": "💼😴☕🖥️😤📊",
+        "theme": "Monday Morning at Office",
+        "themeVi": "Sáng thứ 2 văn phòng",
+        "correctWords": [
+            "meeting",
+            "deadline",
+            "report",
+            "colleague",
+            "schedule"
+        ],
+        "wrongWords": [
+            "beach",
+            "vacation",
+            "party",
+            "sleeping",
+            "netflix"
+        ],
+        "meanings": {
+            "meeting": "Cuộc họp (lại họp 😩)",
+            "deadline": "Hạn chót (stress!)",
+            "report": "Báo cáo",
+            "colleague": "Đồng nghiệp",
+            "schedule": "Lịch trình",
+            "beach": "Bãi biển",
+            "vacation": "Kỳ nghỉ",
+            "party": "Tiệc tùng",
+            "sleeping": "Ngủ nướng",
+            "netflix": "Xem phim"
+        }
+    },
+    {
+        "id": 2,
+        "emoji": "📧📧📧📧📧💀🏃",
+        "theme": "Email Overload",
+        "themeVi": "Tràn ngập email",
+        "correctWords": [
+            "inbox",
+            "urgent",
+            "respond",
+            "forward",
+            "attachment"
+        ],
+        "wrongWords": [
+            "ignore",
+            "delete",
+            "spam",
+            "unsubscribe",
+            "block"
+        ],
+        "meanings": {
+            "inbox": "Hộp thư đến",
+            "urgent": "Khẩn cấp",
+            "respond": "Trả lời",
+            "forward": "Chuyển tiếp",
+            "attachment": "Đính kèm",
+            "ignore": "Bỏ qua",
+            "delete": "Xóa",
+            "spam": "Thư rác",
+            "unsubscribe": "Hủy đăng ký",
+            "block": "Chặn"
+        }
+    },
+    {
+        "id": 3,
+        "emoji": "✈️🏃💨😱⏰",
+        "theme": "Missing the Flight",
+        "themeVi": "Lỡ chuyến bay",
+        "correctWords": [
+            "departure",
+            "terminal",
+            "boarding",
+            "delay",
+            "gate"
+        ],
+        "wrongWords": [
+            "relax",
+            "chill",
+            "snooze",
+            "tomorrow",
+            "cancel"
+        ],
+        "meanings": {
+            "departure": "Khởi hành",
+            "terminal": "Nhà ga",
+            "boarding": "Lên máy bay",
+            "delay": "Trễ",
+            "gate": "Cổng",
+            "relax": "Thư giãn",
+            "chill": "Thoải mái",
+            "snooze": "Ngủ tiếp",
+            "tomorrow": "Ngày mai",
+            "cancel": "Hủy"
+        }
+    },
+    {
+        "id": 4,
+        "emoji": "📱💬💬💬🔕😤",
+        "theme": "Group Chat Chaos",
+        "themeVi": "Hội nhóm chat điên đảo",
+        "correctWords": [
+            "notification",
+            "mention",
+            "reply",
+            "thread",
+            "message"
+        ],
+        "wrongWords": [
+            "silence",
+            "mute",
+            "leave",
+            "ignore",
+            "peace"
+        ],
+        "meanings": {
+            "notification": "Thông báo",
+            "mention": "Nhắc đến",
+            "reply": "Trả lời",
+            "thread": "Chuỗi tin nhắn",
+            "message": "Tin nhắn",
+            "silence": "Im lặng",
+            "mute": "Tắt tiếng",
+            "leave": "Rời đi",
+            "ignore": "Bỏ qua",
+            "peace": "Yên bình"
+        }
+    },
+    {
+        "id": 5,
+        "emoji": "🛒💳💸💸🕳️",
+        "theme": "Impulse Shopping",
+        "themeVi": "Mua sắm bốc đồng",
+        "correctWords": [
+            "purchase",
+            "discount",
+            "receipt",
+            "checkout",
+            "budget"
+        ],
+        "wrongWords": [
+            "savings",
+            "invest",
+            "resist",
+            "necessity",
+            "refund"
+        ],
+        "meanings": {
+            "purchase": "Mua hàng",
+            "discount": "Giảm giá",
+            "receipt": "Hóa đơn",
+            "checkout": "Thanh toán",
+            "budget": "Ngân sách",
+            "savings": "Tiết kiệm",
+            "invest": "Đầu tư",
+            "resist": "Cưỡng lại",
+            "necessity": "Nhu cầu",
+            "refund": "Hoàn tiền"
+        }
+    },
+    {
+        "id": 6,
+        "emoji": "🎤👔😰💦🫠",
+        "theme": "Presentation Anxiety",
+        "themeVi": "Lo lắng khi thuyết trình",
+        "correctWords": [
+            "audience",
+            "slide",
+            "confident",
+            "nervous",
+            "prepare"
+        ],
+        "wrongWords": [
+            "fluent",
+            "calm",
+            "relaxed",
+            "natural",
+            "easy"
+        ],
+        "meanings": {
+            "audience": "Khán giả",
+            "slide": "Trang trình chiếu",
+            "confident": "Tự tin",
+            "nervous": "Lo lắng",
+            "prepare": "Chuẩn bị",
+            "fluent": "Trôi chảy",
+            "calm": "Bình tĩnh",
+            "relaxed": "Thư giãn",
+            "natural": "Tự nhiên",
+            "easy": "Dễ dàng"
+        }
+    },
+    {
+        "id": 7,
+        "emoji": "📦📦📦🚚😍",
+        "theme": "Package Delivery Day",
+        "themeVi": "Ngày ship hàng về",
+        "correctWords": [
+            "delivery",
+            "tracking",
+            "shipment",
+            "courier",
+            "unbox"
+        ],
+        "wrongWords": [
+            "patience",
+            "waiting",
+            "delayed",
+            "lost",
+            "return"
+        ],
+        "meanings": {
+            "delivery": "Giao hàng",
+            "tracking": "Theo dõi",
+            "shipment": "Lô hàng",
+            "courier": "Người giao hàng",
+            "unbox": "Mở hộp",
+            "patience": "Kiên nhẫn",
+            "waiting": "Chờ đợi",
+            "delayed": "Bị trễ",
+            "lost": "Thất lạc",
+            "return": "Trả lại"
+        }
+    },
+    {
+        "id": 8,
+        "emoji": "🏠💻🛋️🍕😴",
+        "theme": "Work From Home Reality",
+        "themeVi": "Sự thật WFH",
+        "correctWords": [
+            "remote",
+            "flexible",
+            "productive",
+            "virtual",
+            "deadline"
+        ],
+        "wrongWords": [
+            "focused",
+            "dressed",
+            "exercise",
+            "schedule",
+            "healthy"
+        ],
+        "meanings": {
+            "remote": "Làm việc từ xa",
+            "flexible": "Linh hoạt",
+            "productive": "Năng suất",
+            "virtual": "Ảo",
+            "deadline": "Hạn chót",
+            "focused": "Tập trung",
+            "dressed": "Ăn mặc chỉnh tề",
+            "exercise": "Tập thể dục",
+            "schedule": "Lịch trình",
+            "healthy": "Khỏe mạnh"
+        }
+    },
+    {
+        "id": 9,
+        "emoji": "📊📈📉🤯🔥",
+        "theme": "Stock Market Stress",
+        "themeVi": "Stress chứng khoán",
+        "correctWords": [
+            "investment",
+            "portfolio",
+            "dividend",
+            "volatile",
+            "profit"
+        ],
+        "wrongWords": [
+            "stable",
+            "guarantee",
+            "safe",
+            "predict",
+            "certain"
+        ],
+        "meanings": {
+            "investment": "Đầu tư",
+            "portfolio": "Danh mục",
+            "dividend": "Cổ tức",
+            "volatile": "Biến động",
+            "profit": "Lợi nhuận",
+            "stable": "Ổn định",
+            "guarantee": "Bảo đảm",
+            "safe": "An toàn",
+            "predict": "Dự đoán",
+            "certain": "Chắc chắn"
+        }
+    },
+    {
+        "id": 10,
+        "emoji": "📞🔇😅💬❓",
+        "theme": "Zoom Meeting Fails",
+        "themeVi": "Họp Zoom fail",
+        "correctWords": [
+            "microphone",
+            "camera",
+            "connection",
+            "screen",
+            "bandwidth"
+        ],
+        "wrongWords": [
+            "clear",
+            "stable",
+            "professional",
+            "smooth",
+            "perfect"
+        ],
+        "meanings": {
+            "microphone": "Micro",
+            "camera": "Camera",
+            "connection": "Kết nối",
+            "screen": "Màn hình",
+            "bandwidth": "Băng thông",
+            "clear": "Rõ ràng",
+            "stable": "Ổn định",
+            "professional": "Chuyên nghiệp",
+            "smooth": "Mượt mà",
+            "perfect": "Hoàn hảo"
+        }
+    },
+    {
+        "id": 11,
+        "emoji": "🤝😊😑🔪💭",
+        "theme": "Fake Nice to Clients",
+        "themeVi": "Giả vờ nice với khách",
+        "correctWords": [
+            "professional",
+            "negotiate",
+            "compromise",
+            "patience",
+            "service"
+        ],
+        "wrongWords": [
+            "honest",
+            "sincere",
+            "genuine",
+            "authentic",
+            "natural"
+        ],
+        "meanings": {
+            "professional": "Chuyên nghiệp",
+            "negotiate": "Đàm phán",
+            "compromise": "Thỏa hiệp",
+            "patience": "Kiên nhẫn",
+            "service": "Dịch vụ",
+            "honest": "Thành thật",
+            "sincere": "Chân thành",
+            "genuine": "Thực lòng",
+            "authentic": "Đích thực",
+            "natural": "Tự nhiên"
+        }
+    },
+    {
+        "id": 12,
+        "emoji": "💰📝😱💸🏦",
+        "theme": "Tax Season Horror",
+        "themeVi": "Mùa thuế kinh hoàng",
+        "correctWords": [
+            "deduction",
+            "expense",
+            "receipt",
+            "filing",
+            "refund"
+        ],
+        "wrongWords": [
+            "simple",
+            "easy",
+            "quick",
+            "free",
+            "ignore"
+        ],
+        "meanings": {
+            "deduction": "Khấu trừ",
+            "expense": "Chi phí",
+            "receipt": "Biên lai",
+            "filing": "Nộp hồ sơ",
+            "refund": "Hoàn thuế",
+            "simple": "Đơn giản",
+            "easy": "Dễ",
+            "quick": "Nhanh",
+            "free": "Miễn phí",
+            "ignore": "Bỏ qua"
+        }
+    },
+    {
+        "id": 13,
+        "emoji": "🏋️💪📅1️⃣📆❌",
+        "theme": "Gym Resolution Fail",
+        "themeVi": "Quyết tâm gym thất bại",
+        "correctWords": [
+            "membership",
+            "workout",
+            "commitment",
+            "motivation",
+            "routine"
+        ],
+        "wrongWords": [
+            "consistent",
+            "dedicated",
+            "discipline",
+            "regular",
+            "success"
+        ],
+        "meanings": {
+            "membership": "Thẻ thành viên",
+            "workout": "Tập luyện",
+            "commitment": "Cam kết",
+            "motivation": "Động lực",
+            "routine": "Thói quen",
+            "consistent": "Kiên trì",
+            "dedicated": "Tận tâm",
+            "discipline": "Kỷ luật",
+            "regular": "Đều đặn",
+            "success": "Thành công"
+        }
+    },
+    {
+        "id": 14,
+        "emoji": "🥗🍔🤔🍔🍔👍",
+        "theme": "Diet vs Reality",
+        "themeVi": "Ăn kiêng vs Thực tế",
+        "correctWords": [
+            "appetite",
+            "calories",
+            "craving",
+            "cheat",
+            "portion"
+        ],
+        "wrongWords": [
+            "willpower",
+            "resist",
+            "healthy",
+            "discipline",
+            "balance"
+        ],
+        "meanings": {
+            "appetite": "Khẩu vị",
+            "calories": "Calo",
+            "craving": "Thèm ăn",
+            "cheat": "Ăn gian",
+            "portion": "Khẩu phần",
+            "willpower": "Ý chí",
+            "resist": "Cưỡng lại",
+            "healthy": "Lành mạnh",
+            "discipline": "Kỷ luật",
+            "balance": "Cân bằng"
+        }
+    },
+    {
+        "id": 15,
+        "emoji": "🚗🔧💸💸💀",
+        "theme": "Car Repair Bills",
+        "themeVi": "Hóa đơn sửa xe",
+        "correctWords": [
+            "maintenance",
+            "warranty",
+            "repair",
+            "estimate",
+            "mechanic"
+        ],
+        "wrongWords": [
+            "affordable",
+            "cheap",
+            "quick",
+            "minor",
+            "simple"
+        ],
+        "meanings": {
+            "maintenance": "Bảo dưỡng",
+            "warranty": "Bảo hành",
+            "repair": "Sửa chữa",
+            "estimate": "Báo giá",
+            "mechanic": "Thợ máy",
+            "affordable": "Phải chăng",
+            "cheap": "Rẻ",
+            "quick": "Nhanh",
+            "minor": "Nhỏ",
+            "simple": "Đơn giản"
+        }
+    },
+    {
+        "id": 16,
+        "emoji": "🏠🔧🛠️💵📆❌",
+        "theme": "Home Renovation Chaos",
+        "themeVi": "Hỗn loạn sửa nhà",
+        "correctWords": [
+            "contractor",
+            "budget",
+            "delay",
+            "permit",
+            "inspection"
+        ],
+        "wrongWords": [
+            "schedule",
+            "estimate",
+            "finish",
+            "plan",
+            "accurate"
+        ],
+        "meanings": {
+            "contractor": "Nhà thầu",
+            "budget": "Ngân sách",
+            "delay": "Trễ",
+            "permit": "Giấy phép",
+            "inspection": "Kiểm tra",
+            "schedule": "Đúng hẹn",
+            "estimate": "Đúng giá",
+            "finish": "Hoàn thành",
+            "plan": "Theo kế hoạch",
+            "accurate": "Chính xác"
+        }
+    },
+    {
+        "id": 17,
+        "emoji": "📱📱📱🔋1️⃣😱",
+        "theme": "Low Battery Panic",
+        "themeVi": "Hoảng loạn hết pin",
+        "correctWords": [
+            "charger",
+            "portable",
+            "percent",
+            "backup",
+            "outlet"
+        ],
+        "wrongWords": [
+            "prepared",
+            "spare",
+            "charged",
+            "planned",
+            "ready"
+        ],
+        "meanings": {
+            "charger": "Sạc",
+            "portable": "Di động",
+            "percent": "Phần trăm",
+            "backup": "Dự phòng",
+            "outlet": "Ổ cắm",
+            "prepared": "Chuẩn bị",
+            "spare": "Dự phòng",
+            "charged": "Đầy pin",
+            "planned": "Có kế hoạch",
+            "ready": "Sẵn sàng"
+        }
+    },
+    {
+        "id": 18,
+        "emoji": "📶❌🔄🔄🔄😤",
+        "theme": "WiFi Problems",
+        "themeVi": "WiFi có vấn đề",
+        "correctWords": [
+            "router",
+            "bandwidth",
+            "signal",
+            "connection",
+            "reset"
+        ],
+        "wrongWords": [
+            "stable",
+            "fast",
+            "reliable",
+            "strong",
+            "unlimited"
+        ],
+        "meanings": {
+            "router": "Bộ định tuyến",
+            "bandwidth": "Băng thông",
+            "signal": "Tín hiệu",
+            "connection": "Kết nối",
+            "reset": "Khởi động lại",
+            "stable": "Ổn định",
+            "fast": "Nhanh",
+            "reliable": "Đáng tin",
+            "strong": "Mạnh",
+            "unlimited": "Không giới hạn"
+        }
+    },
+    {
+        "id": 19,
+        "emoji": "🏨😴🚨📞3️⃣",
+        "theme": "Hotel Room Next to Elevator",
+        "themeVi": "Phòng KS cạnh thang máy",
+        "correctWords": [
+            "complaint",
+            "reception",
+            "upgrade",
+            "refund",
+            "review"
+        ],
+        "wrongWords": [
+            "quiet",
+            "peaceful",
+            "restful",
+            "silent",
+            "sleep"
+        ],
+        "meanings": {
+            "complaint": "Khiếu nại",
+            "reception": "Lễ tân",
+            "upgrade": "Nâng cấp",
+            "refund": "Hoàn tiền",
+            "review": "Đánh giá",
+            "quiet": "Yên tĩnh",
+            "peaceful": "Bình yên",
+            "restful": "Nghỉ ngơi",
+            "silent": "Im lặng",
+            "sleep": "Ngủ ngon"
+        }
+    },
+    {
+        "id": 20,
+        "emoji": "🍕8️⃣🤔➗❓🔪",
+        "theme": "Splitting the Pizza Bill",
+        "themeVi": "Chia tiền pizza",
+        "correctWords": [
+            "calculate",
+            "split",
+            "portion",
+            "contribute",
+            "share"
+        ],
+        "wrongWords": [
+            "simple",
+            "equal",
+            "easy",
+            "agree",
+            "fair"
+        ],
+        "meanings": {
+            "calculate": "Tính toán",
+            "split": "Chia",
+            "portion": "Phần",
+            "contribute": "Đóng góp",
+            "share": "Chia sẻ",
+            "simple": "Đơn giản",
+            "equal": "Công bằng",
+            "easy": "Dễ",
+            "agree": "Đồng ý",
+            "fair": "Hợp lý"
+        }
+    },
+    {
+        "id": 21,
+        "emoji": "🧹🛋️📸✨😴",
+        "theme": "Cleaning Only When Guests Come",
+        "themeVi": "Dọn nhà chỉ khi có khách",
+        "correctWords": [
+            "arrange",
+            "organize",
+            "tidy",
+            "vacuum",
+            "dust"
+        ],
+        "wrongWords": [
+            "routine",
+            "daily",
+            "regular",
+            "habit",
+            "consistent"
+        ],
+        "meanings": {
+            "arrange": "Sắp xếp",
+            "organize": "Tổ chức",
+            "tidy": "Gọn gàng",
+            "vacuum": "Hút bụi",
+            "dust": "Lau bụi",
+            "routine": "Thói quen",
+            "daily": "Hàng ngày",
+            "regular": "Đều đặn",
+            "habit": "Thói quen",
+            "consistent": "Kiên trì"
+        }
+    },
+    {
+        "id": 22,
+        "emoji": "👔👗🤔👔👗🤯",
+        "theme": "What to Wear Today",
+        "themeVi": "Hôm nay mặc gì",
+        "correctWords": [
+            "outfit",
+            "appropriate",
+            "casual",
+            "formal",
+            "match"
+        ],
+        "wrongWords": [
+            "decide",
+            "simple",
+            "quick",
+            "easy",
+            "choice"
+        ],
+        "meanings": {
+            "outfit": "Trang phục",
+            "appropriate": "Phù hợp",
+            "casual": "Thoải mái",
+            "formal": "Trang trọng",
+            "match": "Phối đồ",
+            "decide": "Quyết định",
+            "simple": "Đơn giản",
+            "quick": "Nhanh",
+            "easy": "Dễ",
+            "choice": "Lựa chọn"
+        }
+    },
+    {
+        "id": 23,
+        "emoji": "🤒🏥💊😷😵",
+        "theme": "Sick Day Drama",
+        "themeVi": "Ngày ốm drama",
+        "correctWords": [
+            "symptom",
+            "prescription",
+            "medicine",
+            "recovery",
+            "rest"
+        ],
+        "wrongWords": [
+            "healthy",
+            "energetic",
+            "productive",
+            "active",
+            "fine"
+        ],
+        "meanings": {
+            "symptom": "Triệu chứng",
+            "prescription": "Đơn thuốc",
+            "medicine": "Thuốc",
+            "recovery": "Hồi phục",
+            "rest": "Nghỉ ngơi",
+            "healthy": "Khỏe mạnh",
+            "energetic": "Năng động",
+            "productive": "Năng suất",
+            "active": "Hoạt bát",
+            "fine": "Ổn"
+        }
+    },
+    {
+        "id": 24,
+        "emoji": "🛫✋⏸️✋😤",
+        "theme": "Security Check Hell",
+        "themeVi": "Địa ngục kiểm tra an ninh",
+        "correctWords": [
+            "boarding",
+            "passport",
+            "luggage",
+            "security",
+            "queue"
+        ],
+        "wrongWords": [
+            "fast",
+            "smooth",
+            "quick",
+            "easy",
+            "short"
+        ],
+        "meanings": {
+            "boarding": "Lên máy bay",
+            "passport": "Hộ chiếu",
+            "luggage": "Hành lý",
+            "security": "An ninh",
+            "queue": "Xếp hàng",
+            "fast": "Nhanh",
+            "smooth": "Mượt",
+            "quick": "Nhanh",
+            "easy": "Dễ",
+            "short": "Ngắn"
+        }
+    },
+    {
+        "id": 25,
+        "emoji": "🎂🎉🤝😊😑",
+        "theme": "Forced Office Birthday Party",
+        "themeVi": "Ép tiệc sinh nhật VP",
+        "correctWords": [
+            "celebrate",
+            "colleague",
+            "cake",
+            "contribution",
+            "attend"
+        ],
+        "wrongWords": [
+            "excited",
+            "willing",
+            "happy",
+            "enthusiastic",
+            "voluntary"
+        ],
+        "meanings": {
+            "celebrate": "Ăn mừng",
+            "colleague": "Đồng nghiệp",
+            "cake": "Bánh",
+            "contribution": "Góp tiền",
+            "attend": "Tham dự",
+            "excited": "Hào hứng",
+            "willing": "Tự nguyện",
+            "happy": "Vui vẻ",
+            "enthusiastic": "Nhiệt tình",
+            "voluntary": "Tự nguyện"
+        }
+    },
+    {
+        "id": 26,
+        "emoji": "🎮🕐🕑🕒💀",
+        "theme": "Gaming Until 3AM",
+        "themeVi": "Chơi game đến 3 giờ sáng",
+        "correctWords": [
+            "addicted",
+            "session",
+            "level",
+            "victory",
+            "online"
+        ],
+        "wrongWords": [
+            "sleep",
+            "healthy",
+            "balance",
+            "moderate",
+            "early"
+        ],
+        "meanings": {
+            "addicted": "Nghiện",
+            "session": "Phiên chơi",
+            "level": "Màn chơi",
+            "victory": "Chiến thắng",
+            "online": "Trực tuyến",
+            "sleep": "Ngủ",
+            "healthy": "Lành mạnh",
+            "balance": "Cân bằng",
+            "moderate": "Điều độ",
+            "early": "Sớm"
+        }
+    },
+    {
+        "id": 27,
+        "emoji": "📱🤳🤳🤳📱😩",
+        "theme": "Selfie Retake Mode",
+        "themeVi": "Chế độ chụp lại selfie",
+        "correctWords": [
+            "angle",
+            "filter",
+            "lighting",
+            "pose",
+            "edit"
+        ],
+        "wrongWords": [
+            "natural",
+            "quick",
+            "satisfied",
+            "confident",
+            "first"
+        ],
+        "meanings": {
+            "angle": "Góc chụp",
+            "filter": "Bộ lọc",
+            "lighting": "Ánh sáng",
+            "pose": "Dáng",
+            "edit": "Chỉnh sửa",
+            "natural": "Tự nhiên",
+            "quick": "Nhanh",
+            "satisfied": "Hài lòng",
+            "confident": "Tự tin",
+            "first": "Lần đầu"
+        }
+    },
+    {
+        "id": 28,
+        "emoji": "📋📋📋✏️😵",
+        "theme": "Too Many Forms to Fill",
+        "themeVi": "Quá nhiều form phải điền",
+        "correctWords": [
+            "document",
+            "signature",
+            "application",
+            "deadline",
+            "submit"
+        ],
+        "wrongWords": [
+            "simple",
+            "quick",
+            "easy",
+            "short",
+            "clear"
+        ],
+        "meanings": {
+            "document": "Tài liệu",
+            "signature": "Chữ ký",
+            "application": "Đơn",
+            "deadline": "Hạn chót",
+            "submit": "Nộp",
+            "simple": "Đơn giản",
+            "quick": "Nhanh",
+            "easy": "Dễ",
+            "short": "Ngắn",
+            "clear": "Rõ ràng"
+        }
+    },
+    {
+        "id": 29,
+        "emoji": "🚶‍♂️🚗📍📍❓🗺️",
+        "theme": "Lost Without GPS",
+        "themeVi": "Lạc không có GPS",
+        "correctWords": [
+            "direction",
+            "navigate",
+            "landmark",
+            "destination",
+            "route"
+        ],
+        "wrongWords": [
+            "know",
+            "remember",
+            "familiar",
+            "easy",
+            "confident"
+        ],
+        "meanings": {
+            "direction": "Hướng",
+            "navigate": "Điều hướng",
+            "landmark": "Địa danh",
+            "destination": "Điểm đến",
+            "route": "Lộ trình",
+            "know": "Biết",
+            "remember": "Nhớ",
+            "familiar": "Quen thuộc",
+            "easy": "Dễ",
+            "confident": "Tự tin"
+        }
+    },
+    {
+        "id": 30,
+        "emoji": "🛒🏪🧾💵📉",
+        "theme": "Grocery Store Math",
+        "themeVi": "Toán siêu thị",
+        "correctWords": [
+            "budget",
+            "discount",
+            "compare",
+            "expensive",
+            "receipt"
+        ],
+        "wrongWords": [
+            "cheap",
+            "afford",
+            "save",
+            "planned",
+            "enough"
+        ],
+        "meanings": {
+            "budget": "Ngân sách",
+            "discount": "Giảm giá",
+            "compare": "So sánh",
+            "expensive": "Đắt",
+            "receipt": "Hóa đơn",
+            "cheap": "Rẻ",
+            "afford": "Đủ tiền",
+            "save": "Tiết kiệm",
+            "planned": "Có kế hoạch",
+            "enough": "Đủ"
+        }
+    },
+    {
+        "id": 31,
+        "emoji": "👨‍💻💡✨😃📧💀",
+        "theme": "Great Idea at 5PM Friday",
+        "themeVi": "Ý tưởng hay lúc 5h thứ 6",
+        "correctWords": [
+            "overtime",
+            "weekend",
+            "urgent",
+            "deadline",
+            "submit"
+        ],
+        "wrongWords": [
+            "leave",
+            "rest",
+            "tomorrow",
+            "monday",
+            "later"
+        ],
+        "meanings": {
+            "overtime": "Làm thêm",
+            "weekend": "Cuối tuần",
+            "urgent": "Khẩn cấp",
+            "deadline": "Hạn chót",
+            "submit": "Nộp",
+            "leave": "Nghỉ",
+            "rest": "Nghỉ ngơi",
+            "tomorrow": "Ngày mai",
+            "monday": "Thứ hai",
+            "later": "Sau"
+        }
+    },
+    {
+        "id": 32,
+        "emoji": "🎵🎧😌💭💼😫",
+        "theme": "Music vs Reality Resume",
+        "themeVi": "Nhạc vs thực tế CV",
+        "correctWords": [
+            "experience",
+            "qualification",
+            "reference",
+            "interview",
+            "position"
+        ],
+        "wrongWords": [
+            "confident",
+            "perfect",
+            "guaranteed",
+            "easy",
+            "hired"
+        ],
+        "meanings": {
+            "experience": "Kinh nghiệm",
+            "qualification": "Bằng cấp",
+            "reference": "Người giới thiệu",
+            "interview": "Phỏng vấn",
+            "position": "Vị trí",
+            "confident": "Tự tin",
+            "perfect": "Hoàn hảo",
+            "guaranteed": "Đảm bảo",
+            "easy": "Dễ",
+            "hired": "Được tuyển"
+        }
+    },
+    {
+        "id": 33,
+        "emoji": "🐕🏠💩🛋️😤",
+        "theme": "Pet Destroyed the House",
+        "themeVi": "Thú cưng phá nhà",
+        "correctWords": [
+            "damage",
+            "replace",
+            "furniture",
+            "training",
+            "behavior"
+        ],
+        "wrongWords": [
+            "obedient",
+            "trained",
+            "calm",
+            "gentle",
+            "good"
+        ],
+        "meanings": {
+            "damage": "Hư hại",
+            "replace": "Thay thế",
+            "furniture": "Nội thất",
+            "training": "Huấn luyện",
+            "behavior": "Hành vi",
+            "obedient": "Vâng lời",
+            "trained": "Được huấn luyện",
+            "calm": "Bình tĩnh",
+            "gentle": "Nhẹ nhàng",
+            "good": "Ngoan"
+        }
+    },
+    {
+        "id": 34,
+        "emoji": "🛏️📱🕐😴💤",
+        "theme": "5 More Minutes Syndrome",
+        "themeVi": "Hội chứng 5 phút nữa",
+        "correctWords": [
+            "snooze",
+            "alarm",
+            "oversleep",
+            "late",
+            "rush"
+        ],
+        "wrongWords": [
+            "wake",
+            "early",
+            "prepared",
+            "ready",
+            "punctual"
+        ],
+        "meanings": {
+            "snooze": "Báo lại",
+            "alarm": "Báo thức",
+            "oversleep": "Ngủ quên",
+            "late": "Muộn",
+            "rush": "Vội vã",
+            "wake": "Thức dậy",
+            "early": "Sớm",
+            "prepared": "Chuẩn bị",
+            "ready": "Sẵn sàng",
+            "punctual": "Đúng giờ"
+        }
+    },
+    {
+        "id": 35,
+        "emoji": "💻🔄🔄💀☠️",
+        "theme": "Computer Crash Before Save",
+        "themeVi": "Máy crash trước khi save",
+        "correctWords": [
+            "backup",
+            "recover",
+            "autosave",
+            "lost",
+            "restart"
+        ],
+        "wrongWords": [
+            "saved",
+            "protected",
+            "secure",
+            "prepared",
+            "safe"
+        ],
+        "meanings": {
+            "backup": "Sao lưu",
+            "recover": "Khôi phục",
+            "autosave": "Lưu tự động",
+            "lost": "Mất",
+            "restart": "Khởi động lại",
+            "saved": "Đã lưu",
+            "protected": "Được bảo vệ",
+            "secure": "An toàn",
+            "prepared": "Chuẩn bị",
+            "safe": "An toàn"
+        }
+    },
+    {
+        "id": 36,
+        "emoji": "🍜🥢💨😤🔥👄💀",
+        "theme": "Spicy Food Regret",
+        "themeVi": "Hối hận ăn cay",
+        "correctWords": [
+            "spicy",
+            "regret",
+            "stomach",
+            "water",
+            "burn"
+        ],
+        "wrongWords": [
+            "mild",
+            "comfortable",
+            "okay",
+            "fine",
+            "enjoy"
+        ],
+        "meanings": {
+            "spicy": "Cay",
+            "regret": "Hối hận",
+            "stomach": "Dạ dày",
+            "water": "Nước",
+            "burn": "Cháy",
+            "mild": "Nhẹ",
+            "comfortable": "Thoải mái",
+            "okay": "Ổn",
+            "fine": "Tốt",
+            "enjoy": "Thưởng thức"
+        }
+    },
+    {
+        "id": 37,
+        "emoji": "🧾💳❌💳❌😱",
+        "theme": "Card Declined in Public",
+        "themeVi": "Thẻ bị từ chối nơi công cộng",
+        "correctWords": [
+            "embarrassed",
+            "decline",
+            "balance",
+            "transfer",
+            "cash"
+        ],
+        "wrongWords": [
+            "prepared",
+            "enough",
+            "approved",
+            "successful",
+            "smooth"
+        ],
+        "meanings": {
+            "embarrassed": "Xấu hổ",
+            "decline": "Từ chối",
+            "balance": "Số dư",
+            "transfer": "Chuyển",
+            "cash": "Tiền mặt",
+            "prepared": "Chuẩn bị",
+            "enough": "Đủ",
+            "approved": "Được duyệt",
+            "successful": "Thành công",
+            "smooth": "Mượt"
+        }
+    },
+    {
+        "id": 38,
+        "emoji": "📷🏞️😍📷👀😑",
+        "theme": "Tourist Blocking the View",
+        "themeVi": "Du khách che view",
+        "correctWords": [
+            "patience",
+            "crowded",
+            "tourist",
+            "photo",
+            "wait"
+        ],
+        "wrongWords": [
+            "empty",
+            "clear",
+            "private",
+            "peaceful",
+            "quick"
+        ],
+        "meanings": {
+            "patience": "Kiên nhẫn",
+            "crowded": "Đông đúc",
+            "tourist": "Du khách",
+            "photo": "Ảnh",
+            "wait": "Chờ",
+            "empty": "Trống",
+            "clear": "Rõ",
+            "private": "Riêng tư",
+            "peaceful": "Yên bình",
+            "quick": "Nhanh"
+        }
+    },
+    {
+        "id": 39,
+        "emoji": "🚌💨🏃‍♂️😫💔",
+        "theme": "Bus Left Without Me",
+        "themeVi": "Xe buýt bỏ đi mất",
+        "correctWords": [
+            "missed",
+            "schedule",
+            "delay",
+            "next",
+            "wait"
+        ],
+        "wrongWords": [
+            "caught",
+            "punctual",
+            "early",
+            "prepared",
+            "lucky"
+        ],
+        "meanings": {
+            "missed": "Lỡ",
+            "schedule": "Lịch trình",
+            "delay": "Trễ",
+            "next": "Kế tiếp",
+            "wait": "Chờ",
+            "caught": "Bắt kịp",
+            "punctual": "Đúng giờ",
+            "early": "Sớm",
+            "prepared": "Chuẩn bị",
+            "lucky": "May mắn"
+        }
+    },
+    {
+        "id": 40,
+        "emoji": "🍽️🥡🥢🍱😋💸",
+        "theme": "Food Delivery Addiction",
+        "themeVi": "Nghiện đặt đồ ăn",
+        "correctWords": [
+            "convenient",
+            "delivery",
+            "order",
+            "tip",
+            "fee"
+        ],
+        "wrongWords": [
+            "cook",
+            "healthy",
+            "cheap",
+            "save",
+            "homemade"
+        ],
+        "meanings": {
+            "convenient": "Tiện lợi",
+            "delivery": "Giao hàng",
+            "order": "Đặt",
+            "tip": "Tiền boa",
+            "fee": "Phí",
+            "cook": "Nấu",
+            "healthy": "Lành mạnh",
+            "cheap": "Rẻ",
+            "save": "Tiết kiệm",
+            "homemade": "Tự làm"
+        }
+    },
+    {
+        "id": 41,
+        "emoji": "🛌📱🌙☀️😱",
+        "theme": "Scrolling Until Sunrise",
+        "themeVi": "Lướt điện thoại đến sáng",
+        "correctWords": [
+            "insomnia",
+            "screen",
+            "addicted",
+            "tired",
+            "regret"
+        ],
+        "wrongWords": [
+            "sleep",
+            "rest",
+            "early",
+            "healthy",
+            "discipline"
+        ],
+        "meanings": {
+            "insomnia": "Mất ngủ",
+            "screen": "Màn hình",
+            "addicted": "Nghiện",
+            "tired": "Mệt",
+            "regret": "Hối hận",
+            "sleep": "Ngủ",
+            "rest": "Nghỉ",
+            "early": "Sớm",
+            "healthy": "Lành mạnh",
+            "discipline": "Kỷ luật"
+        }
+    },
+    {
+        "id": 42,
+        "emoji": "📧👀😊😐😤",
+        "theme": "Passive Aggressive Email",
+        "themeVi": "Email công kích thụ động",
+        "correctWords": [
+            "forward",
+            "attach",
+            "regarding",
+            "noted",
+            "appreciate"
+        ],
+        "wrongWords": [
+            "friendly",
+            "direct",
+            "honest",
+            "clear",
+            "sincere"
+        ],
+        "meanings": {
+            "forward": "Chuyển tiếp",
+            "attach": "Đính kèm",
+            "regarding": "Liên quan đến",
+            "noted": "Đã ghi nhận",
+            "appreciate": "Trân trọng",
+            "friendly": "Thân thiện",
+            "direct": "Thẳng thắn",
+            "honest": "Thành thật",
+            "clear": "Rõ ràng",
+            "sincere": "Chân thành"
+        }
+    },
+    {
+        "id": 43,
+        "emoji": "🧳👔👗👙🤔",
+        "theme": "Packing for 3 Days Trip",
+        "themeVi": "Xếp đồ đi 3 ngày",
+        "correctWords": [
+            "luggage",
+            "essential",
+            "outfit",
+            "pack",
+            "checklist"
+        ],
+        "wrongWords": [
+            "light",
+            "minimal",
+            "organized",
+            "simple",
+            "enough"
+        ],
+        "meanings": {
+            "luggage": "Hành lý",
+            "essential": "Thiết yếu",
+            "outfit": "Trang phục",
+            "pack": "Xếp đồ",
+            "checklist": "Danh sách",
+            "light": "Nhẹ",
+            "minimal": "Tối thiểu",
+            "organized": "Ngăn nắp",
+            "simple": "Đơn giản",
+            "enough": "Đủ"
+        }
+    },
+    {
+        "id": 44,
+        "emoji": "🏢⬆️⬆️1️⃣2️⃣😵",
+        "theme": "Elevator Stops Every Floor",
+        "themeVi": "Thang máy dừng mọi tầng",
+        "correctWords": [
+            "patience",
+            "crowded",
+            "slow",
+            "wait",
+            "floor"
+        ],
+        "wrongWords": [
+            "express",
+            "fast",
+            "empty",
+            "direct",
+            "quick"
+        ],
+        "meanings": {
+            "patience": "Kiên nhẫn",
+            "crowded": "Đông",
+            "slow": "Chậm",
+            "wait": "Chờ",
+            "floor": "Tầng",
+            "express": "Nhanh",
+            "fast": "Nhanh",
+            "empty": "Trống",
+            "direct": "Trực tiếp",
+            "quick": "Nhanh"
+        }
+    },
+    {
+        "id": 45,
+        "emoji": "☕☕☕💓💓💀",
+        "theme": "Third Coffee Today",
+        "themeVi": "Ly cà phê thứ 3 hôm nay",
+        "correctWords": [
+            "caffeine",
+            "energy",
+            "focus",
+            "jitters",
+            "overdose"
+        ],
+        "wrongWords": [
+            "calm",
+            "relaxed",
+            "healthy",
+            "moderate",
+            "enough"
+        ],
+        "meanings": {
+            "caffeine": "Caffeine",
+            "energy": "Năng lượng",
+            "focus": "Tập trung",
+            "jitters": "Run rẩy",
+            "overdose": "Quá liều",
+            "calm": "Bình tĩnh",
+            "relaxed": "Thư giãn",
+            "healthy": "Lành mạnh",
+            "moderate": "Điều độ",
+            "enough": "Đủ"
+        }
+    },
+    {
+        "id": 46,
+        "emoji": "🎬🍿😴💤🎬",
+        "theme": "Fell Asleep During Movie",
+        "themeVi": "Ngủ gật khi xem phim",
+        "correctWords": [
+            "boring",
+            "tired",
+            "plot",
+            "ending",
+            "missed"
+        ],
+        "wrongWords": [
+            "exciting",
+            "thrilling",
+            "awake",
+            "focused",
+            "interested"
+        ],
+        "meanings": {
+            "boring": "Chán",
+            "tired": "Mệt",
+            "plot": "Cốt truyện",
+            "ending": "Kết thúc",
+            "missed": "Bỏ lỡ",
+            "exciting": "Thú vị",
+            "thrilling": "Hồi hộp",
+            "awake": "Tỉnh táo",
+            "focused": "Tập trung",
+            "interested": "Quan tâm"
+        }
+    },
+    {
+        "id": 47,
+        "emoji": "🧵👗😍💳💸😭",
+        "theme": "Impulse Fashion Shopping",
+        "themeVi": "Mua quần áo bốc đồng",
+        "correctWords": [
+            "trend",
+            "discount",
+            "wardrobe",
+            "regret",
+            "expensive"
+        ],
+        "wrongWords": [
+            "need",
+            "budget",
+            "plan",
+            "essential",
+            "save"
+        ],
+        "meanings": {
+            "trend": "Xu hướng",
+            "discount": "Giảm giá",
+            "wardrobe": "Tủ quần áo",
+            "regret": "Hối hận",
+            "expensive": "Đắt",
+            "need": "Cần",
+            "budget": "Ngân sách",
+            "plan": "Kế hoạch",
+            "essential": "Thiết yếu",
+            "save": "Tiết kiệm"
+        }
+    },
+    {
+        "id": 48,
+        "emoji": "🎤🎶👀👀😳",
+        "theme": "Karaoke Solo Terror",
+        "themeVi": "Kinh hoàng solo karaoke",
+        "correctWords": [
+            "nervous",
+            "audience",
+            "lyrics",
+            "microphone",
+            "performance"
+        ],
+        "wrongWords": [
+            "confident",
+            "natural",
+            "prepared",
+            "relaxed",
+            "professional"
+        ],
+        "meanings": {
+            "nervous": "Hồi hộp",
+            "audience": "Khán giả",
+            "lyrics": "Lời bài hát",
+            "microphone": "Mic",
+            "performance": "Biểu diễn",
+            "confident": "Tự tin",
+            "natural": "Tự nhiên",
+            "prepared": "Chuẩn bị",
+            "relaxed": "Thư giãn",
+            "professional": "Chuyên nghiệp"
+        }
+    },
+    {
+        "id": 49,
+        "emoji": "🧾📊📈🤯📉💔",
+        "theme": "Checking Bank Statement",
+        "themeVi": "Xem sao kê ngân hàng",
+        "correctWords": [
+            "transaction",
+            "balance",
+            "expense",
+            "withdraw",
+            "overdraft"
+        ],
+        "wrongWords": [
+            "surplus",
+            "save",
+            "enough",
+            "budget",
+            "wealthy"
+        ],
+        "meanings": {
+            "transaction": "Giao dịch",
+            "balance": "Số dư",
+            "expense": "Chi phí",
+            "withdraw": "Rút tiền",
+            "overdraft": "Thấu chi",
+            "surplus": "Dư",
+            "save": "Tiết kiệm",
+            "enough": "Đủ",
+            "budget": "Ngân sách",
+            "wealthy": "Giàu có"
+        }
+    },
+    {
+        "id": 50,
+        "emoji": "🍜🥢💨😤🔥👄💀",
+        "theme": "Eating Too Fast",
+        "themeVi": "Ăn quá nhanh",
+        "correctWords": [
+            "appetite",
+            "portion",
+            "consume",
+            "digest",
+            "swallow"
+        ],
+        "wrongWords": [
+            "patience",
+            "mindful",
+            "slow",
+            "careful",
+            "chewing"
+        ],
+        "meanings": {
+            "appetite": "Khẩu vị",
+            "portion": "Khẩu phần",
+            "consume": "Tiêu thụ",
+            "digest": "Tiêu hóa",
+            "swallow": "Nuốt",
+            "patience": "Kiên nhẫn",
+            "mindful": "Chánh niệm",
+            "slow": "Chậm",
+            "careful": "Cẩn thận",
+            "chewing": "Nhai"
+        }
+    },
+    {
+        "id": 51,
+        "emoji": "☕☕☕☕😵‍💫💀⚡",
+        "theme": "Caffeine Overdose",
+        "themeVi": "Quá liều cà phê",
+        "correctWords": [
+            "stimulant",
+            "addiction",
+            "withdrawal",
+            "tolerance",
+            "dosage"
+        ],
+        "wrongWords": [
+            "hydrate",
+            "moderate",
+            "herbal",
+            "decaf",
+            "calm"
+        ],
+        "meanings": {
+            "stimulant": "Chất kích thích",
+            "addiction": "Nghiện",
+            "withdrawal": "Cai",
+            "tolerance": "Dung nạp",
+            "dosage": "Liều lượng",
+            "hydrate": "Bổ sung nước",
+            "moderate": "Điều độ",
+            "herbal": "Thảo mộc",
+            "decaf": "Không caffeine",
+            "calm": "Bình tĩnh"
+        }
+    },
+    {
+        "id": 52,
+        "emoji": "📉📉📉💎🙌🚀🌙💀",
+        "theme": "Crypto to the Moon (or Ground)",
+        "themeVi": "Crypto lên trời (hay xuống đất)",
+        "correctWords": [
+            "volatile",
+            "leverage",
+            "margin",
+            "liquidate",
+            "portfolio"
+        ],
+        "wrongWords": [
+            "stable",
+            "guarantee",
+            "profit",
+            "secure",
+            "predictable"
+        ],
+        "meanings": {
+            "volatile": "Biến động mạnh",
+            "leverage": "Đòn bẩy",
+            "margin": "Ký quỹ",
+            "liquidate": "Thanh lý",
+            "portfolio": "Danh mục",
+            "stable": "Ổn định",
+            "guarantee": "Đảm bảo",
+            "profit": "Lợi nhuận",
+            "secure": "An toàn",
+            "predictable": "Dự đoán được"
+        }
+    },
+    {
+        "id": 53,
+        "emoji": "🎮🎧😤🔥🤬👊💥",
+        "theme": "Gaming Rage Moment",
+        "themeVi": "Khoảnh khắc gamer điên",
+        "correctWords": [
+            "controller",
+            "frustrated",
+            "competitive",
+            "opponent",
+            "defeat"
+        ],
+        "wrongWords": [
+            "peaceful",
+            "relaxing",
+            "calm",
+            "casual",
+            "enjoyable"
+        ],
+        "meanings": {
+            "controller": "Tay cầm",
+            "frustrated": "Bực bội",
+            "competitive": "Cạnh tranh",
+            "opponent": "Đối thủ",
+            "defeat": "Thất bại",
+            "peaceful": "Yên bình",
+            "relaxing": "Thư giãn",
+            "calm": "Bình tĩnh",
+            "casual": "Bình thường",
+            "enjoyable": "Thú vị"
+        }
+    },
+    {
+        "id": 54,
+        "emoji": "💔😭🍦🎵😢🛋️",
+        "theme": "Post-Breakup Vibes",
+        "themeVi": "Vibe sau chia tay",
+        "correctWords": [
+            "emotional",
+            "heartbreak",
+            "nostalgia",
+            "recover",
+            "lonely"
+        ],
+        "wrongWords": [
+            "happy",
+            "relieved",
+            "celebrate",
+            "freedom",
+            "excited"
+        ],
+        "meanings": {
+            "emotional": "Cảm xúc",
+            "heartbreak": "Tan vỡ",
+            "nostalgia": "Hoài niệm",
+            "recover": "Hồi phục",
+            "lonely": "Cô đơn",
+            "happy": "Vui vẻ",
+            "relieved": "Nhẹ nhõm",
+            "celebrate": "Ăn mừng",
+            "freedom": "Tự do",
+            "excited": "Hào hứng"
+        }
+    },
+    {
+        "id": 55,
+        "emoji": "📱📱📱🧠🔄😵",
+        "theme": "Doomscrolling at 3AM",
+        "themeVi": "Lướt điện thoại lúc 3 giờ sáng",
+        "correctWords": [
+            "algorithm",
+            "addictive",
+            "notification",
+            "content",
+            "scroll"
+        ],
+        "wrongWords": [
+            "productive",
+            "healthy",
+            "sleep",
+            "discipline",
+            "limit"
+        ],
+        "meanings": {
+            "algorithm": "Thuật toán",
+            "addictive": "Gây nghiện",
+            "notification": "Thông báo",
+            "content": "Nội dung",
+            "scroll": "Lướt",
+            "productive": "Năng suất",
+            "healthy": "Lành mạnh",
+            "sleep": "Ngủ",
+            "discipline": "Kỷ luật",
+            "limit": "Giới hạn"
+        }
+    },
+    {
+        "id": 56,
+        "emoji": "🤳✨📸🔄🔄😫💅",
+        "theme": "50 Takes for 1 Selfie",
+        "themeVi": "Chụp 50 tấm chọn 1 tấm",
+        "correctWords": [
+            "filter",
+            "angle",
+            "lighting",
+            "aesthetic",
+            "edit"
+        ],
+        "wrongWords": [
+            "natural",
+            "spontaneous",
+            "authentic",
+            "candid",
+            "genuine"
+        ],
+        "meanings": {
+            "filter": "Bộ lọc",
+            "angle": "Góc chụp",
+            "lighting": "Ánh sáng",
+            "aesthetic": "Thẩm mỹ",
+            "edit": "Chỉnh sửa",
+            "natural": "Tự nhiên",
+            "spontaneous": "Ngẫu hứng",
+            "authentic": "Chân thực",
+            "candid": "Bắt nét",
+            "genuine": "Thật sự"
+        }
+    },
+    {
+        "id": 57,
+        "emoji": "🛏️📱⏰6️⃣😴🔄",
+        "theme": "Just 5 More Minutes",
+        "themeVi": "Cho tao 5 phút nữa",
+        "correctWords": [
+            "snooze",
+            "alarm",
+            "oversleep",
+            "exhausted",
+            "delay"
+        ],
+        "wrongWords": [
+            "punctual",
+            "energetic",
+            "motivated",
+            "early",
+            "refreshed"
+        ],
+        "meanings": {
+            "snooze": "Ngủ nướng",
+            "alarm": "Báo thức",
+            "oversleep": "Ngủ quên",
+            "exhausted": "Kiệt sức",
+            "delay": "Trì hoãn",
+            "punctual": "Đúng giờ",
+            "energetic": "Năng lượng",
+            "motivated": "Có động lực",
+            "early": "Sớm",
+            "refreshed": "Tỉnh táo"
+        }
+    },
+    {
+        "id": 58,
+        "emoji": "🍕🍔🍟🌮😋💀🏥",
+        "theme": "Food Coma Activated",
+        "themeVi": "Thức ăn đánh gục",
+        "correctWords": [
+            "bloated",
+            "overeat",
+            "regret",
+            "indulge",
+            "stuffed"
+        ],
+        "wrongWords": [
+            "portion",
+            "moderate",
+            "healthy",
+            "balanced",
+            "control"
+        ],
+        "meanings": {
+            "bloated": "Đầy bụng",
+            "overeat": "Ăn quá nhiều",
+            "regret": "Hối hận",
+            "indulge": "Chiều theo",
+            "stuffed": "No căng",
+            "portion": "Khẩu phần",
+            "moderate": "Điều độ",
+            "healthy": "Lành mạnh",
+            "balanced": "Cân bằng",
+            "control": "Kiểm soát"
+        }
+    },
+    {
+        "id": 59,
+        "emoji": "👻😱🔦📺3️⃣😭",
+        "theme": "Horror Movie Regret",
+        "themeVi": "Hối hận xem phim kinh dị",
+        "correctWords": [
+            "nightmare",
+            "terrify",
+            "paranoid",
+            "insomnia",
+            "shadow"
+        ],
+        "wrongWords": [
+            "brave",
+            "fearless",
+            "sleep",
+            "calm",
+            "relaxed"
+        ],
+        "meanings": {
+            "nightmare": "Ác mộng",
+            "terrify": "Kinh hoàng",
+            "paranoid": "Hoang tưởng",
+            "insomnia": "Mất ngủ",
+            "shadow": "Bóng tối",
+            "brave": "Dũng cảm",
+            "fearless": "Không sợ",
+            "sleep": "Ngủ ngon",
+            "calm": "Bình tĩnh",
+            "relaxed": "Thư giãn"
+        }
+    },
+    {
+        "id": 60,
+        "emoji": "💇‍♂️✂️😰📸😭💀",
+        "theme": "Haircut Gone Wrong",
+        "themeVi": "Cắt tóc fail",
+        "correctWords": [
+            "disaster",
+            "disastrous",
+            "regret",
+            "hat",
+            "complaint"
+        ],
+        "wrongWords": [
+            "satisfied",
+            "perfect",
+            "confident",
+            "handsome",
+            "stylish"
+        ],
+        "meanings": {
+            "disaster": "Thảm họa",
+            "disastrous": "Kinh khủng",
+            "regret": "Hối hận",
+            "hat": "Mũ",
+            "complaint": "Khiếu nại",
+            "satisfied": "Hài lòng",
+            "perfect": "Hoàn hảo",
+            "confident": "Tự tin",
+            "handsome": "Đẹp trai",
+            "stylish": "Sành điệu"
+        }
+    },
+    {
+        "id": 61,
+        "emoji": "🚗🚗🚗📍⏰😤🔥",
+        "theme": "GPS Says 5 Minutes But...",
+        "themeVi": "GPS nói 5 phút nhưng...",
+        "correctWords": [
+            "traffic",
+            "congestion",
+            "detour",
+            "delay",
+            "frustrate"
+        ],
+        "wrongWords": [
+            "accurate",
+            "quick",
+            "smooth",
+            "reliable",
+            "shortcut"
+        ],
+        "meanings": {
+            "traffic": "Giao thông",
+            "congestion": "Tắc nghẽn",
+            "detour": "Đường vòng",
+            "delay": "Trễ",
+            "frustrate": "Bực bội",
+            "accurate": "Chính xác",
+            "quick": "Nhanh",
+            "smooth": "Mượt",
+            "reliable": "Đáng tin",
+            "shortcut": "Đường tắt"
+        }
+    },
+    {
+        "id": 62,
+        "emoji": "🏃‍♂️🚌💨😱🤚🚫",
+        "theme": "Bus Driver No Mercy",
+        "themeVi": "Tài xế xe buýt không thương",
+        "correctWords": [
+            "commute",
+            "transit",
+            "miss",
+            "schedule",
+            "punctual"
+        ],
+        "wrongWords": [
+            "patient",
+            "wait",
+            "kind",
+            "helpful",
+            "stop"
+        ],
+        "meanings": {
+            "commute": "Đi làm",
+            "transit": "Phương tiện công cộng",
+            "miss": "Lỡ",
+            "schedule": "Lịch trình",
+            "punctual": "Đúng giờ",
+            "patient": "Kiên nhẫn",
+            "wait": "Chờ",
+            "kind": "Tốt bụng",
+            "helpful": "Giúp đỡ",
+            "stop": "Dừng lại"
+        }
+    },
+    {
+        "id": 63,
+        "emoji": "🔑🔑🔑❓🏠😱🤯",
+        "theme": "Where Did I Put My Keys",
+        "themeVi": "Chìa khóa đâu rồi",
+        "correctWords": [
+            "misplace",
+            "search",
+            "frantic",
+            "memory",
+            "panic"
+        ],
+        "wrongWords": [
+            "organize",
+            "remember",
+            "prepared",
+            "systematic",
+            "calm"
+        ],
+        "meanings": {
+            "misplace": "Để lạc",
+            "search": "Tìm kiếm",
+            "frantic": "Điên cuồng",
+            "memory": "Trí nhớ",
+            "panic": "Hoảng loạn",
+            "organize": "Sắp xếp",
+            "remember": "Nhớ",
+            "prepared": "Chuẩn bị",
+            "systematic": "Có hệ thống",
+            "calm": "Bình tĩnh"
+        }
+    },
+    {
+        "id": 64,
+        "emoji": "👩‍👧🗣️🤳💬😅💀",
+        "theme": "Mom Learning Social Media",
+        "themeVi": "Mẹ học dùng mạng xã hội",
+        "correctWords": [
+            "tutorial",
+            "confuse",
+            "explain",
+            "patience",
+            "repeat"
+        ],
+        "wrongWords": [
+            "intuitive",
+            "simple",
+            "obvious",
+            "easy",
+            "understand"
+        ],
+        "meanings": {
+            "tutorial": "Hướng dẫn",
+            "confuse": "Bối rối",
+            "explain": "Giải thích",
+            "patience": "Kiên nhẫn",
+            "repeat": "Nhắc lại",
+            "intuitive": "Trực quan",
+            "simple": "Đơn giản",
+            "obvious": "Rõ ràng",
+            "easy": "Dễ",
+            "understand": "Hiểu"
+        }
+    },
+    {
+        "id": 65,
+        "emoji": "🧹🛁🗑️📸👀😈",
+        "theme": "Cleaning Before Parents Visit",
+        "themeVi": "Dọn nhà trước khi bố mẹ đến",
+        "correctWords": [
+            "urgent",
+            "chaos",
+            "disguise",
+            "transform",
+            "surface"
+        ],
+        "wrongWords": [
+            "routine",
+            "maintain",
+            "consistent",
+            "regular",
+            "habit"
+        ],
+        "meanings": {
+            "urgent": "Khẩn cấp",
+            "chaos": "Hỗn loạn",
+            "disguise": "Ngụy trang",
+            "transform": "Biến đổi",
+            "surface": "Bề mặt",
+            "routine": "Thói quen",
+            "maintain": "Duy trì",
+            "consistent": "Nhất quán",
+            "regular": "Đều đặn",
+            "habit": "Thói quen"
+        }
+    },
+    {
+        "id": 66,
+        "emoji": "💬✓✓😰⏰💀👻",
+        "theme": "Seen But No Reply",
+        "themeVi": "Seen mà không rep",
+        "correctWords": [
+            "ignore",
+            "anxiety",
+            "overthink",
+            "interpret",
+            "assume"
+        ],
+        "wrongWords": [
+            "immediate",
+            "respond",
+            "priority",
+            "urgent",
+            "reply"
+        ],
+        "meanings": {
+            "ignore": "Phớt lờ",
+            "anxiety": "Lo lắng",
+            "overthink": "Nghĩ nhiều",
+            "interpret": "Diễn giải",
+            "assume": "Giả định",
+            "immediate": "Ngay lập tức",
+            "respond": "Trả lời",
+            "priority": "Ưu tiên",
+            "urgent": "Khẩn cấp",
+            "reply": "Hồi đáp"
+        }
+    },
+    {
+        "id": 67,
+        "emoji": "🍳🔥😰🚿🍞😅",
+        "theme": "Cooking Experiment Gone Wrong",
+        "themeVi": "Thí nghiệm nấu ăn fail",
+        "correctWords": [
+            "burn",
+            "smoke",
+            "disaster",
+            "recipe",
+            "substitute"
+        ],
+        "wrongWords": [
+            "delicious",
+            "perfect",
+            "master",
+            "chef",
+            "success"
+        ],
+        "meanings": {
+            "burn": "Cháy",
+            "smoke": "Khói",
+            "disaster": "Thảm họa",
+            "recipe": "Công thức",
+            "substitute": "Thay thế",
+            "delicious": "Ngon",
+            "perfect": "Hoàn hảo",
+            "master": "Thành thạo",
+            "chef": "Đầu bếp",
+            "success": "Thành công"
+        }
+    },
+    {
+        "id": 68,
+        "emoji": "🛒💳🤑📱😵💸",
+        "theme": "Online Shopping at 2AM",
+        "themeVi": "Mua sắm online lúc 2h sáng",
+        "correctWords": [
+            "impulsive",
+            "regret",
+            "shipping",
+            "cart",
+            "checkout"
+        ],
+        "wrongWords": [
+            "necessary",
+            "essential",
+            "budget",
+            "rational",
+            "planned"
+        ],
+        "meanings": {
+            "impulsive": "Bốc đồng",
+            "regret": "Hối hận",
+            "shipping": "Vận chuyển",
+            "cart": "Giỏ hàng",
+            "checkout": "Thanh toán",
+            "necessary": "Cần thiết",
+            "essential": "Thiết yếu",
+            "budget": "Ngân sách",
+            "rational": "Hợp lý",
+            "planned": "Có kế hoạch"
+        }
+    },
+    {
+        "id": 69,
+        "emoji": "🎤😎🚿🎵🏆👑",
+        "theme": "Grammy Winner in the Shower",
+        "themeVi": "Thắng Grammy trong nhà tắm",
+        "correctWords": [
+            "perform",
+            "acoustic",
+            "imagine",
+            "audience",
+            "applause"
+        ],
+        "wrongWords": [
+            "embarrass",
+            "shy",
+            "quiet",
+            "modest",
+            "silent"
+        ],
+        "meanings": {
+            "perform": "Biểu diễn",
+            "acoustic": "Âm thanh",
+            "imagine": "Tưởng tượng",
+            "audience": "Khán giả",
+            "applause": "Vỗ tay",
+            "embarrass": "Xấu hổ",
+            "shy": "Nhút nhát",
+            "quiet": "Im lặng",
+            "modest": "Khiêm tốn",
+            "silent": "Yên lặng"
+        }
+    },
+    {
+        "id": 70,
+        "emoji": "🧠💭😴💡3️⃣😫",
+        "theme": "Brain Won't Shut Up at Night",
+        "themeVi": "Não không chịu ngủ ban đêm",
+        "correctWords": [
+            "insomnia",
+            "overthink",
+            "random",
+            "memory",
+            "anxiety"
+        ],
+        "wrongWords": [
+            "peaceful",
+            "drowsy",
+            "relaxed",
+            "sleep",
+            "calm"
+        ],
+        "meanings": {
+            "insomnia": "Mất ngủ",
+            "overthink": "Suy nghĩ nhiều",
+            "random": "Ngẫu nhiên",
+            "memory": "Ký ức",
+            "anxiety": "Lo âu",
+            "peaceful": "Yên bình",
+            "drowsy": "Buồn ngủ",
+            "relaxed": "Thư giãn",
+            "sleep": "Ngủ ngon",
+            "calm": "Bình tĩnh"
+        }
+    },
+    {
+        "id": 71,
+        "emoji": "🏋️💪📸🤳😤📱",
+        "theme": "Gym Selfie Time",
+        "themeVi": "Giờ selfie ở gym",
+        "correctWords": [
+            "flex",
+            "mirror",
+            "angle",
+            "pump",
+            "pose"
+        ],
+        "wrongWords": [
+            "workout",
+            "cardio",
+            "exercise",
+            "training",
+            "sweat"
+        ],
+        "meanings": {
+            "flex": "Khoe cơ",
+            "mirror": "Gương",
+            "angle": "Góc",
+            "pump": "Bơm máu",
+            "pose": "Tạo dáng",
+            "workout": "Tập luyện",
+            "cardio": "Tim mạch",
+            "exercise": "Bài tập",
+            "training": "Huấn luyện",
+            "sweat": "Mồ hôi"
+        }
+    },
+    {
+        "id": 72,
+        "emoji": "🤧😷🏠📺🍲❤️",
+        "theme": "Sick Day = Self Care Day",
+        "themeVi": "Ngày ốm = Ngày tự chăm",
+        "correctWords": [
+            "binge",
+            "blanket",
+            "comfort",
+            "pamper",
+            "excuse"
+        ],
+        "wrongWords": [
+            "productive",
+            "active",
+            "responsible",
+            "medicine",
+            "recover"
+        ],
+        "meanings": {
+            "binge": "Xem phim không nghỉ",
+            "blanket": "Chăn",
+            "comfort": "Thoải mái",
+            "pamper": "Chiều chuộng",
+            "excuse": "Cái cớ",
+            "productive": "Năng suất",
+            "active": "Năng động",
+            "responsible": "Có trách nhiệm",
+            "medicine": "Thuốc",
+            "recover": "Hồi phục"
+        }
+    },
+    {
+        "id": 73,
+        "emoji": "🐶🐱🤳❤️😍📱",
+        "theme": "Pet Photo Overload",
+        "themeVi": "Ảnh pet tràn lan",
+        "correctWords": [
+            "adorable",
+            "capture",
+            "share",
+            "gallery",
+            "obsess"
+        ],
+        "wrongWords": [
+            "limit",
+            "moderate",
+            "occasional",
+            "restrain",
+            "fewer"
+        ],
+        "meanings": {
+            "adorable": "Đáng yêu",
+            "capture": "Chụp lại",
+            "share": "Chia sẻ",
+            "gallery": "Thư viện ảnh",
+            "obsess": "Ám ảnh",
+            "limit": "Giới hạn",
+            "moderate": "Vừa phải",
+            "occasional": "Thỉnh thoảng",
+            "restrain": "Kiềm chế",
+            "fewer": "Ít hơn"
+        }
+    },
+    {
+        "id": 74,
+        "emoji": "💰🏠📈🤯💸😭",
+        "theme": "House Prices in 2024",
+        "themeVi": "Giá nhà 2024",
+        "correctWords": [
+            "mortgage",
+            "inflation",
+            "afford",
+            "deposit",
+            "interest"
+        ],
+        "wrongWords": [
+            "cheap",
+            "affordable",
+            "reasonable",
+            "budget",
+            "possible"
+        ],
+        "meanings": {
+            "mortgage": "Thế chấp",
+            "inflation": "Lạm phát",
+            "afford": "Đủ tiền",
+            "deposit": "Tiền đặt cọc",
+            "interest": "Lãi suất",
+            "cheap": "Rẻ",
+            "affordable": "Phải chăng",
+            "reasonable": "Hợp lý",
+            "budget": "Ngân sách",
+            "possible": "Khả thi"
+        }
+    },
+    {
+        "id": 75,
+        "emoji": "💅✨🍵☕🛋️👑",
+        "theme": "Treat Yourself Queen",
+        "themeVi": "Tự thưởng bản thân",
+        "correctWords": [
+            "splurge",
+            "luxury",
+            "deserve",
+            "indulge",
+            "justify"
+        ],
+        "wrongWords": [
+            "budget",
+            "save",
+            "practical",
+            "necessary",
+            "limit"
+        ],
+        "meanings": {
+            "splurge": "Xài sang",
+            "luxury": "Xa xỉ",
+            "deserve": "Xứng đáng",
+            "indulge": "Chiều theo",
+            "justify": "Biện minh",
+            "budget": "Ngân sách",
+            "save": "Tiết kiệm",
+            "practical": "Thực tế",
+            "necessary": "Cần thiết",
+            "limit": "Giới hạn"
+        }
+    },
+    {
+        "id": 76,
+        "emoji": "🤡🎪🔥💀😂🤣",
+        "theme": "My Life is a Circus",
+        "themeVi": "Cuộc đời tôi là rạp xiếc",
+        "correctWords": [
+            "chaos",
+            "absurd",
+            "ridiculous",
+            "clown",
+            "disaster"
+        ],
+        "wrongWords": [
+            "organized",
+            "stable",
+            "normal",
+            "planned",
+            "controlled"
+        ],
+        "meanings": {
+            "chaos": "Hỗn loạn",
+            "absurd": "Vô lý",
+            "ridiculous": "Buồn cười",
+            "clown": "Hề",
+            "disaster": "Thảm họa",
+            "organized": "Có tổ chức",
+            "stable": "Ổn định",
+            "normal": "Bình thường",
+            "planned": "Có kế hoạch",
+            "controlled": "Kiểm soát"
+        }
+    },
+    {
+        "id": 77,
+        "emoji": "🗣️🧠❌💀🤷‍♂️🦧",
+        "theme": "Brain.exe Has Stopped Working",
+        "themeVi": "Não.exe đã ngừng hoạt động",
+        "correctWords": [
+            "malfunction",
+            "freeze",
+            "crash",
+            "blank",
+            "buffer"
+        ],
+        "wrongWords": [
+            "process",
+            "function",
+            "operate",
+            "compute",
+            "respond"
+        ],
+        "meanings": {
+            "malfunction": "Trục trặc",
+            "freeze": "Đơ",
+            "crash": "Sập",
+            "blank": "Trống rỗng",
+            "buffer": "Đang load",
+            "process": "Xử lý",
+            "function": "Hoạt động",
+            "operate": "Vận hành",
+            "compute": "Tính toán",
+            "respond": "Phản hồi"
+        }
+    },
+    {
+        "id": 78,
+        "emoji": "💀🪦⚰️📱100️⃣%🔋",
+        "theme": "Phone Dies at 100%",
+        "themeVi": "Điện thoại chết ở 100%",
+        "correctWords": [
+            "betray",
+            "defective",
+            "malfunction",
+            "unreliable",
+            "glitch"
+        ],
+        "wrongWords": [
+            "trust",
+            "reliable",
+            "dependable",
+            "consistent",
+            "faithful"
+        ],
+        "meanings": {
+            "betray": "Phản bội",
+            "defective": "Lỗi",
+            "malfunction": "Hỏng",
+            "unreliable": "Không đáng tin",
+            "glitch": "Lỗi kỹ thuật",
+            "trust": "Tin tưởng",
+            "reliable": "Đáng tin",
+            "dependable": "Tin cậy được",
+            "consistent": "Nhất quán",
+            "faithful": "Trung thành"
+        }
+    },
+    {
+        "id": 79,
+        "emoji": "🍜🥢😋🔥👃💀🚀",
+        "theme": "Nose Running Faster Than Me",
+        "themeVi": "Mũi chạy nhanh hơn tôi",
+        "correctWords": [
+            "spicy",
+            "tissue",
+            "sneeze",
+            "regret",
+            "capsaicin"
+        ],
+        "wrongWords": [
+            "mild",
+            "comfortable",
+            "enjoyable",
+            "pleasant",
+            "tolerable"
+        ],
+        "meanings": {
+            "spicy": "Cay",
+            "tissue": "Khăn giấy",
+            "sneeze": "Hắt hơi",
+            "regret": "Hối hận",
+            "capsaicin": "Chất cay",
+            "mild": "Nhẹ",
+            "comfortable": "Thoải mái",
+            "enjoyable": "Thú vị",
+            "pleasant": "Dễ chịu",
+            "tolerable": "Chịu được"
+        }
+    },
+    {
+        "id": 80,
+        "emoji": "🛏️🧹📅1️⃣🗓️❌365",
+        "theme": "New Year Motivation: Day 1 Only",
+        "themeVi": "Động lực năm mới: Chỉ ngày 1",
+        "correctWords": [
+            "abandon",
+            "procrastinate",
+            "excuse",
+            "postpone",
+            "forget"
+        ],
+        "wrongWords": [
+            "consistent",
+            "committed",
+            "dedicated",
+            "persistent",
+            "achieve"
+        ],
+        "meanings": {
+            "abandon": "Bỏ cuộc",
+            "procrastinate": "Trì hoãn",
+            "excuse": "Lý do",
+            "postpone": "Hoãn",
+            "forget": "Quên",
+            "consistent": "Kiên trì",
+            "committed": "Cam kết",
+            "dedicated": "Tận tâm",
+            "persistent": "Bền bỉ",
+            "achieve": "Đạt được"
+        }
+    },
+    {
+        "id": 81,
+        "emoji": "🐕🐈📱🤳😂💀👑",
+        "theme": "Pet is More Photogenic Than Me",
+        "themeVi": "Pet ăn ảnh hơn tôi",
+        "correctWords": [
+            "jealous",
+            "compare",
+            "inferior",
+            "photogenic",
+            "unfair"
+        ],
+        "wrongWords": [
+            "confident",
+            "equal",
+            "content",
+            "satisfied",
+            "proud"
+        ],
+        "meanings": {
+            "jealous": "Ghen tị",
+            "compare": "So sánh",
+            "inferior": "Thua kém",
+            "photogenic": "Ăn ảnh",
+            "unfair": "Bất công",
+            "confident": "Tự tin",
+            "equal": "Bình đẳng",
+            "content": "Hài lòng",
+            "satisfied": "Thỏa mãn",
+            "proud": "Tự hào"
+        }
+    },
+    {
+        "id": 82,
+        "emoji": "🍕🍔🥗💭🥗❌🍕✅",
+        "theme": "I'll Start Diet on Monday",
+        "themeVi": "Thứ 2 sẽ ăn kiêng",
+        "correctWords": [
+            "delay",
+            "justify",
+            "excuse",
+            "bargain",
+            "cheat"
+        ],
+        "wrongWords": [
+            "discipline",
+            "start",
+            "commit",
+            "today",
+            "begin"
+        ],
+        "meanings": {
+            "delay": "Trì hoãn",
+            "justify": "Biện minh",
+            "excuse": "Lý do",
+            "bargain": "Thỏa thuận",
+            "cheat": "Gian lận",
+            "discipline": "Kỷ luật",
+            "start": "Bắt đầu",
+            "commit": "Cam kết",
+            "today": "Hôm nay",
+            "begin": "Khởi đầu"
+        }
+    },
+    {
+        "id": 83,
+        "emoji": "👻🛏️😱💀3️⃣😰🦶",
+        "theme": "Foot Outside Blanket = Demon Attack",
+        "themeVi": "Chân ra ngoài chăn = Quỷ tấn công",
+        "correctWords": [
+            "paranoid",
+            "irrational",
+            "superstition",
+            "imagine",
+            "fear"
+        ],
+        "wrongWords": [
+            "logical",
+            "rational",
+            "mature",
+            "scientific",
+            "reasonable"
+        ],
+        "meanings": {
+            "paranoid": "Hoang tưởng",
+            "irrational": "Phi lý",
+            "superstition": "Mê tín",
+            "imagine": "Tưởng tượng",
+            "fear": "Sợ hãi",
+            "logical": "Logic",
+            "rational": "Hợp lý",
+            "mature": "Trưởng thành",
+            "scientific": "Khoa học",
+            "reasonable": "Có lý"
+        }
+    },
+    {
+        "id": 84,
+        "emoji": "🗣️💬🧠❌😶💀🤡",
+        "theme": "Opens Mouth, Forgets Everything",
+        "themeVi": "Mở miệng, quên hết",
+        "correctWords": [
+            "blank",
+            "amnesia",
+            "embarrass",
+            "awkward",
+            "stutter"
+        ],
+        "wrongWords": [
+            "articulate",
+            "eloquent",
+            "fluent",
+            "confident",
+            "remember"
+        ],
+        "meanings": {
+            "blank": "Trống rỗng",
+            "amnesia": "Mất trí nhớ",
+            "embarrass": "Xấu hổ",
+            "awkward": "Lúng túng",
+            "stutter": "Lắp bắp",
+            "articulate": "Diễn đạt tốt",
+            "eloquent": "Hùng biện",
+            "fluent": "Trôi chảy",
+            "confident": "Tự tin",
+            "remember": "Nhớ"
+        }
+    },
+    {
+        "id": 85,
+        "emoji": "🚶‍♂️👀🚗🏃‍♂️💀🤡🎪",
+        "theme": "Walk Weird When Cars Watch",
+        "themeVi": "Đi kỳ cục khi xe nhìn",
+        "correctWords": [
+            "conscious",
+            "awkward",
+            "overthink",
+            "perform",
+            "paranoid"
+        ],
+        "wrongWords": [
+            "natural",
+            "confident",
+            "relaxed",
+            "normal",
+            "casual"
+        ],
+        "meanings": {
+            "conscious": "Tự ý thức",
+            "awkward": "Lúng túng",
+            "overthink": "Nghĩ nhiều",
+            "perform": "Diễn",
+            "paranoid": "Hoang tưởng",
+            "natural": "Tự nhiên",
+            "confident": "Tự tin",
+            "relaxed": "Thư giãn",
+            "normal": "Bình thường",
+            "casual": "Thoải mái"
+        }
+    },
+    {
+        "id": 86,
+        "emoji": "🧠💭🛏️😴⏰3️⃣💀",
+        "theme": "Remembering Cringe from 10 Years Ago",
+        "themeVi": "Nhớ lại chuyện xấu hổ 10 năm trước",
+        "correctWords": [
+            "cringe",
+            "regret",
+            "haunt",
+            "trauma",
+            "flashback"
+        ],
+        "wrongWords": [
+            "forget",
+            "move",
+            "mature",
+            "grow",
+            "accept"
+        ],
+        "meanings": {
+            "cringe": "Xấu hổ",
+            "regret": "Hối hận",
+            "haunt": "Ám ảnh",
+            "trauma": "Chấn thương tâm lý",
+            "flashback": "Hồi tưởng",
+            "forget": "Quên",
+            "move": "Bước tiếp",
+            "mature": "Trưởng thành",
+            "grow": "Phát triển",
+            "accept": "Chấp nhận"
+        }
+    },
+    {
+        "id": 87,
+        "emoji": "🚪👋🧠❓🔙😵💫",
+        "theme": "Walked Into Room, Forgot Why",
+        "themeVi": "Vào phòng, quên mất vì sao",
+        "correctWords": [
+            "doorway",
+            "memory",
+            "confuse",
+            "forget",
+            "wander"
+        ],
+        "wrongWords": [
+            "remember",
+            "purpose",
+            "focus",
+            "clarity",
+            "recall"
+        ],
+        "meanings": {
+            "doorway": "Cửa ra vào",
+            "memory": "Trí nhớ",
+            "confuse": "Bối rối",
+            "forget": "Quên",
+            "wander": "Lang thang",
+            "remember": "Nhớ",
+            "purpose": "Mục đích",
+            "focus": "Tập trung",
+            "clarity": "Rõ ràng",
+            "recall": "Nhớ lại"
+        }
+    },
+    {
+        "id": 88,
+        "emoji": "📞🗣️😊💼👔🤡😭",
+        "theme": "Professional Voice vs Real Voice",
+        "themeVi": "Giọng chuyên nghiệp vs Giọng thật",
+        "correctWords": [
+            "fake",
+            "pretend",
+            "persona",
+            "mask",
+            "performance"
+        ],
+        "wrongWords": [
+            "authentic",
+            "genuine",
+            "natural",
+            "sincere",
+            "real"
+        ],
+        "meanings": {
+            "fake": "Giả",
+            "pretend": "Giả vờ",
+            "persona": "Nhân cách giả",
+            "mask": "Mặt nạ",
+            "performance": "Diễn",
+            "authentic": "Thật",
+            "genuine": "Chân thật",
+            "natural": "Tự nhiên",
+            "sincere": "Thành thật",
+            "real": "Thực"
+        }
+    },
+    {
+        "id": 89,
+        "emoji": "🛒👀💸😱📱🏦💀",
+        "theme": "Checking Bank Account = Horror Movie",
+        "themeVi": "Xem tài khoản = Phim kinh dị",
+        "correctWords": [
+            "dread",
+            "anxiety",
+            "broke",
+            "overdraft",
+            "shock"
+        ],
+        "wrongWords": [
+            "wealthy",
+            "secure",
+            "comfortable",
+            "savings",
+            "rich"
+        ],
+        "meanings": {
+            "dread": "Sợ hãi",
+            "anxiety": "Lo lắng",
+            "broke": "Cháy túi",
+            "overdraft": "Thấu chi",
+            "shock": "Sốc",
+            "wealthy": "Giàu có",
+            "secure": "An toàn",
+            "comfortable": "Thoải mái",
+            "savings": "Tiết kiệm",
+            "rich": "Giàu"
+        }
+    },
+    {
+        "id": 90,
+        "emoji": "👨‍🍳🍳📱▶️😍🔥💀🚒",
+        "theme": "Cooking Like TikTok: Fail Edition",
+        "themeVi": "Nấu ăn như TikTok: Bản Fail",
+        "correctWords": [
+            "disaster",
+            "mislead",
+            "expectation",
+            "reality",
+            "burn"
+        ],
+        "wrongWords": [
+            "success",
+            "easy",
+            "simple",
+            "replicate",
+            "perfect"
+        ],
+        "meanings": {
+            "disaster": "Thảm họa",
+            "mislead": "Gây hiểu lầm",
+            "expectation": "Kỳ vọng",
+            "reality": "Thực tế",
+            "burn": "Cháy",
+            "success": "Thành công",
+            "easy": "Dễ",
+            "simple": "Đơn giản",
+            "replicate": "Làm lại",
+            "perfect": "Hoàn hảo"
+        }
+    },
+    {
+        "id": 91,
+        "emoji": "🧠💭🛌😴⏰➡️📱5️⃣",
+        "theme": "5 More Minutes = 2 Hours Later",
+        "themeVi": "5 phút nữa = 2 tiếng sau",
+        "correctWords": [
+            "deceive",
+            "underestimate",
+            "miscalculate",
+            "regret",
+            "late"
+        ],
+        "wrongWords": [
+            "accurate",
+            "punctual",
+            "discipline",
+            "reliable",
+            "honest"
+        ],
+        "meanings": {
+            "deceive": "Lừa dối bản thân",
+            "underestimate": "Đánh giá thấp",
+            "miscalculate": "Tính sai",
+            "regret": "Hối hận",
+            "late": "Trễ",
+            "accurate": "Chính xác",
+            "punctual": "Đúng giờ",
+            "discipline": "Kỷ luật",
+            "reliable": "Đáng tin",
+            "honest": "Thành thật"
+        }
+    },
+    {
+        "id": 92,
+        "emoji": "🤝👔🗣️😊💭🔪😤",
+        "theme": "Smile Outside, Scream Inside",
+        "themeVi": "Cười ngoài mặt, gào trong lòng",
+        "correctWords": [
+            "suppress",
+            "facade",
+            "pretend",
+            "endure",
+            "tolerate"
+        ],
+        "wrongWords": [
+            "genuine",
+            "express",
+            "honest",
+            "authentic",
+            "release"
+        ],
+        "meanings": {
+            "suppress": "Kìm nén",
+            "facade": "Mặt ngoài",
+            "pretend": "Giả vờ",
+            "endure": "Chịu đựng",
+            "tolerate": "Chấp nhận",
+            "genuine": "Thật lòng",
+            "express": "Bày tỏ",
+            "honest": "Thành thật",
+            "authentic": "Đích thực",
+            "release": "Giải tỏa"
+        }
+    },
+    {
+        "id": 93,
+        "emoji": "💬👀📱🔥💀🤡🎪😭",
+        "theme": "Typing... Then Stops",
+        "themeVi": "Đang nhập... rồi dừng",
+        "correctWords": [
+            "anxiety",
+            "paranoid",
+            "interpret",
+            "assume",
+            "stress"
+        ],
+        "wrongWords": [
+            "patient",
+            "calm",
+            "rational",
+            "wait",
+            "relaxed"
+        ],
+        "meanings": {
+            "anxiety": "Lo lắng",
+            "paranoid": "Hoang tưởng",
+            "interpret": "Diễn giải",
+            "assume": "Giả định",
+            "stress": "Căng thẳng",
+            "patient": "Kiên nhẫn",
+            "calm": "Bình tĩnh",
+            "rational": "Hợp lý",
+            "wait": "Chờ",
+            "relaxed": "Thư giãn"
+        }
+    },
+    {
+        "id": 94,
+        "emoji": "🎤🗣️👥😰💦🧊💀",
+        "theme": "Public Speaking = Near Death Experience",
+        "themeVi": "Nói trước đám đông = Cận tử",
+        "correctWords": [
+            "terrify",
+            "tremble",
+            "sweat",
+            "stammer",
+            "panic"
+        ],
+        "wrongWords": [
+            "confident",
+            "natural",
+            "comfortable",
+            "enjoy",
+            "thrive"
+        ],
+        "meanings": {
+            "terrify": "Kinh hoàng",
+            "tremble": "Run rẩy",
+            "sweat": "Đổ mồ hôi",
+            "stammer": "Lắp bắp",
+            "panic": "Hoảng loạn",
+            "confident": "Tự tin",
+            "natural": "Tự nhiên",
+            "comfortable": "Thoải mái",
+            "enjoy": "Thích thú",
+            "thrive": "Phát triển"
+        }
+    },
+    {
+        "id": 95,
+        "emoji": "🛒📦❓🤔📦❓📦💀",
+        "theme": "Ordered 1 Thing, Got 47 Packages",
+        "themeVi": "Đặt 1 món, nhận 47 gói",
+        "correctWords": [
+            "impulse",
+            "addiction",
+            "justify",
+            "excessive",
+            "compulsive"
+        ],
+        "wrongWords": [
+            "necessary",
+            "minimal",
+            "essential",
+            "practical",
+            "restrain"
+        ],
+        "meanings": {
+            "impulse": "Bốc đồng",
+            "addiction": "Nghiện",
+            "justify": "Biện minh",
+            "excessive": "Quá mức",
+            "compulsive": "Không kiểm soát",
+            "necessary": "Cần thiết",
+            "minimal": "Tối thiểu",
+            "essential": "Thiết yếu",
+            "practical": "Thực tế",
+            "restrain": "Kiềm chế"
+        }
+    },
+    {
+        "id": 96,
+        "emoji": "🧠🗣️😴💭🎤👑💀",
+        "theme": "Win Arguments in Shower 3 Days Later",
+        "themeVi": "Thắng cãi nhau khi tắm sau 3 ngày",
+        "correctWords": [
+            "rehearse",
+            "imagine",
+            "delayed",
+            "fantasy",
+            "hindsight"
+        ],
+        "wrongWords": [
+            "spontaneous",
+            "quick",
+            "witty",
+            "present",
+            "immediate"
+        ],
+        "meanings": {
+            "rehearse": "Tập dượt",
+            "imagine": "Tưởng tượng",
+            "delayed": "Trễ",
+            "fantasy": "Mơ mộng",
+            "hindsight": "Nhìn lại",
+            "spontaneous": "Ứng biến",
+            "quick": "Nhanh",
+            "witty": "Hóm hỉnh",
+            "present": "Hiện tại",
+            "immediate": "Ngay lập tức"
+        }
+    },
+    {
+        "id": 97,
+        "emoji": "👶📸📱🤳🙈💀🎪",
+        "theme": "Finding Old Photos = Identity Crisis",
+        "themeVi": "Tìm ảnh cũ = Khủng hoảng bản thân",
+        "correctWords": [
+            "cringe",
+            "deny",
+            "embarrass",
+            "disown",
+            "regret"
+        ],
+        "wrongWords": [
+            "proud",
+            "nostalgic",
+            "cherish",
+            "appreciate",
+            "fond"
+        ],
+        "meanings": {
+            "cringe": "Xấu hổ",
+            "deny": "Phủ nhận",
+            "embarrass": "Ngại",
+            "disown": "Từ chối",
+            "regret": "Hối hận",
+            "proud": "Tự hào",
+            "nostalgic": "Hoài niệm",
+            "cherish": "Trân trọng",
+            "appreciate": "Đánh giá cao",
+            "fond": "Yêu thích"
+        }
+    },
+    {
+        "id": 98,
+        "emoji": "💰💸🤑📈🧠❌💀🤡",
+        "theme": "Financial Advice From Broke Friend",
+        "themeVi": "Lời khuyên tài chính từ bạn nghèo",
+        "correctWords": [
+            "ironic",
+            "hypocrite",
+            "absurd",
+            "clueless",
+            "delusional"
+        ],
+        "wrongWords": [
+            "wise",
+            "expert",
+            "reliable",
+            "credible",
+            "qualified"
+        ],
+        "meanings": {
+            "ironic": "Mỉa mai",
+            "hypocrite": "Đạo đức giả",
+            "absurd": "Vô lý",
+            "clueless": "Mù mờ",
+            "delusional": "Ảo tưởng",
+            "wise": "Khôn ngoan",
+            "expert": "Chuyên gia",
+            "reliable": "Đáng tin",
+            "credible": "Uy tín",
+            "qualified": "Đủ tiêu chuẩn"
+        }
+    },
+    {
+        "id": 99,
+        "emoji": "🧹🏠👀📸🗑️😇💀",
+        "theme": "Hiding Mess Instead of Cleaning",
+        "themeVi": "Giấu rác thay vì dọn",
+        "correctWords": [
+            "conceal",
+            "disguise",
+            "temporary",
+            "illusion",
+            "shortcut"
+        ],
+        "wrongWords": [
+            "thorough",
+            "organize",
+            "proper",
+            "complete",
+            "genuine"
+        ],
+        "meanings": {
+            "conceal": "Che giấu",
+            "disguise": "Ngụy trang",
+            "temporary": "Tạm thời",
+            "illusion": "Ảo giác",
+            "shortcut": "Đường tắt",
+            "thorough": "Kỹ lưỡng",
+            "organize": "Sắp xếp",
+            "proper": "Đúng cách",
+            "complete": "Hoàn chỉnh",
+            "genuine": "Thật sự"
+        }
+    },
+    {
+        "id": 100,
+        "emoji": "🤡🎪🔥💀👑🏆🎭😂",
+        "theme": "Congrats! You're A Certified Clown",
+        "themeVi": "Chúc mừng! Bạn chính thức là hề",
+        "correctWords": [
+            "graduate",
+            "master",
+            "expert",
+            "professional",
+            "certified"
+        ],
+        "wrongWords": [
+            "amateur",
+            "beginner",
+            "learning",
+            "novice",
+            "student"
+        ],
+        "meanings": {
+            "graduate": "Tốt nghiệp",
+            "master": "Bậc thầy",
+            "expert": "Chuyên gia",
+            "professional": "Chuyên nghiệp",
+            "certified": "Được chứng nhận",
+            "amateur": "Nghiệp dư",
+            "beginner": "Người mới",
+            "learning": "Đang học",
+            "novice": "Tay mơ",
+            "student": "Học viên"
+        }
+    }
+]

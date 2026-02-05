@@ -1,0 +1,1001 @@
+﻿id,word,phonetic,meaning,example,partOfSpeech,ExampleMeaning
+1,Abide by,/É™ËˆbaÉªd baÉª/,"TuÃ¢n theo, chá»‹u theo",The two parties agreed to abide by the judge's decision.,verb
+2,Agreement,/É™ËˆÉ¡riËmÉ™nt/,"Há»£p Ä‘á»“ng, sá»± thá»a thuáº­n",According to the agreement, the caterer will also supply the flowers for the event.,noun
+3,Assurance,/É™ËˆÊƒÊŠÉ™rÉ™ns/,"Sá»± cam Ä‘oan, báº£o Ä‘áº£m",The sales associate gave his assurance that the missing keyboard would be replaced the next day.,noun
+4,Cancellation,/ËŒkÃ¦nsÉ™ËˆleÉªÊƒn/,"Sá»± há»§y bá»",The cancellation of her flight caused her problems for the rest of the week.,noun
+5,Determine,/dÉªËˆtÉœËmÉªn/,"Quyáº¿t Ä‘á»‹nh, xÃ¡c Ä‘á»‹nh",After reading the contract, I was still unable to determine if our company was liable for back wages.,verb
+6,Engage,/ÉªnËˆÉ¡eÉªdÊ’/,"Tham gia, cam káº¿t",Before engaging in a new business, it is important to do thorough research.,verb
+7,Establish,/ÉªËˆstÃ¦blÉªÊƒ/,"ThÃ nh láº­p, thiáº¿t láº­p",The merger of the two companies established a powerful new corporation.,verb
+8,Obligate,/ËˆÉ’blÉªÉ¡eÉªt/,"Báº¯t buá»™c, Ã©p buá»™c",The contractor was obligated by the contract to work 40 hours a week.,verb
+9,Party,/ËˆpÉ‘Ëti/,"BÃªn (trong há»£p Ä‘á»“ng)",The parties agreed to a settlement in their contract dispute.,noun
+10,Provision,/prÉ™ËˆvÉªÊ’n/,"Äiá»u khoáº£n, sá»± cung cáº¥p",The contract contains a provision to deal with how payments are made if John loses his job.,noun
+11,Resolve,/rÉªËˆzÉ’lv/,"Giáº£i quyáº¿t",The mediator was able to resolve the problem to everyone's satisfaction.,verb
+12,Specific,/spÉ™ËˆsÉªfÉªk/,"Cá»¥ thá»ƒ, Ä‘áº·c trÆ°ng",The customer's complaint was not specific enough for the clerk to find the proper replacement part.,adj
+13,Attract,/É™ËˆtrÃ¦kt/,"Thu hÃºt, háº¥p dáº«n",The new advertising campaign attracted thousands of new customers.,verb
+14,Compare,/kÉ™mËˆpeÉ™(r)/,"So sÃ¡nh",The customer compared the prices of the two cameras before making a purchase.,verb
+15,Competition,/ËŒkÉ’mpÉ™ËˆtÉªÊƒn/,"Sá»± cáº¡nh tranh",In the competition for the contract, the lowest bid was accepted.,noun
+16,Consume,/kÉ™nËˆsuËm/,"TiÃªu thá»¥, tiÃªu dÃ¹ng",The printer consumes more toner than the manual suggests.,verb
+17,Convince,/kÉ™nËˆvÉªns/,"Thuyáº¿t phá»¥c",He convinced me that he was right.,verb
+18,Current,/ËˆkÊŒrÉ™nt/,"Hiá»‡n táº¡i, hiá»‡n hÃ nh",Good market researchers have to be aware of current trends.,adj
+19,Fad,/fÃ¦d/,"Má»‘t nháº¥t thá»i",The mini-dress was a fad once thought to be finished, but now it is making a comeback.,noun
+20,Inspire,/ÉªnËˆspaÉªÉ™(r)/,"Truyá»n cáº£m há»©ng",His painting style was inspired by the works of the Old Masters.,verb
+21,Market,/ËˆmÉ‘ËkÉªt/,"Thá»‹ trÆ°á»ng, tiáº¿p thá»‹",The market for colored denim jeans has changed continuously.,noun
+22,Persuasion,/pÉ™ËˆsweÉªÊ’n/,"Sá»± thuyáº¿t phá»¥c",The seminar teaches techniques of persuasion to increase sales.,noun
+23,Productive,/prÉ™ËˆdÊŒktÉªv/,"CÃ³ nÄƒng suáº¥t, hiá»‡u quáº£",The productive employee was rewarded with a raise.,adj
+24,Satisfaction,/ËŒsÃ¦tÉªsËˆfÃ¦kÊƒn/,"Sá»± hÃ i lÃ²ng",Your satisfaction is guaranteed or your money back.,noun
+25,Characteristic,/ËŒkÃ¦rÉ™ktÉ™ËˆrÉªstÉªk/,"Äáº·c Ä‘iá»ƒm, Ä‘áº·c trÆ°ng",One characteristic of the store is that it is slow in mailing refund checks.,noun
+26,Consequence,/ËˆkÉ’nsÉªkwÉ™ns/,"Háº­u quáº£, káº¿t quáº£",As a consequence of not having a good business plan, the company failed.,noun
+27,Consider,/kÉ™nËˆsÉªdÉ™(r)/,"CÃ¢n nháº¯c, xem xÃ©t",You should consider all options before making a decision.,verb
+28,Cover,/ËˆkÊŒvÉ™(r)/,"Che phá»§, bao gá»“m, báº£o hiá»ƒm",Will my medical insurance cover this surgery?,verb
+29,Expiration,/ËŒekspÉ™ËˆreÉªÊƒn/,"Sá»± háº¿t háº¡n",Have you checked the expiration date on this yogurt?,noun
+30,Frequently,/ËˆfriËkwÉ™ntli/,"ThÆ°á»ng xuyÃªn",Appliances frequently come with a one-year warranty.,adv
+31,Imply,/ÉªmËˆplaÉª/,"Ngá»¥ Ã½, Ã¡m chá»‰",The guarantee on the Walkman implied that all damages were covered, not just labor.,verb
+32,Promise,/ËˆprÉ’mÉªs/,"Há»©a, cam káº¿t",The sales associate promised that our new mattress would arrive by noon on Saturday.,verb
+33,Protect,/prÉ™Ëˆtekt/,"Báº£o vá»‡",Consumer laws are designed to protect the public against unscrupulous vendors.,verb
+34,Reputation,/ËŒrepjuËˆteÉªÊƒn/,"Danh tiáº¿ng",The company knew that the reputation of its products was the most important asset it had.,noun
+35,Require,/rÉªËˆkwaÉªÉ™(r)/,"YÃªu cáº§u, Ä‘Ã²i há»i",The law requires that each item clearly display the warranty information.,verb
+36,Variety,/vÉ™ËˆraÉªÉ™ti/,"Sá»± Ä‘a dáº¡ng",There is a wide variety of patterns to choose from.,noun
+37,Address,/É™Ëˆdres/,"Äá»‹a chá»‰, giáº£i quyáº¿t, bÃ i nÃ³i chuyá»‡n",Marco's business plan addresses the needs of small business owners.,verb
+38,Avoid,/É™ËˆvÉ”Éªd/,"TrÃ¡nh",To avoid going out of business, owners should prepare a proper business plan.,verb
+39,Demonstrate,/ËˆdemÉ™nstreÉªt/,"Chá»©ng minh, giáº£i thÃ­ch",The professor demonstrated through a case study that a business plan can impress a lender.,verb
+40,Develop,/dÉªËˆvelÉ™p/,"PhÃ¡t triá»ƒn",Lily developed her ideas into a business plan by taking a class at the community college.,verb
+41,Evaluate,/ÉªËˆvÃ¦ljueÉªt/,"ÄÃ¡nh giÃ¡",It's important to evaluate your competition when making a business plan.,verb
+42,Gather,/ËˆÉ¡Ã¦Ã°É™(r)/,"Thu tháº­p, táº­p há»£p",We gathered information for our plan from many sources.,verb
+43,Offer,/ËˆÉ’fÉ™(r)/,"Äá» nghá»‹, cung cáº¥p",Devon accepted our offer to write the business plan.,noun
+44,Primary,/ËˆpraÉªmÉ™ri/,"ChÃ­nh, chá»§ yáº¿u",The primary reason for writing a business plan is to avoid common errors.,adj
+45,Risk,/rÉªsk/,"Rá»§i ro, nguy cÆ¡",Expanding into a new market is a big risk.,noun
+46,Strategy,/ËˆstrÃ¦tÉ™dÊ’i/,"Chiáº¿n lÆ°á»£c",A business plan is a strategy for running a business and avoiding problems.,noun
+47,Strong,/strÉ’Å‹/,"Máº¡nh máº½, kiÃªn cá»‘",The professor made a strong argument for the value of a good business plan.,adj
+48,Substitute,/ËˆsÊŒbstÉªtjuËt/,"Thay tháº¿",Don't try to substitute intuition for good planning.,verb
+49,Accommodate,/É™ËˆkÉ’mÉ™deÉªt/,"Cung cáº¥p chá»— á»Ÿ, Ä‘Ã¡p á»©ng",The meeting room was large enough to accommodate the various needs of the participants.,verb
+50,Arrangement,/É™ËˆreÉªndÊ’mÉ™nt/,"Sá»± sáº¯p xáº¿p",The travel arrangements were taken care of by Sara, Mr. Billing's capable assistant.,noun
+51,Association,/É™ËŒsÉ™ÊŠÊƒiËˆeÉªÊƒn/,"Hiá»‡p há»™i, sá»± liÃªn káº¿t",Membership in the trade association allows our company to attend the conference at a discount.,noun
+52,Attend,/É™Ëˆtend/,"Tham dá»±",We expect more than 100 members to attend the annual meeting.,verb
+53,Get in touch,/É¡et Éªn tÊŒtÊƒ/,"Giá»¯ liÃªn láº¡c",As soon as we arrive at the hotel, we will get in touch with the manager.,verb
+54,Hold,/hÉ™ÊŠld/,"Tá»• chá»©c, cáº§m, chá»©a",This meeting room holds at least 80 people comfortably.,verb
+55,Location,/lÉ™ÊŠËˆkeÉªÊƒn/,"Vá»‹ trÃ­, Ä‘á»‹a Ä‘iá»ƒm",The location of the meeting was changed from the Red Room to the Green Room.,noun
+56,Overcrowded,/ËŒÉ™ÊŠvÉ™ËˆkraÊŠdÉªd/,"QuÃ¡ Ä‘Ã´ng Ä‘Ãºc",As soon as the guests entered the dining room for dinner, Sue Lin saw that it was overcrowded.,adj
+57,Register,/ËˆredÊ’ÉªstÉ™(r)/,"ÄÄƒng kÃ½",According to the website, you can register for the conference online.,verb
+58,Select,/sÉªËˆlekt/,"Lá»±a chá»n",The conference participant selected the marketing seminar from the various options.,verb
+59,Session,/ËˆseÊƒn/,"PhiÃªn, buá»•i há»p",The morning sessions tend to fill up first, so sign up early.,noun
+60,Take part in,/teÉªk pÉ‘Ët Éªn/,"Tham gia",We could not get enough people to take part in the meeting, so we canceled it.,verb
+61,Access,/ËˆÃ¦kses/,"Truy cáº­p",You need a password to access the database.,verb
+62,Allocate,/ËˆÃ¦lÉ™keÉªt/,"PhÃ¢n bá»•",The office manager did not allocate enough money to purchase software.,verb
+63,Compatible,/kÉ™mËˆpÃ¦tÉ™bl/,"TÆ°Æ¡ng thÃ­ch",This operating system is not compatible with this model computer.,adj
+64,Delete,/dÉªËˆliËt/,"XÃ³a bá»",The technicians deleted all the data on the disk accidentally.,verb
+65,Display,/dÉªËˆspleÉª/,"Hiá»ƒn thá»‹, trÆ°ng bÃ y",The light on the LCD display is too weak.,noun
+66,Duplicate,/ËˆdjuËplÉªkeÉªt/,"Sao chÃ©p, n. báº£n sao",I think the new word processing program will duplicate the work of the system we already have.,verb
+67,Failure,/ËˆfeÉªljÉ™(r)/,"Sá»± tháº¥t báº¡i, há»ng hÃ³c",Your failure to inform us about the changed password cost the company a day's work.,noun
+68,Figure out,/ËˆfÉªÉ¡É™(r) aÊŠt/,"TÃ¬m ra, giáº£i quyáº¿t",By examining all of the errors, the technicians figured out how to fix the problem.,verb
+69,Ignore,/ÉªÉ¡ËˆnÉ”Ë(r)/,"Phá»›t lá»",Don't ignore the technician's advice when connecting cables.,verb
+70,Search,/sÉœËtÊƒ/,"TÃ¬m kiáº¿m",Our computer system will search for the file for you.,verb
+71,Shut down,/ÊƒÊŒt daÊŠn/,"Táº¯t mÃ¡y, Ä‘Ã³ng cá»­a",Please shut down the computer before you leave for the day.,verb
+72,Warning,/ËˆwÉ”ËnÉªÅ‹/,"Sá»± cáº£nh bÃ¡o",The red flashing light gives a warning to users that the battery is low.,noun
+73,Affordable,/É™ËˆfÉ”ËdÉ™bl/,"CÃ³ thá»ƒ chi tráº£, giÃ¡ pháº£i chÄƒng",The company's first priority was to find an affordable phone system.,adj
+74,As needed,/É™z ËˆniËdÉªd/,"Khi cáº§n thiáº¿t",The courier service will pick up the packages as needed.,adv
+75,Capacity,/kÉ™ËˆpÃ¦sÉ™ti/,"Sá»©c chá»©a, nÄƒng lá»±c",The new conference room has a capacity of 200 people.,noun
+76,Durable,/ËˆdjÊŠÉ™rÉ™bl/,"Bá»n bá»‰",This printer is so durable that with a little care verify it will last another five years.,adj
+77,Initiative,/ÉªËˆnÉªÊƒÉ™tÉªv/,"SÃ¡ng kiáº¿n, tháº¿ chá»§ Ä‘á»™ng",Employees are encouraged to take the initiative and share their ideas with management.,noun
+78,Physically,/ËˆfÉªzÉªkli/,"Vá» máº·t thá»ƒ cháº¥t",The computer screen is physically too small for the graphic designs.,adv
+79,Provider,/prÉ™ËˆvaÉªdÉ™(r)/,"NhÃ  cung cáº¥p",The department was looking for a new internet service provider.,noun
+80,Recur,/rÉªËˆkÉœË(r)/,"TÃ¡i diá»…n",The subject of decreasing sales recurs in each meeting.,verb
+81,Reduction,/rÉªËˆdÊŒkÊƒn/,"Sá»± giáº£m bá»›t",The reduction in office staff has made it difficult to get work done on time.,noun
+82,Stay on top of,/steÉª É’n tÉ’p É™v/,"Náº¯m báº¯t tÃ¬nh hÃ¬nh, kiá»ƒm soÃ¡t",In this industry, you must stay on top of current developments.,verb
+83,Stock,/stÉ’k/,"HÃ ng tá»“n kho, cá»• phiáº¿u",The employees stocked the shelves on a weekly basis.,verb
+84,Appreciation,/É™ËŒpriËÊƒiËˆeÉªÊƒn/,"Sá»± cáº£m kÃ­ch, sá»± tÄƒng giÃ¡ trá»‹",In appreciation of your hard work on the Castcon project, the department will hold a casual lunch party.,noun
+85,Be made of,/bi meÉªd É™v/,"ÄÆ°á»£c lÃ m tá»«",This job will really test what you are made of.,verb
+86,Bring in,/brÉªÅ‹ Éªn/,"ThuÃª, mÆ°á»›n, tuyá»ƒn dá»¥ng, mang láº¡i",The company brought in a new team of project planners.,verb
+87,Casually,/ËˆkÃ¦Ê’uÉ™li/,"KhÃ´ng trang trá»ng, tÃ¬nh cá»",On Fridays, most employees dress casually.,adv
+88,Code,/kÉ™ÊŠd/,"MÃ£, quy táº¯c",Even the most traditional companies are changing their dress code to something less formal.,noun
+89,Expose,/ÉªkËˆspÉ™ÊŠz/,"PhÆ¡i bÃ y, tiáº¿p xÃºc",Mergers require that employees be exposed to new business practices.,verb
+90,Glimpse,/É¡lÉªmps/,"CÃ¡i nhÃ¬n thoÃ¡ng qua",The secretary caught a glimpse of her new boss as she was leaving the office.,noun
+91,Out of,/aÊŠt É™v/,"Háº¿t, cáº¡n kiá»‡t",The presenter ran out of time before he could finish his presentation.,adj
+92,Outdated,/ËŒaÊŠtËˆdeÉªtÉªd/,"Lá»—i thá»i",The purpose of the seminar is to have employees replace outdated methods with new ones.,adj
+93,Practice,/ËˆprÃ¦ktÉªs/,"Thá»±c hÃ nh, thÃ³i quen",Bill practiced answering the telephone until he was satisfied.,verb
+94,Reinforce,/ËŒriËÉªnËˆfÉ”Ës/,"Cá»§ng cá»‘, tÄƒng cÆ°á»ng",The financial officer's presentation reinforced the idea that we need to cut costs.,verb
+95,Verbally,/ËˆvÉœËbÉ™li/,"Báº±ng lá»i nÃ³i",She verbally reprimanded the new hire in front of his entire team.,adv
+96,Disk,/dÉªsk/,"ÄÄ©a (mÃ¡y tÃ­nh)",The head of the department made copies of the disk for everyone in the meeting.,noun
+97,Facilitate,/fÉ™ËˆsÉªlÉªteÉªt/,"Táº¡o Ä‘iá»u kiá»‡n, lÃ m cho dá»… dÃ ng",The computer program facilitated the scheduling of appointments.,verb
+98,Network,/ËˆnetwÉœËk/,"Máº¡ng lÆ°á»›i",We set up a new network for the accounting department.,noun
+99,Popularity,/ËŒpÉ’pjuËˆlÃ¦rÉ™ti/,"Sá»± phá»• biáº¿n",The popularity of the new system has been overwhelming.,noun
+100,Process,/ËˆprÉ™ÊŠses/,"Quy trÃ¬nh, xá»­ lÃ½",There is a process for determining why your computer is malfunctioning.,noun
+101,Replace,/r?ple?s/,"Thay th?",I replaced the worn-out tires on my car.,verb
+102,Revolution,/rev?lu??n/,"Cu?c cách m?ng",The computer revolution has changed the way we work.,noun
+103,Sharp,/???p/,"Thông minh, s?c bén",The new employee is sharp and eager to learn.,adj
+104,Skill,/sk?l/,"K? nang",You need practice to improve your skills.,noun
+105,Software,/s?ftwe?(r)/,"Ph?n m?m",The new software is easier to use than the old program.,noun
+106,Storage,/st??r?d?/,"Luu tr?",Network storage is generally more reliable than local storage.,noun
+107,Technical,/tekn?kl/,"K? thu?t",The manual is too technical for most users to understand.,adj
+108,Assemble,/?sembl/,"L?p ráp",The factory assembles cars.,verb
+109,Beforehand,/b?f??hænd/,"Tru?c",We need to know beforehand how many people are coming.,adv
+110,Complication,/k?mpl?ke??n/,"S? ph?c t?p",There were complications with the new computer system.,noun
+111,Courier,/k?ri?(r)/,"Ngu?i chuy?n phát",The courier delivered the package this morning.,noun
+112,Express,/?kspres/,"Nhanh, t?c hành",Please send this letter via express mail.,adj
+113,Fold,/f??ld/,"G?p l?i",Fold the letter in half before putting it in the envelope.,verb
+114,Layout,/le?a?t/,"B? c?c",The layout of the new office is very open.,noun
+115,Mention,/men?n/,"Ð? c?p",Did he mention when he would be back?,verb
+116,Petition,/p?t??n/,"Ki?n ngh?",The employees signed a petition asking for better benefits.,noun
+117,Proof,/pru?f/,"B?ng ch?ng",Do you have any proof of purchase?,noun
+118,Register,/red??st?(r)/,"Ðang ký",You need to register for the conference by Friday.,verb
+119,Revise,/r?va?z/,"Xem l?i, s?a d?i",Please revise your report and submit it again tomorrow.,verb
+120,Abundant,/?b?nd?nt/,"Phong phú, d?i dào",The country has abundant natural resources.,adj
+121,Accomplishment,/?k?mpl??m?nt/,"Thành t?u",Winning the award was a major accomplishment.,noun
+122,Bring together,/br?? t?geð?(r)/,"T?p h?p, k?t n?i",The project brought together people from different departments.,verb
+123,Candidate,/kænd?d?t/,"?ng c? viên",The company interviewed several candidates for the job.,noun
+124,Come up with,/k?m ?p w?ð/,"N?y ra (ý tu?ng)",He came up with a great idea for the marketing campaign.,verb
+125,Commensurate,/k?men??r?t/,"Tuong x?ng",Salary will be commensurate with experience.,adj
+126,Match,/mæt?/,"Phù h?p, tuong x?ng",Her skills match the job requirements perfectly.,verb
+127,Profile,/pr??fa?l/,"H? so nang l?c",The company's profile has grown significantly in recent years.,noun
+128,Qualification,/kw?l?f?ke??n/,"Trình d? chuyên môn",Does he have the necessary qualifications for the job?,noun
+129,Recruit,/r?kru?t/,"Tuy?n d?ng",The company is recruiting new engineers.,verb
+130,Submit,/s?bm?t/,"N?p, d? trình",Please submit your application by the deadline.,verb
+131,Time-consuming,/ta?m k?nsju?m??/,"T?n th?i gian",Writing reports can be very time-consuming.,adj
+132,Ability,/?b?l?ti/,"Kh? nang",He has the ability to learn new things quickly.,noun
+133,Apply,/?pla?/,"N?p don, áp d?ng",I decided to apply for the job.,verb
+134,Background,/bækgra?nd/,"Lý l?ch, n?n t?ng",She has a strong background in finance.,noun
+135,Be ready for,/bi redi f??(r)/,"S?n sàng cho",Are you ready for the interview?,verb
+136,Call in,/k??l ?n/,"M?i d?n, g?i d?n",The manager called him in for a meeting.,verb
+137,Confidence,/k?nf?d?ns/,"S? t? tin",She answered the questions with confidence.,noun
+138,Constantly,/k?nst?ntli/,"Liên t?c, luôn luôn",Technology is constantly changing.,adv
+139,Expert,/eksp??t/,"Chuyên gia",He is an expert in computer security.,noun
+140,Follow up,/f?l?? ?p/,"Theo dõi, ti?p n?i",I will follow up with you next week.,verb
+141,Hesitant,/hez?t?nt/,"Do d?",He was hesitant to accept the offer.,adj
+142,Present,/preznt/,"Trình bày",She will present her findings at the meeting.,verb
+143,Weakly,/wi?kli/,"Y?u ?t",He smiled weakly.,adv
+144,Conduct,/k?nd?kt/,"Ti?n hành, cu x?",The company conducts performance reviews every year.,verb
+145,Generate,/d?en?re?t/,"T?o ra",The new marketing campaign generated a lot of sales.,verb
+146,Hire,/ha??(r)/,"Thuê, tuy?n d?ng",We need to hire more staff.,verb
+147,Keep up with,/ki?p ?p w?ð/,"Theo k?p",It's hard to keep up with all the changes in technology.,verb
+148,Look up to,/l?k ?p tu/,"Kính tr?ng",I look up to my mentor.,verb
+149,Mentor,/ment??(r)/,"Ngu?i c? v?n",She acted as a mentor to the new employees.,noun
+150,On track,/?n træk/,"Ðúng ti?n d?",The project is on track to be finished by Friday.,adj
+151,Reject,/r?d?ekt/,"T? ch?i",The committee rejected the proposal.,verb
+152,Set up,/set ?p/,"Thi?t l?p",We need to set up a meeting to discuss the budget.,verb
+153,Success,/s?kses/,"Thành công",The project was a great success.,noun
+154,Training,/tre?n??/,"Ðào t?o",The company provides training for all new employees.,noun
+155,Update,/?pde?t/,"C?p nh?t",We need to update our website.,verb
+156,Basis,/be?s?s/,"Co s?, n?n t?ng",We meet on a weekly basis.,noun
+157,Be aware of,/bi ?we?(r) ?v/,"Nh?n th?c du?c",He was not aware of the problem.,verb
+158,Benefit,/ben?f?t/,"L?i ích",The new policy has many benefits for employees.,noun
+159,Compensate,/k?mpense?t/,"B?i thu?ng, d?n bù",The company compensated him for his injury.,verb
+160,Delicate,/del?k?t/,"Tinh t?, nh?y c?m",The negotiations were at a delicate stage.,adj
+161,Eligible,/el?d??bl/,"Ð? di?u ki?n",Only full-time employees are eligible for benefits.,adj
+162,Flexibly,/fleks?bli/,"Linh ho?t",We try to work flexibly to meet our clients' needs.,adv
+163,Negotiate,/n?g???ie?t/,"Ðàm phán",I negotiated a better salary.,verb
+164,Raise,/re?z/,"S? tang luong, nâng lên",He received a raise after his performance review.,noun
+165,Retire,/r?ta??(r)/,"Ngh? huu",He plans to retire next year.,verb
+166,Vested,/vest?d/,"Ðu?c trao quy?n, du?c hu?ng",She has a vested interest in the company's success.,adj
+167,Wage,/we?d?/,"Ti?n công (theo gi?/ngày)",The minimum wage was increased last month.,noun
+168,Achievement,/?t?i?vm?nt/,"Thành tích",Winning the sales award was a great achievement.,noun
+169,Contribute,/k?ntr?bju?t/,"Ðóng góp",Everyone contributed to the success of the project.,verb
+170,Dedication,/ded?ke??n/,"S? c?ng hi?n",We appreciate your dedication to the company.,noun
+171,Look forward to,/l?k f??w?d tu/,"Mong d?i",I look forward to meeting you.,verb
+172,Look to,/l?k tu/,"Trông c?y vào",We look to him for leadership.,verb
+173,Loyal,/l???l/,"Trung thành",He has been a loyal employee for 20 years.,adj
+174,Merit,/mer?t/,"Công lao, giá tr?",Promotions are based on merit, not seniority.,noun
+175,Obviously,/?bvi?sli/,"Rõ ràng",Obviously, we need to improve our sales.,adv
+176,Promote,/pr?m??t/,"Thúc d?y, thang ch?c",He was promoted to manager.,verb
+177,Recognition,/rek?gn??n/,"S? công nh?n",She received recognition for her hard work.,noun
+178,Value,/vælju?/,"Ðánh giá cao, giá tr?",We value your opinion.,verb
+179,Bargain,/b??g?n/,"Món h?i, m?c c?",This coat was a real bargain.,noun
+180,Bear,/be?(r)/,"Ch?u d?ng",I can't bear the thought of losing my job.,verb
+181,Behavior,/b?he?vj?(r)/,"Hành vi",His behavior at the party was unacceptable.,noun
+182,Checkout,/t?eka?t/,"Qu?y thanh toán",The line at the checkout was very long.,noun
+183,Comfort,/k?mf?t/,"S? tho?i mái",The new chairs provide great comfort.,noun
+184,Expand,/?kspænd/,"M? r?ng",The company plans to expand its operations.,verb
+185,Explore,/?kspl??(r)/,"Khám phá",We need to explore new markets.,verb
+186,Item,/a?t?m/,"Món hàng",Please check your items before leaving the store.,noun
+187,Mandatory,/mænd?t?ri/,"B?t bu?c",Attendance at the meeting is mandatory.,adj
+188,Merchandise,/m??t??nda?s/,"Hàng hóa",The store displays its merchandise attractively.,noun
+189,Strictly,/str?ktli/,"Nghiêm ng?t",Smoking is strictly prohibited.,adv
+190,Trend,/trend/,"Xu hu?ng",The current trend is towards smaller cars.,noun
+191,Consistent,/k?ns?st?nt/,"Nh?t quán",We need to maintain a consistent quality standard.,adj
+192,Diversify,/da?v??s?fa?/,"Ða d?ng hóa",The company should diversify its product line.,verb
+193,Enterprise,/ent?pra?z/,"Doanh nghi?p",This is a successful business enterprise.,noun
+194,Essentially,/?sen??li/,"V? co b?n",Essentially, we agree on the main points.,adv
+195,Function,/f??k?n/,"Ch?c nang",The main function of this machine is to copy documents.,noun
+196,Maintain,/me?nte?n/,"Duy trì",We need to maintain good relations with our customers.,verb
+197,Obtain,/?bte?n/,"Có du?c, d?t du?c",He obtained a loan from the bank.,verb
+198,Prerequisite,/pri?rekw?z?t/,"Ði?u ki?n tiên quy?t",A degree is a prerequisite for this job.,noun
+199,Quality,/kw?l?ti/,"Ch?t lu?ng",We pride ourselves on the quality of our products.,noun
+200,Smooth,/smu?ð/,"Trôi ch?y, êm th?m",The transition to the new system was very smooth.,adj
+201,Source,/s??s/,"Ngu?n",We need to find a new source for raw materials.,noun
+202,Stationery,/ste???nri/,"Van phòng ph?m",We need to order more stationery for the office.,noun
+203,Accurate,/ækj?r?t/,"Chính xác",The report needs to be accurate.,adj
+204,Carrier,/kæri?(r)/,"Hãng v?n chuy?n",We use a reliable carrier for our shipments.,noun
+205,Catalog,/kæt?l?g/,"Danh m?c",Please check the catalog for the latest products.,noun
+206,Fulfill,/f?lf?l/,"Hoàn thành, dáp ?ng",We need to fulfill the customer's order by Friday.,verb
+207,Integral,/?nt?gr?l/,"C?n thi?t, không th? thi?u",Customer service is an integral part of our business.,adj
+208,Inventory,/?nv?ntri/,"Hàng t?n kho",We take inventory every month.,noun
+209,Minimize,/m?n?ma?z/,"Gi?m thi?u",We need to minimize our costs.,verb
+210,On hand,/?n hænd/,"Có s?n",We have plenty of supplies on hand.,adj
+211,Remember,/r?memb?(r)/,"Nh?",Please remember to sign the invoice.,verb
+212,Ship,/??p/,"G?i hàng, v?n chuy?n",When will you ship the order?,verb
+213,Sufficient,/s?f??nt/,"Ð?",We have sufficient funds to complete the project.,adj
+214,Supply,/s?pla?/,"Cung c?p",The company supplies us with paper.,verb
+215,Charge,/t???d?/,"Tính phí",How much do you charge for delivery?,verb
+216,Compile,/k?mpa?l/,"Biên so?n, t?p h?p",She compiled a list of potential customers.,verb
+217,Customer,/k?st?m?(r)/,"Khách hàng",The customer is always right.,noun
+218,Discount,/d?ska?nt/,"Gi?m giá",We offer a 10% discount for cash payments.,noun
+219,Efficient,/?f??nt/,"Hi?u qu?",He is an efficient worker.,adj
+220,Estimate,/est?m?t/,"U?c tính",Can you give me an estimate for the repairs?,noun
+221,Impose,/?mp??z/,"Áp d?t",The government imposed a new tax on imports.,verb
+222,Mistake,/m?ste?k/,"L?i, sai l?m",I made a mistake in the calculation.,noun
+223,Order,/??d?(r)/,"Ðon hàng, d?t hàng",I'd like to place an order for 100 units.,noun
+224,Prompt,/pr?mpt/,"Nhanh chóng",Thank you for your prompt reply.,adj
+225,Rectify,/rekt?fa?/,"S?a ch?a, kh?c ph?c",We will rectify the error immediately.,verb
+226,Terms,/t??mz/,"Ði?u kho?n",We need to agree on the terms of the contract.,noun
+227,Adjustment,/?d??stm?nt/,"S? di?u ch?nh",We made a few adjustments to the plan.,noun
+228,Automatically,/??t?mæt?kli/,"T? d?ng",The doors open automatically.,adv
+229,Crucial,/kru??l/,"Quan tr?ng, c?t y?u",It is crucial to follow the instructions carefully.,adj
+230,Discrepancy,/d?skrep?nsi/,"S? khác bi?t, không nh?t quán",There is a discrepancy between the two reports.,noun
+231,Disturb,/d?st??b/,"Làm phi?n",Please do not disturb me while I'm working.,verb
+232,Liability,/la??b?l?ti/,"Trách nhi?m pháp lý",The company admits no liability for the accident.,noun
+233,Reflection,/r?flek?n/,"S? ph?n chi?u, ph?n ánh",The report checks a reflection of the current economic situation.,noun
+234,Run,/r?n/,"Ch?y, v?n hành",The computer is running slowly.,verb
+235,Scan,/skæn/,"Quét",Please scan the document and email it to me.,verb
+236,Subtract,/s?btrækt/,"Tr? di",Subtract the expenses from the income.,verb
+237,Tedious,/ti?di?s/,"T? nh?t",Filing documents can be a tedious job.,adj
+238,Verify,/ver?fa?/,"Xác minh",Please verify your email address.,verb
+239,Accept,/?ksept/,"Ch?p nh?n",We accept credit cards.,verb
+240,Balance,/bæl?ns/,"S? du",Check your bank balance regularly.,noun
+241,Borrow,/b?r??/,"Vay, mu?n",Can I borrow a pen?,verb
+242,Cautiously,/k????sli/,"C?n tr?ng",He drove cautiously down the icy road.,adv
+243,Deduct,/d?d?kt/,"Tr? di, kh?u tr?",The tax will be deducted from your salary.,verb
+244,Dividend,/d?v?dend/,"C? t?c",The company pays a quarterly dividend.,noun
+245,Down payment,/da?n pe?m?nt/,"Ti?n d?t c?c",We made a down payment on the house.,noun
+246,Mortgage,/m??g?d?/,"Th? ch?p",They took out a mortgage to buy the property.,noun
+247,Restricted,/r?str?kt?d/,"B? h?n ch?",Access to this area is restricted.,adj
+248,Signature,/s?gn?t??(r)/,"Ch? ký",Please put your signature at the bottom of the page.,noun
+249,Take out,/te?k a?t/,"Rút ra, l?y ra",He took out a loan to buy a car.,verb
+250,Transaction,/trænzæk?n/,"Giao d?ch",The transaction was completed successfully.,noun
+251,Accounting,/?ka?nt??/,"K? toán",She is studying accounting at university.,noun
+252,Accumulate,/?kju?mj?le?t/,"Tích luy",Debts can accumulate quickly.,verb
+253,Asset,/æset/,"Tài s?n",The company has assets worth millions of dollars.,noun
+254,Audit,/??d?t/,"Ki?m toán",The company accounts are audited annually.,noun
+255,Budget,/b?d??t/,"Ngân sách",We need to stay within our budget.,noun
+256,Build up,/b?ld ?p/,"Xây d?ng, tang cu?ng",We need to build up our savings.,verb
+257,Client,/kla??nt/,"Khách hàng",We have many important clients.,noun
+258,Debt,/det/,"N?",He is in debt to the bank.,noun
+259,Outstanding,/a?tstænd??/,"Tuy?t v?i, chua thanh toán",You have an outstanding balance on your account.,adj
+260,Profitable,/pr?f?t?bl/,"Có l?i nhu?n",The business is very profitable.,adj
+261,Reconcile,/rek?nsa?l/,"Hòa gi?i, d?i chi?u",It can be difficult to reconcile work and family life.,verb
+262,Turnover,/t??n??v?(r)/,"Doanh thu, t? l? thay th? nhân viên",The company has a high staff turnover.,noun
+263,Aggressive,/?gres?v/,"Tích c?c, hung hang",An aggressive marketing campaign is needed.,adj
+264,Attitude,/æt?tju?d/,"Thái d?",She has a positive attitude towards her work.,noun
+265,Commit,/k?m?t/,"Cam k?t",We are committed to providing quality service.,verb
+266,Conservative,/k?ns??v?t?v/,"B?o th?",He is a conservative investor.,adj
+267,Fund,/f?nd/,"Qu?, tài tr?",The government will fund the project.,verb
+268,Invest,/?nvest/,"Ð?u tu",It's wise to invest in real estate.,verb
+269,Long-term,/l?? t??m/,"Dài h?n",We need a long-term solution to this problem.,adj
+270,Portfolio,/p??tf??li??/,"Danh m?c d?u tu",He has a diverse investment portfolio.,noun
+271,Pull out,/p?l a?t/,"Rút lui",The company pulled out of the deal.,verb
+272,Resource,/r?s??s/,"Tài nguyên, ngu?n l?c",We need to use our resources wisely.,noun
+273,Return,/r?t??n/,"Ti?n l?i, s? tr? l?i",The return on investment was high.,noun
+274,Wisely,/wa?zli/,"M?t cách khôn ngoan",Choose your words wisely.,adv
+275,Calculation,/kælkjule??n/,"S? tính toán",The calculation was incorrect.,noun
+276,Deadline,/dedla?n/,"H?n chót",The deadline for the report is Friday.,noun
+277,File,/fa?l/,"H? so, d? trình",Please file these documents.,verb
+278,Fill out,/f?l a?t/,"Ði?n vào",Please fill out this form.,verb
+279,Give up,/g?v ?p/,"T? b?",Don't give up hope.,verb
+280,Joint,/d???nt/,"Chung",They have a joint bank account.,adj
+281,Owe,/??/,"N?",I owe you a favor.,verb
+282,Penalty,/pen?lti/,"Hình ph?t, ti?n ph?t",There is a penalty for late payment.,noun
+283,Preparation,/prep?re??n/,"S? chu?n b?",Preparation is key to success.,noun
+284,Refund,/ri?f?nd/,"Hoàn ti?n",Can I get a refund for this ticket?,noun
+285,Spouse,/spa?s/,"V?/ch?ng",Employees and their spouses are invited to the party.,noun
+286,Withhold,/w?ðh??ld/,"Gi? l?i",The company withholds taxes from my paycheck.,verb
+287,Desired,/d?za??d/,"Mong mu?n",The desired outcome was achieved.,adj
+288,Detail,/di?te?l/,"Chi ti?t",Tell me the details of the plan.,noun
+289,Forecast,/f??k??st/,"D? báo",The sales forecast looks good.,noun
+290,Level,/levl/,"M?c d?",The noise level is too high.,noun
+291,Overall,/??v?r??l/,"T?ng th?",The overall cost was higher than expected.,adj
+292,Perspective,/p?spekt?v/,"Góc nhìn, quan di?m",Try to see things from my perspective.,noun
+293,Projecteds,/pr?d?ekt?d/,"D? ki?n",The projected sales for next year are encouraging.,adj
+294,Realistic,/ri??l?st?k/,"Th?c t?",Let's be realistic about what we can achieve.,adj
+295,Target,/t??g?t/,"M?c tiêu",Our target is to increase sales by 10%.,noun
+296,Translation,/trænzle??n/,"B?n d?ch",The translation is accurate.,noun
+297,Typical,/t?p?kl/,"Ði?n hình",Use specific examples to show typical uses.,adj
+298,Yield,/ji?ld/,"L?i nhu?n, s?n lu?ng",The investment yields a high return.,verb
+299,Adjacent,/?d?e?snt/,"Li?n k?",The hotel is adjacent to the airport.,adj
+300,Collaboration,/k?læb?re??n/,"S? c?ng tác",The project was a collaboration between two artists.,noun
+301,Concentrate,/k?nsntre?t/,"T?p trung",We need to concentrate on our core business.,verb
+302,Conducive,/k?ndju?s?v/,"Có l?i, giúp ích",A quiet environment is conducive to learning.,adj
+303,Disrupt,/d?s'r?pt/,"Làm gián do?n",The meeting was disrupted by a fire alarm.,verb
+304,Hamper,/hæmp?(r)/,"C?n tr?",Bad weather hampered the rescue effort.,verb
+305,Inconsiderately,/?nk?ns?d?r?tli/,"Thi?u suy nghi",He parked his car inconsiderately, blocking the driveway.,adv
+306,Lobby,/l?bi/,"S?nh",We met in the hotel lobby.,noun
+307,Move up,/mu?v ?p/,"Thang ti?n, d?i lên s?m hon",Can we move the meeting up to 2 PM?,verb
+308,Open to,/??p?n tu/,"S?n sàng ti?p thu",We are open to suggestions.,adj
+309,Opt,/?pt/,"Ch?n l?a",He opted to retire early.,verb
+310,Scrutinize,/skru?t?na?z/,"Xem xét k? lu?ng",The contract was carefully scrutinized by the lawyers.,verb
+311,Adjourn,/?d???n/,"D?i l?i, hoãn l?i (cu?c h?p)",The meeting was adjourned until tomorrow.,verb
+312,Agenda,/?d?end?/,"Chuong trình ngh? s?",The first item on the agenda is the budget.,noun
+313,Chairperson,/t?e?p??sn/,"Ch? t?ch",The chairperson opened the meeting.,noun
+314,Consensus,/k?nsens?s/,"S? d?ng thu?n",We reached a consensus on the issue.,noun
+315,Designate,/dez?gne?t/,"Ch? d?nh",She was designated as the leader of the group.,verb
+316,Dispense,/d?spens/,"Phân phát, mi?n tr?",The machine dispenses coffee.,verb
+317,Feature,/fi?t??(r)/,"Ð?c di?m, tính nang",The new car has many safety features.,noun
+318,Happen,/hæp?n/,"X?y ra",What happened at the meeting?,verb
+319,Highlight,/ha?la?t/,"Làm n?i b?t",The report highlights the need for change.,verb
+320,Irrelevant,/?rel?v?nt/,"Không liên quan",That comment is irrelevant to the discussion.,adj
+321,Minutes,/m?n?ts/,"Biên b?n cu?c h?p",Who will take the minutes?,noun
+322,Motion,/m???n/,"S? chuy?n d?ng, ki?n ngh?",I move a motion to adjourn the meeting.,verb
+323,Ambitious,/æmb???s/,"Tham v?ng",He is very ambitious and wants to become CEO.,adj
+324,Apprehensive,/æpr?hens?v/,"Lo l?ng, e s?",I was apprehensive about the interview.,adj
+325,Background,/bækgra?nd/,"Lý l?ch, b?i c?nh",She has a background in marketing.,noun
+326,Candidate,/kænd?d?t/,"?ng c? viên",He is a strong candidate for the job.,noun
+327,Consultant,/k?ns?lt?nt/,"Tu v?n viên",We hired a consultant to help us with the project.,noun
+328,Entitle,/?nta?tl/,"Cho quy?n",This ticket entitles you to a free meal.,verb
+329,Degree,/d?gri?/,"B?ng c?p",He has a degree in engineering.,noun
+330,Payroll,/pe?r??l/,"B?ng luong",The company has 500 employees on its payroll.,noun
+331,Recruit,/r?kru?t/,"Tuy?n m?",We are recruiting new staff.,verb
+332,Wage,/we?d?/,"Ti?n công",The minimum wage has increased.,noun
+333,Commute,/k?mju?t/,"Ði làm (du?ng xa)",I commute to work by train.,verb
+334,Conduct,/k?nd?kt/,"Ti?n hành",We conducted a survey of our customers.,verb
+335,Confirm,/k?nf??m/,"Xác nh?n",Please confirm your attendance.,verb
+336,Expect,/?kspekt/,"Mong d?i",We expect sales to increase.,verb
+337,Measure,/me??(r)/,"Ðo lu?ng, bi?n pháp",We need to take measures to reduce costs.,noun
+338,Occupy,/?kjupa?/,"Chi?m gi?",The building is occupied by a law firm.,verb
+339,Procedure,/pr?si?d??(r)/,"Th? t?c",What is the procedure for applying for a visa?,noun
+340,Reimburse,/ri??mb??s/,"Hoàn tr?",The company will reimburse you for your travel expenses.,verb
+341,Resource,/r?s??s/,"Tài nguyên",We need to protect our natural resources.,noun
+342,Secure,/s?kj??(r)/,"Ð?m b?o, an toàn",Please ensure that the door is secure.,adj
+343,Annual,/ænju?l/,"Hàng nam",The company holds an annual meeting.,adj
+344,Appointment,/?p??ntm?nt/,"Cu?c h?n",I have an appointment with the doctor.,noun
+345,Assess,/?ses/,"Ðánh giá",We need to assess the damage.,verb
+346,Diagnose,/da??gn??z/,"Ch?n doán",The doctor diagnosed him with the flu.,verb
+347,Effective,/bre?k ?n/,"Hi?u qu?",The new medicine is very effective.,adj
+348,Instrument,/?nstr?m?nt/,"D?ng c?, nh?c c?",The surgeon used delicate instruments.,noun
+349,Manage,/mæn?d?/,"Qu?n lý, xoay x?",Can you manage to finish the report by tomorrow?,verb
+350,Prevent,/pr?vent/,"Ngan ch?n",Regular exercise can help prevent heart disease.,verb
+351,Recommend,/rek?mend/,"Khuyên, d? ngh?",I recommend the chicken dish.,verb
+352,Record,/rek??d/,"H? so, k? l?c",Keep a record of your expenses.,noun
+353,Refer,/r?f??(r)/,"Tham kh?o, gi?i thi?u",Please refer to the manual for instructions.,verb
+354,Serious,/s??ri?s/,"Nghiêm tr?ng",Wait, this is a serious problem.,adj
+355,Aware,/?we?(r)/,"Nh?n th?c",Are you aware of the risks?,adj
+356,Catch up,/kæt? ?p/,"Làm bù, b?t k?p",I need to catch up on some work.,verb
+357,Distraction,/d?stræk?n/,"S? xao nhãng",Background noise can be a distraction.,noun
+358,Encouragement,/?nk?r?d?m?nt/,"S? khích l?",He needs a lot of encouragement.,noun
+359,Evident,/ev?d?nt/,"Rõ ràng",It was evident that she was unhappy.,adj
+360,Habit,/hæb?t/,"Thói quen",Smoking is a bad habit.,noun
+361,Illuminate,/?lu?m?ne?t/,"Chi?u sáng, làm sáng t?",The street was illuminated by streetlights.,verb
+362,Irritate,/?r?te?t/,"Làm khó ch?u",His constant complaining irritates me.,verb
+363,Overview,/??v?vju?/,"T?ng quan",The report gives an overview of the company's financial situation.,noun
+364,Position,/p?z??n/,"V? trí",He holds a senior position in the company.,noun
+365,Regularly,/regj?l?li/,"Thu?ng xuyên",We meet regularly to discuss progress.,adv
+366,Restore,/r?st??(r)/,"Khôi ph?c",The painting was restored to its original condition.,verb
+367,Allow,/?la?/,"Cho phép",Smoking is not allowed in the building.,verb
+368,Alternative,/??lt??n?t?v/,"S? thay th?",We have no alternative but to close the factory.,noun
+369,Aspect,/æspekt/,"Khía c?nh",We need to consider every aspect of the problem.,noun
+370,Concern,/k?ns??n/,"Lo l?ng, quan tâm",I am concerned about his health.,verb
+371,Emphasize,/emf?sa?z/,"Nh?n m?nh",The report emphasizes the importance of safety.,verb
+372,Incur,/?nk??(r)/,"Ch?u d?ng (chi phí, h?u qu?)",You may incur a fee if you cancel the reservation.,verb
+373,Personnel,/p??s?nel/,"Nhân s?",All personnel must wear ID badges.,noun
+374,Policy,/p?l?si/,"Chính sách",The company has a strict no-smoking policy.,noun
+375,Portion,/p???n/,"Ph?n",A large portion of the budget is spent on advertising.,noun
+376,Regardless,/r?g??dl?s/,"B?t ch?p",He continued working regardless of the pain.,adv
+377,Salary,/sæl?ri/,"Luong",She earns a high salary.,noun
+378,Suit,/su?t/,"Phù h?p",This time doesn't suit me.,verb
+379,Admit,/?dm?t/,"Th?a nh?n",He admitted that he had made a mistake.,verb
+380,Authorize,/????ra?z/,"?y quy?n",Who authorized this payment?,verb
+381,Designate,/dez?gne?t/,"Ch? d?nh",Areas designated for smoking.,verb
+382,Escort,/esk??t/,"H? t?ng",Security guards escorted him out of the building.,verb
+383,Identify,/a?dent?fa?/,"Nh?n di?n",Can you identify the man in the photo?,verb
+384,Mission,/m??n/,"S? m?nh",Our mission is to provide the best possible service.,noun
+385,Permit,/p?m?t/,"Cho phép, gi?y phép",Do you have a permit to park here?,noun
+386,Pertinent,/p??t?n?nt/,"Thích h?p, liên quan",Please ask pertinent questions.,adj
+387,Procedure,/pr?si?d??(r)/,"Th? t?c",We must follow proper courtroom procedure.,noun
+388,Result,/r?z?lt/,"K?t qu?",The result of the game was a draw.,noun
+389,Statement,/ste?tm?nt/,"Tuyên b?, sao kê",The bank sends a monthly statement.,noun
+390,Usually,/ju??u?li/,"Thu?ng xuyên",I usually get up at 7 AM.,adv
+391,Consult,/k?ns?lt/,"Tham kh?o ý ki?n",You should consult a lawyer.,verb
+392,Control,/k?ntr??l/,"Ki?m soát",He lost control of the car.,verb
+393,Convenient,/k?nvi?ni?nt/,"Thu?n ti?n",Is it convenient for you to meet now?,adj
+394,Detect,/d?tekt/,"Phát hi?n",The alarm detects smoke.,verb
+395,Factor,/fækt?(r)/,"Y?u t?",Cost is a major factor in our decision.,noun
+396,Interaction,/?nt?ræk?n/,"S? tuong tác",There is a lot of interaction between the two departments.,noun
+397,Limit,/l?m?t/,"Gi?i h?n",There is a speed limit of 50 km/h.,noun
+398,Monitor,/m?n?t?(r)/,"Giám sát",We need to monitor the situation closely.,verb
+399,Potential,/p?ten?l/,"Ti?m nang",He has the potential to be a great leader.,noun
+400,Sample,/s??mpl/,"M?u th?",Here is a free sample of our new product.,noun
+401,Sense,/sens/,"Giác quan, ý th?c",He has a good sense of humor.,noun
+402,Volunteer,/v?l?nt??(r)/,"Tình nguy?n viên",She volunteers at the local hospital.,noun
+403,Admission,/?dm??n/,"S? nh?n vào, phí vào c?a",Admission to the museum is free.,noun
+404,Adjustment,/?d??stm?nt/,"S? di?u ch?nh",We made some adjustments to the schedule.,noun
+405,Make a decision,/me?k ? d?s??n/,"Ðua ra quy?t d?nh",It's time to make a decision.,verb
+406,Announce,/?na?ns/,"Thông báo",The company announced a new product line.,verb
+407,Calculate,/kælkjule?t/,"Tính toán",We need to calculate the total cost.,verb
+408,Comparison,/k?mpær?sn/,"S? so sánh",There is no comparison between the two cars.,noun
+409,Compete,/k?mpi?t/,"C?nh tranh",We have to compete with cheap imports.,verb
+410,Deadline,/dedla?n/,"H?n chót",We have to meet the deadline.,noun
+411,Difficult,/d?f?k?lt/,"Khó khan",It was a difficult decision.,adj
+412,Effort,/ef?t/,"N? l?c",He put a lot of effort into the project.,noun
+413,Extend,/?kstend/,"M? r?ng, gia h?n",We plan to extend the house.,verb
+414,Independent,/?nd?pend?nt/,"Ð?c l?p",She is a very independent woman.,adj
+415,Merger,/m??d??(r)/,"S? sáp nh?p",The merger of the two companies was announced today.,noun
+416,Priority,/pra??r?ti/,"Uu tiên",Safety is our top priority.,noun
+417,Prohibit,/pr?h?b?t/,"C?m",Smoking is prohibited in this area.,verb
+418,System,/s?st?m/,"H? th?ng",We need a better filing system.,noun
+419,Advance,/?dv??ns/,"Ti?n b?, ?ng tru?c",Technological advances have changed our lives.,noun
+420,Appoint,/?p??nt/,"B? nhi?m",He was appointed manager of the branch.,verb
+421,Assessment,/?sesm?nt/,"S? dánh giá",The assessment of the damage will take some time.,noun
+422,Assignment,/?sa?nm?nt/,"Nhi?m v?",Complete the assignment by Friday.,noun
+423,Award,/?w??d/,"Gi?i thu?ng",She won an award for her acting.,noun
+424,Celebrate,/sel?bre?t/,"An m?ng",We celebrated her birthday with a party.,verb
+425,Combine,/k?mba?n/,"K?t h?p",The new company combines the strengths of both.,verb
+426,Coordinator,/k????d?ne?t?(r)/,"Ði?u ph?i viên",She is the coordinator of the project.,noun
+427,Demand,/d?m??nd/,"Nhu c?u",There is a high demand for skilled workers.,noun
+428,Encourage,/?nk?r?d?/,"Khuy?n khích",My parents encouraged me to study hard.,verb
+429,Feedback,/fi?dbæk/,"Ph?n h?i",We welcome feedback from our customers.,noun
+430,Finalize,/fa?n?la?z/,"Hoàn t?t",We need to finalize the details of the contract.,verb
+431,Generate,/d?en?re?t/,"T?o ra",The power plant generates electricity.,verb
+432,Grant,/gr??nt/,"Tr? c?p, ban cho",The university granted him a scholarship.,noun
+433,Handle,/hændl/,"X? lý",She can handle difficult situations well.,verb
+434,Improve,/?mpru?v/,"C?i thi?n",I want to improve my English.,verb
+435,Initial,/?n??l/,"Ban d?u",My initial reaction was surprise.,adj
+436,Keep in mind,/ki?p ?n ma?nd/,"Ghi nh?",Keep in mind that the deadline is tomorrow.,verb
+437,Launch,/l??nt?/,"Ra m?t, phóng",The company launched a new product.,verb
+438,Mandatory,/mænd?t?ri/,"B?t bu?c",It is mandatory to wear a seatbelt.,adj
+439,Objective,/?bd?ekt?v/,"M?c tiêu",Our main objective is to increase profits.,noun
+440,Participation,/p??t?s?pe??n/,"S? tham gia",Participation in the event is voluntary.,noun
+441,Payment,/pe?m?nt/,"Thanh toán",Payment is due within 30 days.,noun
+442,Penalty,/pen?lti/,"Hình ph?t",The penalty for speeding is a fine.,noun
+443,Predict,/pr?d?kt/,"D? doán",It is difficult to predict the weather.,verb
+444,Productivity,/pr?d?kt?v?ti/,"Nang su?t",We need to increase productivity.,noun
+445,Prohibit,/pr?h?b?t/,"C?m",Parking is prohibited here.,verb
+446,Providing,/pr?va?d??/,"Mi?n là",I will go providing the weather is good.,conj
+447,Raise,/re?z/,"Nâng lên, tang",He raised his hand to ask a question.,verb
+448,Rate,/re?t/,"T? l?, giá",The unemployment rate is rising.,noun
+449,Recognition,/rek?gn??n/,"S? công nh?n",He deserves recognition for his achievements.,noun
+450,Refuse,/r?fju?z/,"T? ch?i",She refused to help me.,verb
+451,Regulation,/regjule??n/,"Quy d?nh",We have to comply with safety regulations.,noun
+452,Reimburse,/ri??mb??s/,"Hoàn tr?",You will be reimbursed for your expenses.,verb
+453,Release,/r?li?s/,"Phát hành, gi?i phóng",The new album will be released next week.,verb
+454,Reminder,/r?ma?nd?(r)/,"L?i nh?c nh?",This is a reminder to pay your bill.,noun
+455,Remote,/r?m??t/,"Xa xôi, t? xa",He lives in a remote village.,adj
+456,Reputation,/repjute??n/,"Danh ti?ng",The restaurant has a good reputation.,noun
+457,Requirement,/r?kwa??m?nt/,"Yêu c?u",A degree is a requirement for this job.,noun
+458,Resolve,/r?z?lv/,"Gi?i quy?t",We need to resolve this issue as soon as possible.,verb
+459,Respect,/r?spekt/,"Tôn tr?ng",We should respect the environment.,verb
+460,Respond,/r?sp?nd/,"Ph?n h?i",Please respond to this email.,verb
+461,Result,/r?z?lt/,"K?t qu?",The result was better than expected.,noun
+462,Revenue,/rev?nju?/,"Doanh thu",The company's revenue increased last year.,noun
+463,Rising,/ra?z??/,"Ðang tang",Rising prices are a concern.,adj
+464,Schedule,/?edju?l/,"L?ch trình",The meeting is scheduled for 10 AM.,noun
+465,Seek,/si?k/,"Tìm ki?m",We are seeking new business opportunities.,verb
+466,Select,/s?lekt/,"Ch?n",She was selected for the team.,verb
+467,Significant,/s?gn?f?k?nt/,"Ðáng k?",There has been a significant change in the market.,adj
+468,Solution,/s?lu??n/,"Gi?i pháp",We need to find a solution to this problem.,noun
+469,Specific,/sp?s?f?k/,"C? th?",Can you be more specific?,adj
+470,Strategy,/stræt?d?i/,"Chi?n lu?c",We need a new marketing strategy.,noun
+471,Strict,/str?kt/,"Nghiêm kh?c",My parents were very strict.,adj
+472,Submit,/s?bm?t/,"N?p",Submit your report by Monday.,verb
+473,Substantial,/s?bstæn?l/,"Ðáng k?",He made a substantial donation to the charity.,adj
+474,Suggest,/s?d?est/,"G?i ý",I suggest we go for a walk.,verb
+475,Support,/s?p??t/,"H? tr?",I support your decision.,verb
+476,Target,/t??g?t/,"M?c tiêu",Our target audience is young people.,noun
+477,Technical,/tekn?kl/,"K? thu?t",We have some technical problems.,adj
+478,Temporary,/tempr?ri/,"T?m th?i",This is just a temporary solution.,adj
+479,Terminate,/t??m?ne?t/,"Ch?m d?t",The contract was terminated.,verb
+480,Track,/træk/,"Theo dõi",We track our sales daily.,verb
+481,Training,/tre?n??/,"Ðào t?o",We offer training to all employees.,noun
+482,Transaction,/trænzæk?n/,"Giao d?ch",The transaction was processed quickly.,noun
+483,Transfer,/trænsf3?(r)/,"Chuy?n",She was transferred to the London office.,verb
+484,Trend,/trend/,"Xu hu?ng",There is a trend towards healthier eating.,noun
+485,Typically,/t?p?kli/,"Thông thu?ng",Typically, I walk to work.,adv
+486,Unique,/juni?k/,"Ð?c dáo",This is a unique opportunity.,adj
+487,Update,/?pde?t/,"C?p nh?t",The software updates automatically.,verb
+488,Useful,/ju?sfl/,"H?u ích",This information is very useful.,adj
+489,Utilization,/ju?t?la?ze??n/,"S? s? d?ng",The utilization of resources is important.,noun
+490,Valid,/væl?d/,"H?p l?",This ticket is valid for one day.,adj
+491,Variety,/v?ra??ti/,"S? da d?ng",We offer a variety of services.,noun
+492,Vehicle,/vi??kl/,"Phuong ti?n",A car is a vehicle.,noun
+493,Verify,/ver?fa?/,"Xác minh",Please verify your identity.,verb
+494,Violation,/va??le??n/,"S? vi ph?m",This is a violation of the rules.,noun
+495,Visible,/v?z?bl/,"Có th? nhìn th?y",The stars were visible in the night sky.,adj
+496,Wage,/we?d?/,"Ti?n công",He earns a decent wage.,noun
+497,Warranty,/w?r?nti/,"B?o hành",The car comes with a 3-year warranty.,noun
+498,Worldwide,/w??ldwa?d/,"Toàn c?u",The company has offices worldwide.,adj
+499,Yield,/ji?ld/,"S?n lu?ng, l?i nhu?n",The crop yield was high this year.,noun
+500,Zone,/z??n/,"Khu v?c",This is a no-parking zone.,noun
+301,Concentrate,/k?nsntre?t/,"T?p trung",We need to concentrate on our core business.,verb
+302,Conducive,/k?ndju?s?v/,"Có l?i, giúp ích",A quiet environment is conducive to learning.,adj
+303,Disrupt,/d?sr?pt/,"Làm gián do?n",The meeting was disrupted by a fire alarm.,verb
+304,Hamper,/hæmp?(r)/,"C?n tr?",Bad weather hampered the rescue effort.,verb
+305,Inconsiderately,/?nk?ns?d?r?tli/,"Thi?u suy nghi",He parked his car inconsiderately, blocking the driveway.,adv
+306,Lobby,/l?bi/,"S?nh",We met in the hotel lobby.,noun
+307,Move up,/mu?v ?p/,"Thang ti?n, d?i lên s?m hon",Can we move the meeting up to 2 PM?,verb
+308,Open to,/??p?n tu/,"S?n sàng ti?p thu",We are open to suggestions.,adj
+309,Opt,/?pt/,"Ch?n l?a",He opted to retire early.,verb
+310,Scrutinize,/skru?t?na?z/,"Xem xét k? lu?ng",The contract was carefully scrutinized by the lawyers.,verb
+311,Adjourn,/?d???n/,"D?i l?i, hoãn l?i (cu?c h?p)",The meeting was adjourned until tomorrow.,verb
+312,Agenda,/?d?end?/,"Chuong trình ngh? s?",The first item on the agenda is the budget.,noun
+313,Chairperson,/t?e?p??sn/,"Ch? t?ch",The chairperson opened the meeting.,noun
+314,Consensus,/k?nsens?s/,"S? d?ng thu?n",We reached a consensus on the issue.,noun
+315,Designate,/dez?gne?t/,"Ch? d?nh",She was designated as the leader of the group.,verb
+316,Dispense,/d?spens/,"Phân phát, mi?n tr?",The machine dispenses coffee.,verb
+317,Feature,/fi?t??(r)/,"Ð?c di?m, tính nang",The new car has many safety features.,noun
+318,Happen,/hæp?n/,"X?y ra",What happened at the meeting?,verb
+319,Highlight,/ha?la?t/,"Làm n?i b?t",The report highlights the need for change.,verb
+320,Irrelevant,/?rel?v?nt/,"Không liên quan",That comment is irrelevant to the discussion.,adj
+321,Minutes,/m?n?ts/,"Biên b?n cu?c h?p",Who will take the minutes?,noun
+322,Motion,/m???n/,"S? chuy?n d?ng, ki?n ngh?",I move a motion to adjourn the meeting.,verb
+323,Ambitious,/æmb???s/,"Tham v?ng",He is very ambitious and wants to become CEO.,adj
+324,Apprehensive,/æpr?hens?v/,"Lo l?ng, e s?",I was apprehensive about the interview.,adj
+325,Background,/bækgra?nd/,"Lý l?ch, b?i c?nh",She has a background in marketing.,noun
+326,Candidate,/kænd?d?t/,"?ng c? viên",He is a strong candidate for the job.,noun
+327,Consultant,/k?ns?lt?nt/,"Tu v?n viên",We hired a consultant to help us with the project.,noun
+328,Entitle,/?nta?tl/,"Cho quy?n",This ticket entitles you to a free meal.,verb
+329,Degree,/d?gri?/,"B?ng c?p",He has a degree in engineering.,noun
+330,Payroll,/pe?r??l/,"B?ng luong",The company has 500 employees on its payroll.,noun
+331,Recruit,/r?kru?t/,"Tuy?n m?",We are recruiting new staff.,verb
+332,Wage,/we?d?/,"Ti?n công",The minimum wage has increased.,noun
+333,Commute,/k?mju?t/,"Ði làm (du?ng xa)",I commute to work by train.,verb
+334,Conduct,/k?nd?kt/,"Ti?n hành",We conducted a survey of our customers.,verb
+335,Confirm,/k?nf??m/,"Xác nh?n",Please confirm your attendance.,verb
+336,Expect,/?kspekt/,"Mong d?i",We expect sales to increase.,verb
+337,Measure,/me??(r)/,"Ðo lu?ng, bi?n pháp",We need to take measures to reduce costs.,noun
+338,Occupy,/?kjupa?/,"Chi?m gi?",The building is occupied by a law firm.,verb
+339,Procedure,/pr?si?d??(r)/,"Th? t?c",What is the procedure for applying for a visa?,noun
+340,Reimburse,/ri??mb??s/,"Hoàn tr?",The company will reimburse you for your travel expenses.,verb
+341,Resource,/r?s??s/,"Tài nguyên",We need to protect our natural resources.,noun
+342,Secure,/s?kj??(r)/,"Ð?m b?o, an toàn",Please ensure that the door is secure.,adj
+343,Annual,/ænju?l/,"Hàng nam",The company holds an annual meeting.,adj
+344,Appointment,/?p??ntm?nt/,"Cu?c h?n",I have an appointment with the doctor.,noun
+345,Assess,/?ses/,"Ðánh giá",We need to assess the damage.,verb
+346,Diagnose,/da??gn??z/,"Ch?n doán",The doctor diagnosed him with the flu.,verb
+347,Effective,/bre?k ?n/,"Hi?u qu?",The new medicine is very effective.,adj
+348,Instrument,/?nstr?m?nt/,"D?ng c?, nh?c c?",The surgeon used delicate instruments.,noun
+349,Manage,/mæn?d?/,"Qu?n lý, xoay x?",Can you manage to finish the report by tomorrow?,verb
+350,Prevent,/pr?vent/,"Ngan ch?n",Regular exercise can help prevent heart disease.,verb
+351,Recommend,/rek?mend/,"Khuyên, d? ngh?",I recommend the chicken dish.,verb
+352,Record,/rek??d/,"H? so, k? l?c",Keep a record of your expenses.,noun
+353,Refer,/r?f??(r)/,"Tham kh?o, gi?i thi?u",Please refer to the manual for instructions.,verb
+354,Serious,/s??ri?s/,"Nghiêm tr?ng",Wait, this is a serious problem.,adj
+355,Aware,/?we?(r)/,"Nh?n th?c",Are you aware of the risks?,adj
+356,Catch up,/kæt? ?p/,"Làm bù, b?t k?p",I need to catch up on some work.,verb
+357,Distraction,/d?stræk?n/,"S? xao nhãng",Background noise can be a distraction.,noun
+358,Encouragement,/?nk?r?d?m?nt/,"S? khích l?",He needs a lot of encouragement.,noun
+359,Evident,/ev?d?nt/,"Rõ ràng",It was evident that she was unhappy.,adj
+360,Habit,/hæb?t/,"Thói quen",Smoking is a bad habit.,noun
+361,Illuminate,/?lu?m?ne?t/,"Chi?u sáng, làm sáng t?",The street was illuminated by streetlights.,verb
+362,Irritate,/?r?te?t/,"Làm khó ch?u",His constant complaining irritates me.,verb
+363,Overview,/??v?vju?/,"T?ng quan",The report gives an overview of the company's financial situation.,noun
+364,Position,/p?z??n/,"V? trí",He holds a senior position in the company.,noun
+365,Regularly,/regj?l?li/,"Thu?ng xuyên",We meet regularly to discuss progress.,adv
+366,Restore,/r?st??(r)/,"Khôi ph?c",The painting was restored to its original condition.,verb
+367,Allow,/?la?/,"Cho phép",Smoking is not allowed in the building.,verb
+368,Alternative,/??lt??n?t?v/,"S? thay th?",We have no alternative but to close the factory.,noun
+369,Aspect,/æspekt/,"Khía c?nh",We need to consider every aspect of the problem.,noun
+370,Concern,/k?ns??n/,"Lo l?ng, quan tâm",I am concerned about his health.,verb
+371,Emphasize,/emf?sa?z/,"Nh?n m?nh",The report emphasizes the importance of safety.,verb
+372,Incur,/?nk??(r)/,"Ch?u d?ng (chi phí, h?u qu?)",You may incur a fee if you cancel the reservation.,verb
+373,Personnel,/p??s?nel/,"Nhân s?",All personnel must wear ID badges.,noun
+374,Policy,/p?l?si/,"Chính sách",The company has a strict no-smoking policy.,noun
+375,Portion,/p???n/,"Ph?n",A large portion of the budget is spent on advertising.,noun
+376,Regardless,/r?g??dl?s/,"B?t ch?p",He continued working regardless of the pain.,adv
+377,Salary,/sæl?ri/,"Luong",She earns a high salary.,noun
+378,Suit,/su?t/,"Phù h?p",This time doesn't suit me.,verb
+379,Admit,/?dm?t/,"Th?a nh?n",He admitted that he had made a mistake.,verb
+380,Authorize,/????ra?z/,"?y quy?n",Who authorized this payment?,verb
+381,Designate,/dez?gne?t/,"Ch? d?nh",Areas designated for smoking.,verb
+382,Escort,/esk??t/,"H? t?ng",Security guards escorted him out of the building.,verb
+383,Identify,/a?dent?fa?/,"Nh?n di?n",Can you identify the man in the photo?,verb
+384,Mission,/m??n/,"S? m?nh",Our mission is to provide the best possible service.,noun
+385,Permit,/p?m?t/,"Cho phép, gi?y phép",Do you have a permit to park here?,noun
+386,Pertinent,/p??t?n?nt/,"Thích h?p, liên quan",Please ask pertinent questions.,adj
+387,Procedure,/pr?si?d??(r)/,"Th? t?c",We must follow proper courtroom procedure.,noun
+388,Result,/r?z?lt/,"K?t qu?",The result of the game was a draw.,noun
+389,Statement,/ste?tm?nt/,"Tuyên b?, sao kê",The bank sends a monthly statement.,noun
+390,Usually,/ju??u?li/,"Thu?ng xuyên",I usually get up at 7 AM.,adv
+391,Consult,/k?ns?lt/,"Tham kh?o ý ki?n",You should consult a lawyer.,verb
+392,Control,/k?ntr??l/,"Ki?m soát",He lost control of the car.,verb
+393,Convenient,/k?nvi?ni?nt/,"Thu?n ti?n",Is it convenient for you to meet now?,adj
+394,Detect,/d?tekt/,"Phát hi?n",The alarm detects smoke.,verb
+395,Factor,/fækt?(r)/,"Y?u t?",Cost is a major factor in our decision.,noun
+396,Interaction,/?nt?ræk?n/,"S? tuong tác",There is a lot of interaction between the two departments.,noun
+397,Limit,/l?m?t/,"Gi?i h?n",There is a speed limit of 50 km/h.,noun
+398,Monitor,/m?n?t?(r)/,"Giám sát",We need to monitor the situation closely.,verb
+399,Potential,/p?ten?l/,"Ti?m nang",He has the potential to be a great leader.,noun
+400,Sample,/s??mpl/,"M?u th?",Here is a free sample of our new product.,noun
+501,Appointment,/?p??ntm?nt/,"Cu?c h?n",I have an appointment with the dentist at 3 PM.,noun
+502,Checkup,/t?ek?p/,"Ki?m tra s?c kh?e",You should have a regular dental checkup.,noun
+503,Diagnosis,/da??gn??s?s/,"Ch?n doán",The doctor's diagnosis was correct.,noun
+504,Insurance,/?n???r?ns/,"B?o hi?m",Do you have health insurance?,noun
+505,Patient,/pe??nt/,"B?nh nhân",The doctor is examining a patient.,noun
+506,Pharmacy,/f??m?si/,"Hi?u thu?c",You can buy medicine at the pharmacy.,noun
+507,Prescription,/pr?skr?p?n/,"Ðon thu?c",The doctor gave me a prescription for antibiotics.,noun
+508,Recommend,/rek?mend/,"Khuyên, gi?i thi?u",Can you recommend a good doctor?,verb
+509,Recovery,/r?k?v?ri/,"S? h?i ph?c",He made a full recovery from his illness.,noun
+510,Surgery,/s??d??ri/,"Ph?u thu?t",She needs surgery on her knee.,noun
+511,Symptom,/s?mpt?m/,"Tri?u ch?ng",Fever is a symptom of the flu.,noun
+512,Treatment,/tri?tm?nt/,"Ði?u tr?",He is receiving treatment for cancer.,noun
+513,Annual,/ænju?l/,"Hàng nam",The annual checkup is important.,adj
+514,Authorize,/????ra?z/,"Cho phép",The insurance company authorized the treatment.,verb
+515,Concern,/k?ns??n/,"Lo l?ng",The doctor expressed concern about his high blood pressure.,noun
+516,Coverage,/k?v?r?d?/,"Ph?m vi b?o hi?m",Does your policy provide coverage for dental work?,noun
+517,Expiration,/eksp?re??n/,"S? h?t h?n",Check the expiration date on the medicine.,noun
+518,Personnel,/p??s?nel/,"Nhân s?",The hospital personnel are very helpful.,noun
+519,Policy,/p?l?si/,"Chính sách",It is hospital policy to wash hands frequently.,noun
+520,Premium,/pri?mi?m/,"Phí b?o hi?m",The insurance premiums are quite high.,noun
+521,Prevent,/pr?vent/,"Ngan ng?a",A healthy diet can help prevent disease.,verb
+522,Record,/rek??d/,"H? so",The hospital keeps medical records for all patients.,noun
+523,Referral,/r?f??r?l/,"Gi?y gi?i thi?u (chuy?n vi?n)",I need a referral to see a specialist.,noun
+524,Serious,/s??ri?s/,"Nghiêm tr?ng",His condition is serious.,adj
+525,Examination,/?gzæm?ne??n/,"S? ki?m tra",The physical examination took an hour.,noun
+526,Hygiene,/ha?d?i?n/,"V? sinh",Good dental hygiene is essential.,noun
+527,Instrument,/?nstr?m?nt/,"D?ng c?",The dentist uses various instruments.,noun
+528,Operator,/?p?re?t?(r)/,"Ngu?i tr?c t?ng dài, v?n hành",Call the operator if you need assistance.,noun
+529,Preventative,/pr?vent?t?v/,"Phòng ng?a",Preventative medicine helps you stay healthy.,adj
+530,Receptionist,/r?sep??n?st/,"L? tân",The receptionist greeted the patients.,noun
+531,Wait,/we?t/,"Ch? d?i",We had to wait for a long time.,verb
+532,X-ray,/eks re?/,"X-quang",The doctor ordered an X-ray of his chest.,noun
+533,Accessible,/?kses?bl/,"Có th? ti?p c?n",The building is accessible to wheelchairs.,adj
+534,Advance,/?dv??ns/,"Ti?n b?",Medical advances have saved many lives.,noun
+535,Coordinate,/k????d?ne?t/,"Ph?i h?p",The team coordinated their efforts.,verb
+536,Detect,/d?tekt/,"Phát hi?n",Early detection is important.,verb
+537,Evaluate,/?væljue?t/,"Ðánh giá",The doctor evaluated his condition.,verb
+538,Monitor,/m?n?t?(r)/,"Theo dõi",We need to monitor his heart rate.,verb
+539,Noticeable,/n??t?s?bl/,"Ðáng chú ý",There was a noticeable improvement in his health.,adj
+540,Overview,/??v?vju?/,"T?ng quan",The brochure gives an overview of the hospital's services.,noun
+541,Physical,/f?z?kl/,"Th? ch?t",Regular physical activity is good for you.,adj
+542,Reaction,/riæk?n/,"Ph?n ?ng",He had an allergic reaction to the medicine.,noun
+543,Aware,/?we?(r)/,"Nh?n th?c",Be aware of the side effects.,adj
+544,Diet,/da??t/,"Ch? d? an",A balanced diet is important.,noun
+545,Encourage,/?nk?r?d?/,"Khuy?n khích",Doctors encourage patients to quit smoking.,verb
+546,Habit,/hæb?t/,"Thói quen",Eating late at night is a bad habit.,noun
+547,Maintain,/me?nte?n/,"Duy trì",Try to maintain a healthy weight.,verb
+548,Mental,/mentl/,"Tinh th?n",Mental health is as important as physical health.,adj
+549,Nutritious,/njutr???s/,"Dinh du?ng",Choose nutritious foods.,adj
+550,Reduce,/r?dju?s/,"Gi?m",Exercise helps reduce stress.,verb
+551,Stress,/stres/,"Cang th?ng",Work can cause a lot of stress.,noun
+552,Variety,/v?ra??ti/,"S? da d?ng",Eat a variety of fruits and vegetables.,noun
+553,Allow,/?la?/,"Cho phép",Patients are allowed to have visitors.,verb
+554,Alternative,/??lt??n?t?v/,"Thay th?",Is there an alternative treatment?,noun
+555,Available,/?ve?l?bl/,"Có s?n",The doctor is not available right now.,adj
+556,Charge,/t???d?/,"Phí",Is there a charge for parking?,noun
+557,Consult,/k?ns?lt/,"Tham kh?o ý ki?n",Consult your doctor before starting a new diet.,verb
+558,Effective,/?fekt?v/,"Hi?u qu?",The treatment was very effective.,adj
+559,Emphasize,/emf?sa?z/,"Nh?n m?nh",The doctor emphasized the need for rest.,verb
+560,Factor,/fækt?(r)/,"Y?u t?",Diet is a key factor in health.,noun
+561,Goal,/g??l/,"M?c tiêu",Our goal is to improve patient care.,noun
+562,Improvement,/?mpru?vm?nt/,"S? c?i thi?n",There is room for improvement.,noun
+563,Interact,/?nt?rækt/,"Tuong tác",Some medicines interact with each other.,verb
+564,Manage,/mæn?d?/,"Qu?n lý",He manages his diabetes well.,verb
+565,Mission,/m??n/,"S? m?nh",The hospital's mission is to save lives.,noun
+566,Permit,/p?m?t/,"Cho phép",Visitors are not permitted in the ICU.,verb
+567,Potential,/p?ten?l/,"Ti?m nang",There are potential side effects.,adj
+568,Professional,/pr?fe??nl/,"Chuyên nghi?p",The staff are very professional.,adj
+569,Project,/pr?d?ekt/,"D? án",Wait, this is a research project.,noun
+570,Regardless,/r?g??dl?s/,"B?t ch?p",We treat all patients regardless of ability to pay.,adv
+571,Responsible,/r?sp?ns?bl/,"Ch?u trách nhi?m",Who is responsible for this patient?,adj
+572,Secure,/s?kj??(r)/,"An toàn",Keep medicines in a secure place.,adj
+573,Significant,/s?gn?f?k?nt/,"Ðáng k?",There was a significant improvement.,adj
+574,Statement,/ste?tm?nt/,"Tuyên b?",The hospital issued a statement.,noun
+575,Suggest,/s?d?est/,"G?i ý",The doctor suggested a new treatment.,verb
+576,Temporary,/tempr?ri/,"T?m th?i",The pain is temporary.,adj
+577,Typical,/t?p?kl/,"Ði?n hình",These are typical symptoms.,adj
+578,Usually,/ju??u?li/,"Thu?ng xuyên",I usually see the doctor once a year.,adv
+579,Volunteer,/v?l?nt??(r)/,"Tình nguy?n viên",She volunteers at the nursing home.,verb
+580,Alert,/?l??t/,"C?nh giác",Be alert for signs of infection.,adj
+581,Comfortable,/k?mf?t?bl/,"Tho?i mái",Are you comfortable?,adj
+582,Detailed,/di?te?ld/,"Chi ti?t",The doctor gave a detailed explanation.,adj
+583,Emergency,/im??d??nsi/,"Kh?n c?p",In an emergency, call 911.,noun
+584,Expert,/eksp??t/,"Chuyên gia",She is an expert in tropical diseases.,noun
+585,General,/d?enr?l/,"Chung",The general health of the population is improving.,adj
+586,Hesitant,/hez?t?nt/,"Do d?",He was hesitant to take the medicine.,adj
+587,Immediate,/?mi?di?t/,"Ngay l?p t?c",He needs immediate attention.,adj
+588,Impossible,/?mp?s?bl/,"Không th?",It is impossible to cure this disease.,adj
+589,Necessary,/nes?s?ri/,"C?n thi?t",Surgery may be necessary.,adj
+590,Observe,/?bz??v/,"Quan sát",The students observed the surgery.,verb
+591,Obvious,/?bvi?s/,"Rõ ràng",It is obvious that he is sick.,adj
+592,Optimistic,/?pt?m?st?k/,"L?c quan",She is optimistic about her recovery.,adj
+593,Patiently,/pe??ntli/,"Kiên nh?n",The patients waited patiently.,adv
+594,Permanent,/p??m?n?nt/,"Vinh vi?n",The damage may be permanent.,adj
+595,Popular,/p?pj?l?(r)/,"Ph? bi?n",This is a popular remedy.,adj
+596,Possible,/p?s?bl/,"Có th?",Is it possible to see a doctor today?,adj
+597,Private,/pra?v?t/,"Bao m?t, riêng tu",This is a private hospital.,adj
+598,Rapid,/ræp?d/,"Nhanh chóng",He made a rapid recovery.,adj
+599,Reasonable,/ri?zn?bl/,"H?p lý",The cost was reasonable.,adj
+600,Urgent,/??d??nt/,"Kh?n c?p",This is an urgent matter.,adj
+301,Concentrate,/ËˆkÉ’nsntreÉªt/,"Táº­p trung",We need to concentrate on our core business.,verb
+302,Conducive,/kÉ™nËˆdjuËsÉªv/,"CÃ³ lá»£i, giÃºp Ã­ch",A quiet environment is conducive to learning.,adj
+303,Disrupt,/dÉªsËˆrÊŒpt/,"LÃ m giÃ¡n Ä‘oáº¡n",The meeting was disrupted by a fire alarm.,verb
+304,Hamper,/ËˆhÃ¦mpÉ™(r)/,"Cáº£n trá»Ÿ",Bad weather hampered the rescue effort.,verb
+305,Inconsiderately,/ËŒÉªnkÉ™nËˆsÉªdÉ™rÉ™tli/,"Thiáº¿u suy nghÄ©",He parked his car inconsiderately, blocking the driveway.,adv
+306,Lobby,/ËˆlÉ’bi/,"Sáº£nh",We met in the hotel lobby.,noun
+307,Move up,/muËv ÊŒp/,"ThÄƒng tiáº¿n, dá»i lÃªn sá»›m hÆ¡n",Can we move the meeting up to 2 PM?,verb
+308,Open to,/ËˆÉ™ÊŠpÉ™n tu/,"Sáºµn sÃ ng tiáº¿p thu",We are open to suggestions.,adj
+309,Opt,/É’pt/,"Chá»n lá»±a",He opted to retire early.,verb
+310,Scrutinize,/ËˆskruËtÉ™naÉªz/,"Xem xÃ©t ká»¹ lÆ°á»¡ng",The contract was carefully scrutinized by the lawyers.,verb
+311,Adjourn,/É™ËˆdÊ’ÉœËn/,"Dá»i láº¡i, hoÃ£n láº¡i (cuá»™c há»p)",The meeting was adjourned until tomorrow.,verb
+312,Agenda,/É™ËˆdÊ’endÉ™/,"ChÆ°Æ¡ng trÃ¬nh nghá»‹ sá»±",The first item on the agenda is the budget.,noun
+313,Chairperson,/ËˆtÊƒeÉ™pÉœËsn/,"Chá»§ tá»‹ch",The chairperson opened the meeting.,noun
+314,Consensus,/kÉ™nËˆsensÉ™s/,"Sá»± Ä‘á»“ng thuáº­n",We reached a consensus on the issue.,noun
+315,Designate,/ËˆdezÉªÉ¡neÉªt/,"Chá»‰ Ä‘á»‹nh",She was designated as the leader of the group.,verb
+316,Dispense,/dÉªËˆspens/,"PhÃ¢n phÃ¡t, miá»…n trá»«",The machine dispenses coffee.,verb
+317,Feature,/ËˆfiËtÊƒÉ™(r)/,"Äáº·c Ä‘iá»ƒm, tÃ­nh nÄƒng",The new car has many safety features.,noun
+318,Happen,/ËˆhÃ¦pÉ™n/,"Xáº£y ra",What happened at the meeting?,verb
+319,Highlight,/ËˆhaÉªlaÉªt/,"LÃ m ná»•i báº­t",The report highlights the need for change.,verb
+320,Irrelevant,/ÉªËˆrelÉ™vÉ™nt/,"KhÃ´ng liÃªn quan",That comment is irrelevant to the discussion.,adj
+321,Minutes,/ËˆmÉªnÉªts/,"BiÃªn báº£n cuá»™c há»p",Who will take the minutes?,noun
+322,Motion,/ËˆmÉ™ÊŠÊƒn/,"Sá»± chuyá»ƒn Ä‘á»™ng, kiáº¿n nghá»‹",I move a motion to adjourn the meeting.,verb
+323,Ambitious,/Ã¦mËˆbÉªÊƒÉ™s/,"Tham vá»ng",He is very ambitious and wants to become CEO.,adj
+324,Apprehensive,/ËŒÃ¦prÉªËˆhensÉªv/,"Lo láº¯ng, e sá»£",I was apprehensive about the interview.,adj
+325,Background,/ËˆbÃ¦kÉ¡raÊŠnd/,"LÃ½ lá»‹ch, bá»‘i cáº£nh",She has a background in marketing.,noun
+326,Candidate,/ËˆkÃ¦ndÉªdÉ™t/,"á»¨ng cá»­ viÃªn",He is a strong candidate for the job.,noun
+327,Consultant,/kÉ™nËˆsÊŒltÉ™nt/,"TÆ° váº¥n viÃªn",We hired a consultant to help us with the project.,noun
+328,Entitle,/ÉªnËˆtaÉªtl/,"Cho quyá»n",This ticket entitles you to a free meal.,verb
+329,Degree,/dÉªËˆÉ¡riË/,"Báº±ng cáº¥p",He has a degree in engineering.,noun
+330,Payroll,/ËˆpeÉªrÉ™ÊŠl/,"Báº£ng lÆ°Æ¡ng",The company has 500 employees on its payroll.,noun
+331,Recruit,/rÉªËˆkruËt/,"Tuyá»ƒn má»™",We are recruiting new staff.,verb
+332,Wage,/weÉªdÊ’/,"Tiá»n cÃ´ng",The minimum wage has increased.,noun
+333,Commute,/kÉ™ËˆmjuËt/,"Äi lÃ m (Ä‘Æ°á»ng xa)",I commute to work by train.,verb
+334,Conduct,/kÉ™nËˆdÊŒkt/,"Tiáº¿n hÃ nh",We conducted a survey of our customers.,verb
+335,Confirm,/kÉ™nËˆfÉœËm/,"XÃ¡c nháº­n",Please confirm your attendance.,verb
+336,Expect,/ÉªkËˆspekt/,"Mong Ä‘á»£i",We expect sales to increase.,verb
+337,Measure,/ËˆmeÊ’É™(r)/,"Äo lÆ°á»ng, biá»‡n phÃ¡p",We need to take measures to reduce costs.,noun
+338,Occupy,/ËˆÉ’kjupaÉª/,"Chiáº¿m giá»¯",The building is occupied by a law firm.,verb
+339,Procedure,/prÉ™ËˆsiËdÊ’É™(r)/,"Thá»§ tá»¥c",What is the procedure for applying for a visa?,noun
+340,Reimburse,/ËŒriËÉªmËˆbÉœËs/,"HoÃ n tráº£",The company will reimburse you for your travel expenses.,verb
+341,Resource,/rÉªËˆsÉ”Ës/,"TÃ i nguyÃªn",We need to protect our natural resources.,noun
+342,Secure,/sÉªËˆkjÊŠÉ™(r)/,"Äáº£m báº£o, an toÃ n",Please ensure that the door is secure.,adj
+343,Annual,/ËˆÃ¦njuÉ™l/,"HÃ ng nÄƒm",The company holds an annual meeting.,adj
+344,Appointment,/É™ËˆpÉ”ÉªntmÉ™nt/,"Cuá»™c háº¹n",I have an appointment with the doctor.,noun
+345,Assess,/É™Ëˆses/,"ÄÃ¡nh giÃ¡",We need to assess the damage.,verb
+346,Diagnose,/ËˆdaÉªÉ™É¡nÉ™ÊŠz/,"Cháº©n Ä‘oÃ¡n",The doctor diagnosed him with the flu.,verb
+347,Effective,/breÉªk Éªn/,"Hiá»‡u quáº£",The new medicine is very effective.,adj
+348,Instrument,/ËˆÉªnstrÉ™mÉ™nt/,"Dá»¥ng cá»¥, nháº¡c cá»¥",The surgeon used delicate instruments.,noun
+349,Manage,/ËˆmÃ¦nÉªdÊ’/,"Quáº£n lÃ½, xoay xá»Ÿ",Can you manage to finish the report by tomorrow?,verb
+350,Prevent,/prÉªËˆvent/,"NgÄƒn cháº·n",Regular exercise can help prevent heart disease.,verb
+351,Recommend,/ËŒrekÉ™Ëˆmend/,"KhuyÃªn, Ä‘á» nghá»‹",I recommend the chicken dish.,verb
+352,Record,/ËˆrekÉ”Ëd/,"Há»“ sÆ¡, ká»· lá»¥c",Keep a record of your expenses.,noun
+353,Refer,/rÉªËˆfÉœË(r)/,"Tham kháº£o, giá»›i thiá»‡u",Please refer to the manual for instructions.,verb
+354,Serious,/ËˆsÉªÉ™riÉ™s/,"NghiÃªm trá»ng",Wait, this is a serious problem.,adj
+355,Aware,/É™ËˆweÉ™(r)/,"Nháº­n thá»©c",Are you aware of the risks?,adj
+356,Catch up,/kÃ¦tÊƒ ÊŒp/,"LÃ m bÃ¹, báº¯t ká»‹p",I need to catch up on some work.,verb
+357,Distraction,/dÉªËˆstrÃ¦kÊƒn/,"Sá»± xao nhÃ£ng",Background noise can be a distraction.,noun
+358,Encouragement,/ÉªnËˆkÊŒrÉªdÊ’mÉ™nt/,"Sá»± khÃ­ch lá»‡",He needs a lot of encouragement.,noun
+359,Evident,/ËˆevÉªdÉ™nt/,"RÃµ rÃ ng",It was evident that she was unhappy.,adj
+360,Habit,/ËˆhÃ¦bÉªt/,"ThÃ³i quen",Smoking is a bad habit.,noun
+361,Illuminate,/ÉªËˆluËmÉªneÉªt/,"Chiáº¿u sÃ¡ng, lÃ m sÃ¡ng tá»",The street was illuminated by streetlights.,verb
+362,Irritate,/ËˆÉªrÉªteÉªt/,"LÃ m khÃ³ chá»‹u",His constant complaining irritates me.,verb
+363,Overview,/ËˆÉ™ÊŠvÉ™vjuË/,"Tá»•ng quan",The report gives an overview of the company's financial situation.,noun
+364,Position,/pÉ™ËˆzÉªÊƒn/,"Vá»‹ trÃ­",He holds a senior position in the company.,noun
+365,Regularly,/ËˆreÉ¡jÉ™lÉ™li/,"ThÆ°á»ng xuyÃªn",We meet regularly to discuss progress.,adv
+366,Restore,/rÉªËˆstÉ”Ë(r)/,"KhÃ´i phá»¥c",The painting was restored to its original condition.,verb
+367,Allow,/É™ËˆlaÊŠ/,"Cho phÃ©p",Smoking is not allowed in the building.,verb
+368,Alternative,/É”ËlËˆtÉœËnÉ™tÉªv/,"Sá»± thay tháº¿",We have no alternative but to close the factory.,noun
+369,Aspect,/ËˆÃ¦spekt/,"KhÃ­a cáº¡nh",We need to consider every aspect of the problem.,noun
+370,Concern,/kÉ™nËˆsÉœËn/,"Lo láº¯ng, quan tÃ¢m",I am concerned about his health.,verb
+371,Emphasize,/ËˆemfÉ™saÉªz/,"Nháº¥n máº¡nh",The report emphasizes the importance of safety.,verb
+372,Incur,/ÉªnËˆkÉœË(r)/,"Chá»‹u Ä‘á»±ng (chi phÃ­, háº­u quáº£)",You may incur a fee if you cancel the reservation.,verb
+373,Personnel,/ËŒpÉœËsÉ™Ëˆnel/,"NhÃ¢n sá»±",All personnel must wear ID badges.,noun
+374,Policy,/ËˆpÉ’lÉ™si/,"ChÃ­nh sÃ¡ch",The company has a strict no-smoking policy.,noun
+375,Portion,/ËˆpÉ”ËÊƒn/,"Pháº§n",A large portion of the budget is spent on advertising.,noun
+376,Regardless,/rÉªËˆÉ¡É‘ËdlÉ™s/,"Báº¥t cháº¥p",He continued working regardless of the pain.,adv
+377,Salary,/ËˆsÃ¦lÉ™ri/,"LÆ°Æ¡ng",She earns a high salary.,noun
+378,Suit,/suËt/,"PhÃ¹ há»£p",This time doesn't suit me.,verb
+379,Admit,/É™dËˆmÉªt/,"Thá»«a nháº­n",He admitted that he had made a mistake.,verb
+380,Authorize,/ËˆÉ”ËÎ¸É™raÉªz/,"á»¦y quyá»n",Who authorized this payment?,verb
+381,Designate,/ËˆdezÉªÉ¡neÉªt/,"Chá»‰ Ä‘á»‹nh",Areas designated for smoking.,verb
+382,Escort,/ËˆeskÉ”Ët/,"Há»™ tá»‘ng",Security guards escorted him out of the building.,verb
+383,Identify,/aÉªËˆdentÉªfaÉª/,"Nháº­n diá»‡n",Can you identify the man in the photo?,verb
+384,Mission,/ËˆmÉªÊƒn/,"Sá»© má»‡nh",Our mission is to provide the best possible service.,noun
+385,Permit,/pÉ™ËˆmÉªt/,"Cho phÃ©p, giáº¥y phÃ©p",Do you have a permit to park here?,noun
+386,Pertinent,/ËˆpÉœËtÉªnÉ™nt/,"ThÃ­ch há»£p, liÃªn quan",Please ask pertinent questions.,adj
+387,Procedure,/prÉ™ËˆsiËdÊ’É™(r)/,"Thá»§ tá»¥c",We must follow proper courtroom procedure.,noun
+388,Result,/rÉªËˆzÊŒlt/,"Káº¿t quáº£",The result of the game was a draw.,noun
+389,Statement,/ËˆsteÉªtmÉ™nt/,"TuyÃªn bá»‘, sao kÃª",The bank sends a monthly statement.,noun
+390,Usually,/ËˆjuËÊ’uÉ™li/,"ThÆ°á»ng xuyÃªn",I usually get up at 7 AM.,adv
+391,Consult,/kÉ™nËˆsÊŒlt/,"Tham kháº£o Ã½ kiáº¿n",You should consult a lawyer.,verb
+392,Control,/kÉ™nËˆtrÉ™ÊŠl/,"Kiá»ƒm soÃ¡t",He lost control of the car.,verb
+393,Convenient,/kÉ™nËˆviËniÉ™nt/,"Thuáº­n tiá»‡n",Is it convenient for you to meet now?,adj
+394,Detect,/dÉªËˆtekt/,"PhÃ¡t hiá»‡n",The alarm detects smoke.,verb
+395,Factor,/ËˆfÃ¦ktÉ™(r)/,"Yáº¿u tá»‘",Cost is a major factor in our decision.,noun
+396,Interaction,/ËŒÉªntÉ™rËˆÃ¦kÊƒn/,"Sá»± tÆ°Æ¡ng tÃ¡c",There is a lot of interaction between the two departments.,noun
+397,Limit,/ËˆlÉªmÉªt/,"Giá»›i háº¡n",There is a speed limit of 50 km/h.,noun
+398,Monitor,/ËˆmÉ’nÉªtÉ™(r)/,"GiÃ¡m sÃ¡t",We need to monitor the situation closely.,verb
+399,Potential,/pÉ™ËˆtenÊƒl/,"Tiá»m nÄƒng",He has the potential to be a great leader.,noun
+400,Sample,/ËˆsÉ‘Ëmpl/,"Máº«u thá»­",Here is a free sample of our new product.,noun
+401,Sense,/sens/,"GiÃ¡c quan, Ã½ thá»©c",He has a good sense of humor.,noun
+402,Volunteer,/ËŒvÉ’lÉ™nËˆtÉªÉ™(r)/,"TÃ¬nh nguyá»‡n viÃªn",She volunteers at the local hospital.,noun
+403,Admission,/É™dËˆmÉªÊƒn/,"Sá»± nháº­n vÃ o, phÃ­ vÃ o cá»­a",Admission to the museum is free.,noun
+404,Adjustment,/É™ËˆdÊ’ÊŒstmÉ™nt/,"Sá»± Ä‘iá»u chá»‰nh",We made some adjustments to the schedule.,noun
+405,Make a decision,/meÉªk É™ dÉªËˆsÉªÊ’n/,"ÄÆ°a ra quyáº¿t Ä‘á»‹nh",It's time to make a decision.,verb
+406,Announce,/É™ËˆnaÊŠns/,"ThÃ´ng bÃ¡o",The company announced a new product line.,verb
+407,Calculate,/ËˆkÃ¦lkjuleÉªt/,"TÃ­nh toÃ¡n",We need to calculate the total cost.,verb
+408,Comparison,/kÉ™mËˆpÃ¦rÉªsn/,"Sá»± so sÃ¡nh",There is no comparison between the two cars.,noun
+409,Compete,/kÉ™mËˆpiËt/,"Cáº¡nh tranh",We have to compete with cheap imports.,verb
+410,Deadline,/ËˆdedlaÉªn/,"Háº¡n chÃ³t",We have to meet the deadline.,noun
+411,Difficult,/ËˆdÉªfÉªkÉ™lt/,"KhÃ³ khÄƒn",It was a difficult decision.,adj
+412,Effort,/ËˆefÉ™t/,"Ná»— lá»±c",He put a lot of effort into the project.,noun
+413,Extend,/ÉªkËˆstend/,"Má»Ÿ rá»™ng, gia háº¡n",We plan to extend the house.,verb
+414,Independent,/ËŒÉªndÉªËˆpendÉ™nt/,"Äá»™c láº­p",She is a very independent woman.,adj
+415,Merger,/ËˆmÉœËdÊ’É™(r)/,"Sá»± sÃ¡p nháº­p",The merger of the two companies was announced today.,noun
+416,Priority,/praÉªËˆÉ’rÉ™ti/,"Æ¯u tiÃªn",Safety is our top priority.,noun
+417,Prohibit,/prÉ™ËˆhÉªbÉªt/,"Cáº¥m",Smoking is prohibited in this area.,verb
+418,System,/ËˆsÉªstÉ™m/,"Há»‡ thá»‘ng",We need a better filing system.,noun
+419,Advance,/É™dËˆvÉ‘Ëns/,"Tiáº¿n bá»™, á»©ng trÆ°á»›c",Technological advances have changed our lives.,noun
+420,Appoint,/É™ËˆpÉ”Éªnt/,"Bá»• nhiá»‡m",He was appointed manager of the branch.,verb
+421,Assessment,/É™ËˆsesmÉ™nt/,"Sá»± Ä‘Ã¡nh giÃ¡",The assessment of the damage will take some time.,noun
+422,Assignment,/É™ËˆsaÉªnmÉ™nt/,"Nhiá»‡m vá»¥",Complete the assignment by Friday.,noun
+423,Award,/É™ËˆwÉ”Ëd/,"Giáº£i thÆ°á»Ÿng",She won an award for her acting.,noun
+424,Celebrate,/ËˆselÉªbreÉªt/,"Ä‚n má»«ng",We celebrated her birthday with a party.,verb
+425,Combine,/kÉ™mËˆbaÉªn/,"Káº¿t há»£p",The new company combines the strengths of both.,verb
+426,Coordinator,/kÉ™ÊŠËˆÉ”ËdÉªneÉªtÉ™(r)/,"Äiá»u phá»‘i viÃªn",She is the coordinator of the project.,noun
+427,Demand,/dÉªËˆmÉ‘Ënd/,"Nhu cáº§u",There is a high demand for skilled workers.,noun
+428,Encourage,/ÉªnËˆkÊŒrÉªdÊ’/,"Khuyáº¿n khÃ­ch",My parents encouraged me to study hard.,verb
+429,Feedback,/ËˆfiËdbÃ¦k/,"Pháº£n há»“i",We welcome feedback from our customers.,noun
+430,Finalize,/ËˆfaÉªnÉ™laÉªz/,"HoÃ n táº¥t",We need to finalize the details of the contract.,verb
+431,Generate,/ËˆdÊ’enÉ™reÉªt/,"Táº¡o ra",The power plant generates electricity.,verb
+432,Grant,/É¡rÉ‘Ënt/,"Trá»£ cáº¥p, ban cho",The university granted him a scholarship.,noun
+433,Handle,/ËˆhÃ¦ndl/,"Xá»­ lÃ½",She can handle difficult situations well.,verb
+434,Improve,/ÉªmËˆpruËv/,"Cáº£i thiá»‡n",I want to improve my English.,verb
+435,Initial,/ÉªËˆnÉªÊƒl/,"Ban Ä‘áº§u",My initial reaction was surprise.,adj
+436,Keep in mind,/kiËp Éªn maÉªnd/,"Ghi nhá»›",Keep in mind that the deadline is tomorrow.,verb
+437,Launch,/lÉ”ËntÊƒ/,"Ra máº¯t, phÃ³ng",The company launched a new product.,verb
+438,Mandatory,/ËˆmÃ¦ndÉ™tÉ™ri/,"Báº¯t buá»™c",It is mandatory to wear a seatbelt.,adj
+439,Objective,/É™bËˆdÊ’ektÉªv/,"Má»¥c tiÃªu",Our main objective is to increase profits.,noun
+440,Participation,/pÉ‘ËËŒtÉªsÉªËˆpeÉªÊƒn/,"Sá»± tham gia",Participation in the event is voluntary.,noun
+441,Payment,/ËˆpeÉªmÉ™nt/,"Thanh toÃ¡n",Payment is due within 30 days.,noun
+442,Penalty,/ËˆpenÉ™lti/,"HÃ¬nh pháº¡t",The penalty for speeding is a fine.,noun
+443,Predict,/prÉªËˆdÉªkt/,"Dá»± Ä‘oÃ¡n",It is difficult to predict the weather.,verb
+444,Productivity,/ËŒprÉ’dÊŒkËˆtÉªvÉ™ti/,"NÄƒng suáº¥t",We need to increase productivity.,noun
+445,Prohibit,/prÉ™ËˆhÉªbÉªt/,"Cáº¥m",Parking is prohibited here.,verb
+446,Providing,/prÉ™ËˆvaÉªdÉªÅ‹/,"Miá»…n lÃ ",I will go providing the weather is good.,conj
+447,Raise,/reÉªz/,"NÃ¢ng lÃªn, tÄƒng",He raised his hand to ask a question.,verb
+448,Rate,/reÉªt/,"Tá»· lá»‡, giÃ¡",The unemployment rate is rising.,noun
+449,Recognition,/ËŒrekÉ™É¡ËˆnÉªÊƒn/,"Sá»± cÃ´ng nháº­n",He deserves recognition for his achievements.,noun
+450,Refuse,/rÉªËˆfjuËz/,"Tá»« chá»‘i",She refused to help me.,verb
+451,Regulation,/ËŒreÉ¡juËˆleÉªÊƒn/,"Quy Ä‘á»‹nh",We have to comply with safety regulations.,noun
+452,Reimburse,/ËŒriËÉªmËˆbÉœËs/,"HoÃ n tráº£",You will be reimbursed for your expenses.,verb
+453,Release,/rÉªËˆliËs/,"PhÃ¡t hÃ nh, giáº£i phÃ³ng",The new album will be released next week.,verb
+454,Reminder,/rÉªËˆmaÉªndÉ™(r)/,"Lá»i nháº¯c nhá»Ÿ",This is a reminder to pay your bill.,noun
+455,Remote,/rÉªËˆmÉ™ÊŠt/,"Xa xÃ´i, tá»« xa",He lives in a remote village.,adj
+456,Reputation,/ËŒrepjuËˆteÉªÊƒn/,"Danh tiáº¿ng",The restaurant has a good reputation.,noun
+457,Requirement,/rÉªËˆkwaÉªÉ™mÉ™nt/,"YÃªu cáº§u",A degree is a requirement for this job.,noun
+458,Resolve,/rÉªËˆzÉ’lv/,"Giáº£i quyáº¿t",We need to resolve this issue as soon as possible.,verb
+459,Respect,/rÉªËˆspekt/,"TÃ´n trá»ng",We should respect the environment.,verb
+460,Respond,/rÉªËˆspÉ’nd/,"Pháº£n há»“i",Please respond to this email.,verb
+461,Result,/rÉªËˆzÊŒlt/,"Káº¿t quáº£",The result was better than expected.,noun
+462,Revenue,/ËˆrevÉ™njuË/,"Doanh thu",The company's revenue increased last year.,noun
+463,Rising,/ËˆraÉªzÉªÅ‹/,"ÄÄƒng tÄƒng",Rising prices are a concern.,adj
+464,Schedule,/ËˆÊƒedjuËl/,"Lá»‹ch trÃ¬nh",The meeting is scheduled for 10 AM.,noun
+465,Seek,/siËk/,"TÃ¬m kiáº¿m",We are seeking new business opportunities.,verb
+466,Select,/sÉªËˆlekt/,"Chá»n",She was selected for the team.,verb
+467,Significant,/sÉªÉ¡ËˆnÉªfÉªkÉ™nt/,"ÄÃ¡ng ká»ƒ",There has been a significant change in the market.,adj
+468,Solution,/sÉ™ËˆluËÊƒn/,"Giáº£i phÃ¡p",We need to find a solution to this problem.,noun
+469,Specific,/spÉ™ËˆsÉªfÉªk/,"Cá»¥ thá»ƒ",Can you be more specific?,adj
+470,Strategy,/ËˆstrÃ¦tÉ™dÊ’i/,"Chiáº¿n lÆ°á»£c",We need a new marketing strategy.,noun
+471,Strict,/strÉªkt/,"NghiÃªm kháº¯c",My parents were very strict.,adj
+472,Submit,/sÉ™bËˆmÉªt/,"Ná»™p",Submit your report by Monday.,verb
+473,Substantial,/sÉ™bËˆstÃ¦nÊƒl/,"ÄÃ¡ng ká»ƒ",He made a substantial donation to the charity.,adj
+474,Suggest,/sÉ™ËˆdÊ’est/,"Gá»£i Ã½",I suggest we go for a walk.,verb
+475,Support,/sÉ™ËˆpÉ”Ët/,"Há»— trá»£",I support your decision.,verb
+476,Target,/ËˆtÉ‘ËÉ¡Éªt/,"Má»¥c tiÃªu",Our target audience is young people.,noun
+477,Technical,/ËˆteknÉªkl/,"Ká»¹ thuáº­t",We have some technical problems.,adj
+478,Temporary,/ËˆtemprÉ™ri/,"Táº¡m thá»i",This is just a temporary solution.,adj
+479,Terminate,/ËˆtÉœËmÉªneÉªt/,"Cháº¥m dá»©t",The contract was terminated.,verb
+480,Track,/trÃ¦k/,"Theo dÃµi",We track our sales daily.,verb
+481,Training,/ËˆtreÉªnÉªÅ‹/,"ÄÃ o táº¡o",We offer training to all employees.,noun
+482,Transaction,/trÃ¦nËˆzÃ¦kÊƒn/,"Giao dá»‹ch",The transaction was processed quickly.,noun
+483,Transfer,/trÃ¦nsËˆf3Ë(r)/,"Chuyá»ƒn",She was transferred to the London office.,verb
+484,Trend,/trend/,"Xu hÆ°á»›ng",There is a trend towards healthier eating.,noun
+485,Typically,/ËˆtÉªpÉªkli/,"ThÃ´ng thÆ°á»ng",Typically, I walk to work.,adv
+486,Unique,/juËˆniËk/,"Äá»™c Ä‘Ã¡o",This is a unique opportunity.,adj
+487,Update,/ËŒÊŒpËˆdeÉªt/,"Cáº­p nháº­t",The software updates automatically.,verb
+488,Useful,/ËˆjuËsfl/,"Há»¯u Ã­ch",This information is very useful.,adj
+489,Utilization,/ËŒjuËtÉ™laÉªËˆzeÉªÊƒn/,"Sá»± sá»­ dá»¥ng",The utilization of resources is important.,noun
+490,Valid,/ËˆvÃ¦lÉªd/,"Há»£p lá»‡",This ticket is valid for one day.,adj
+491,Variety,/vÉ™ËˆraÉªÉ™ti/,"Sá»± Ä‘a dáº¡ng",We offer a variety of services.,noun
+492,Vehicle,/ËˆviËÉ™kl/,"PhÆ°Æ¡ng tiá»‡n",A car is a vehicle.,noun
+493,Verify,/ËˆverÉªfaÉª/,"XÃ¡c minh",Please verify your identity.,verb
+494,Violation,/ËŒvaÉªÉ™ËˆleÉªÊƒn/,"Sá»± vi pháº¡m",This is a violation of the rules.,noun
+495,Visible,/ËˆvÉªzÉ™bl/,"CÃ³ thá»ƒ nhÃ¬n tháº¥y",The stars were visible in the night sky.,adj
+496,Wage,/weÉªdÊ’/,"Tiá»n cÃ´ng",He earns a decent wage.,noun
+497,Warranty,/ËˆwÉ’rÉ™nti/,"Báº£o hÃ nh",The car comes with a 3-year warranty.,noun
+498,Worldwide,/ËŒwÉœËldËˆwaÉªd/,"ToÃ n cáº§u",The company has offices worldwide.,adj
+499,Yield,/jiËld/,"Sáº£n lÆ°á»£ng, lá»£i nhuáº­n",The crop yield was high this year.,noun
+500,Zone,/zÉ™ÊŠn/,"Khu vá»±c",This is a no-parking zone.,noun
+501,Appointment,/É™ËˆpÉ”ÉªntmÉ™nt/,"Cuá»™c háº¹n",I have an appointment with the dentist at 3 PM.,noun
+502,Checkup,/ËˆtÊƒekÊŒp/,"Kiá»ƒm tra sá»©c khá»e",You should have a regular dental checkup.,noun
+503,Diagnosis,/ËŒdaÉªÉ™É¡ËˆnÉ™ÊŠsÉªs/,"Cháº©n Ä‘oÃ¡n",The doctor's diagnosis was correct.,noun
+504,Insurance,/ÉªnËˆÊƒÊŠÉ™rÉ™ns/,"Báº£o hiá»ƒm",Do you have health insurance?,noun
+505,Patient,/ËˆpeÉªÊƒnt/,"Bá»‡nh nhÃ¢n",The doctor is examining a patient.,noun
+506,Pharmacy,/ËˆfÉ‘ËmÉ™si/,"Hiá»‡u thuá»‘c",You can buy medicine at the pharmacy.,noun
+507,Prescription,/prÉªËˆskrÉªpÊƒn/,"ÄÆ¡n thuá»‘c",The doctor gave me a prescription for antibiotics.,noun
+508,Recommend,/ËŒrekÉ™Ëˆmend/,"KhuyÃªn, giá»›i thiá»‡u",Can you recommend a good doctor?,verb
+509,Recovery,/rÉªËˆkÊŒvÉ™ri/,"Sá»± há»“i phá»¥c",He made a full recovery from his illness.,noun
+510,Surgery,/ËˆsÉœËdÊ’É™ri/,"Pháº«u thuáº­t",She needs surgery on her knee.,noun
+511,Symptom,/ËˆsÉªmptÉ™m/,"Triá»‡u chá»©ng",Fever is a symptom of the flu.,noun
+512,Treatment,/ËˆtriËtmÉ™nt/,"Äiá»u trá»‹",He is receiving treatment for cancer.,noun
+513,Annual,/ËˆÃ¦njuÉ™l/,"HÃ ng nÄƒm",The annual checkup is important.,adj
+514,Authorize,/ËˆÉ”ËÎ¸É™raÉªz/,"Cho phÃ©p",The insurance company authorized the treatment.,verb
+515,Concern,/kÉ™nËˆsÉœËn/,"Lo láº¯ng",The doctor expressed concern about his high blood pressure.,noun
+516,Coverage,/ËˆkÊŒvÉ™rÉªdÊ’/,"Pháº¡m vi báº£o hiá»ƒm",Does your policy provide coverage for dental work?,noun
+517,Expiration,/ËŒekspÉ™ËˆreÉªÊƒn/,"Sá»± háº¿t háº¡n",Check the expiration date on the medicine.,noun
+518,Personnel,/ËŒpÉœËsÉ™Ëˆnel/,"NhÃ¢n sá»±",The hospital personnel are very helpful.,noun
+519,Policy,/ËˆpÉ’lÉ™si/,"ChÃ­nh sÃ¡ch",It is hospital policy to wash hands frequently.,noun
+520,Premium,/ËˆpriËmiÉ™m/,"PhÃ­ báº£o hiá»ƒm",The insurance premiums are quite high.,noun
+521,Prevent,/prÉªËˆvent/,"NgÄƒn ngá»«a",A healthy diet can help prevent disease.,verb
+522,Record,/ËˆrekÉ”Ëd/,"Há»“ sÆ¡",The hospital keeps medical records for all patients.,noun
+523,Referral,/rÉªËˆfÉœËrÉ™l/,"Giáº¥y giá»›i thiá»‡u (chuyá»ƒn viá»‡n)",I need a referral to see a specialist.,noun
+524,Serious,/ËˆsÉªÉ™riÉ™s/,"NghiÃªm trá»ng",His condition is serious.,adj
+525,Examination,/ÉªÉ¡ËŒzÃ¦mÉªËˆneÉªÊƒn/,"Sá»± kiá»ƒm tra",The physical examination took an hour.,noun
+526,Hygiene,/ËˆhaÉªdÊ’iËn/,"Vá»‡ sinh",Good dental hygiene is essential.,noun
+527,Instrument,/ËˆÉªnstrÉ™mÉ™nt/,"Dá»¥ng cá»¥",The dentist uses various instruments.,noun
+528,Operator,/ËˆÉ’pÉ™reÉªtÉ™(r)/,"NgÆ°á»i trá»±c tá»•ng Ä‘Ã i, váº­n hÃ nh",Call the operator if you need assistance.,noun
+529,Preventative,/prÉªËˆventÉ™tÉªv/,"PhÃ²ng ngá»«a",Preventative medicine helps you stay healthy.,adj
+530,Receptionist,/rÉªËˆsepÊƒÉ™nÉªst/,"Lá»… tÃ¢n",The receptionist greeted the patients.,noun
+531,Wait,/weÉªt/,"Chá» Ä‘á»£i",We had to wait for a long time.,verb
+532,X-ray,/Ëˆeks reÉª/,"X-quang",The doctor ordered an X-ray of his chest.,noun
+533,Accessible,/É™kËˆsesÉ™bl/,"CÃ³ thá»ƒ tiáº¿p cáº­n",The building is accessible to wheelchairs.,adj
+534,Advance,/É™dËˆvÉ‘Ëns/,"Tiáº¿n bá»™",Medical advances have saved many lives.,noun
+535,Coordinate,/kÉ™ÊŠËˆÉ”ËdÉªneÉªt/,"Phá»‘i há»£p",The team coordinated their efforts.,verb
+536,Detect,/dÉªËˆtekt/,"PhÃ¡t hiá»‡n",Early detection is important.,verb
+537,Evaluate,/ÉªËˆvÃ¦ljueÉªt/,"ÄÃ¡nh giÃ¡",The doctor evaluated his condition.,verb
+538,Monitor,/ËˆmÉ’nÉªtÉ™(r)/,"Theo dÃµi",We need to monitor his heart rate.,verb
+539,Noticeable,/ËˆnÉ™ÊŠtÉªsÉ™bl/,"ÄÃ¡ng chÃº Ã½",There was a noticeable improvement in his health.,adj
+540,Overview,/ËˆÉ™ÊŠvÉ™vjuË/,"Tá»•ng quan",The brochure gives an overview of the hospital's services.,noun
+541,Physical,/ËˆfÉªzÉªkl/,"Thá»ƒ cháº¥t",Regular physical activity is good for you.,adj
+542,Reaction,/riËˆÃ¦kÊƒn/,"Pháº£n á»©ng",He had an allergic reaction to the medicine.,noun
+543,Aware,/É™ËˆweÉ™(r)/,"Nháº­n thá»©c",Be aware of the side effects.,adj
+544,Diet,/ËˆdaÉªÉ™t/,"Cháº¿ Ä‘á»™ Äƒn",A balanced diet is important.,noun
+545,Encourage,/ÉªnËˆkÊŒrÉªdÊ’/,"Khuyáº¿n khÃ­ch",Doctors encourage patients to quit smoking.,verb
+546,Habit,/ËˆhÃ¦bÉªt/,"ThÃ³i quen",Eating late at night is a bad habit.,noun
+547,Maintain,/meÉªnËˆteÉªn/,"Duy trÃ¬",Try to maintain a healthy weight.,verb
+548,Mental,/Ëˆmentl/,"Tinh tháº§n",Mental health is as important as physical health.,adj
+549,Nutritious,/njuËˆtrÉªÊƒÉ™s/,"Dinh dÆ°á»¡ng",Choose nutritious foods.,adj
+550,Reduce,/rÉªËˆdjuËs/,"Giáº£m",Exercise helps reduce stress.,verb
+551,Stress,/stres/,"CÄƒng tháº³ng",Work can cause a lot of stress.,noun
+552,Variety,/vÉ™ËˆraÉªÉ™ti/,"Sá»± Ä‘a dáº¡ng",Eat a variety of fruits and vegetables.,noun
+553,Allow,/É™ËˆlaÊŠ/,"Cho phÃ©p",Patients are allowed to have visitors.,verb
+554,Alternative,/É”ËlËˆtÉœËnÉ™tÉªv/,"Thay tháº¿",Is there an alternative treatment?,noun
+555,Available,/É™ËˆveÉªlÉ™bl/,"CÃ³ sáºµn",The doctor is not available right now.,adj
+556,Charge,/tÊƒÉ‘ËdÊ’/,"PhÃ­",Is there a charge for parking?,noun
+557,Consult,/kÉ™nËˆsÊŒlt/,"Tham kháº£o Ã½ kiáº¿n",Consult your doctor before starting a new diet.,verb
+558,Effective,/ÉªËˆfektÉªv/,"Hiá»‡u quáº£",The treatment was very effective.,adj
+559,Emphasize,/ËˆemfÉ™saÉªz/,"Nháº¥n máº¡nh",The doctor emphasized the need for rest.,verb
+560,Factor,/ËˆfÃ¦ktÉ™(r)/,"Yáº¿u tá»‘",Diet is a key factor in health.,noun
+561,Goal,/É¡É™ÊŠl/,"Má»¥c tiÃªu",Our goal is to improve patient care.,noun
+562,Improvement,/ÉªmËˆpruËvmÉ™nt/,"Sá»± cáº£i thiá»‡n",There is room for improvement.,noun
+563,Interact,/ËŒÉªntÉ™rËˆÃ¦kt/,"TÆ°Æ¡ng tÃ¡c",Some medicines interact with each other.,verb
+564,Manage,/ËˆmÃ¦nÉªdÊ’/,"Quáº£n lÃ½",He manages his diabetes well.,verb
+565,Mission,/ËˆmÉªÊƒn/,"Sá»© má»‡nh",The hospital's mission is to save lives.,noun
+566,Permit,/pÉ™ËˆmÉªt/,"Cho phÃ©p",Visitors are not permitted in the ICU.,verb
+567,Potential,/pÉ™ËˆtenÊƒl/,"Tiá»m nÄƒng",There are potential side effects.,adj
+568,Professional,/prÉ™ËˆfeÊƒÉ™nl/,"ChuyÃªn nghiá»‡p",The staff are very professional.,adj
+569,Project,/ËˆprÉ’dÊ’ekt/,"Dá»± Ã¡n",Wait, this is a research project.,noun
+570,Regardless,/rÉªËˆÉ¡É‘ËdlÉ™s/,"Báº¥t cháº¥p",We treat all patients regardless of ability to pay.,adv
+571,Responsible,/rÉªËˆspÉ’nsÉ™bl/,"Chá»‹u trÃ¡ch nhiá»‡m",Who is responsible for this patient?,adj
+572,Secure,/sÉªËˆkjÊŠÉ™(r)/,"An toÃ n",Keep medicines in a secure place.,adj
+573,Significant,/sÉªÉ¡ËˆnÉªfÉªkÉ™nt/,"ÄÃ¡ng ká»ƒ",There was a significant improvement.,adj
+574,Statement,/ËˆsteÉªtmÉ™nt/,"TuyÃªn bá»‘",The hospital issued a statement.,noun
+575,Suggest,/sÉ™ËˆdÊ’est/,"Gá»£i Ã½",The doctor suggested a new treatment.,verb
+576,Temporary,/ËˆtemprÉ™ri/,"Táº¡m thá»i",The pain is temporary.,adj
+577,Typical,/ËˆtÉªpÉªkl/,"Äiá»ƒn hÃ¬nh",These are typical symptoms.,adj
+578,Usually,/ËˆjuËÊ’uÉ™li/,"ThÆ°á»ng xuyÃªn",I usually see the doctor once a year.,adv
+579,Volunteer,/ËŒvÉ’lÉ™nËˆtÉªÉ™(r)/,"TÃ¬nh nguyá»‡n viÃªn",She volunteers at the nursing home.,verb
+580,Alert,/É™ËˆlÉœËt/,"Cáº£nh giÃ¡c",Be alert for signs of infection.,adj
+581,Comfortable,/ËˆkÊŒmfÉ™tÉ™bl/,"Thoáº£i mÃ¡i",Are you comfortable?,adj
+582,Detailed,/ËˆdiËteÉªld/,"Chi tiáº¿t",The doctor gave a detailed explanation.,adj
+583,Emergency,/iËˆmÉœËdÊ’É™nsi/,"Kháº©n cáº¥p",In an emergency, call 911.,noun
+584,Expert,/ËˆekspÉœËt/,"ChuyÃªn gia",She is an expert in tropical diseases.,noun
+585,General,/ËˆdÊ’enrÉ™l/,"Chung",The general health of the population is improving.,adj
+586,Hesitant,/ËˆhezÉªtÉ™nt/,"Do dá»±",He was hesitant to take the medicine.,adj
+587,Immediate,/ÉªËˆmiËdiÉ™t/,"Ngay láº­p tá»©c",He needs immediate attention.,adj
+588,Impossible,/ÉªmËˆpÉ’sÉ™bl/,"KhÃ´ng thá»ƒ",It is impossible to cure this disease.,adj
+589,Necessary,/ËˆnesÉ™sÉ™ri/,"Cáº§n thiáº¿t",Surgery may be necessary.,adj
+590,Observe,/É™bËˆzÉœËv/,"Quan sÃ¡t",The students observed the surgery.,verb
+591,Obvious,/ËˆÉ’bviÉ™s/,"RÃµ rÃ ng",It is obvious that he is sick.,adj
+592,Optimistic,/ËŒÉ’ptÉªËˆmÉªstÉªk/,"Láº¡c quan",She is optimistic about her recovery.,adj
+593,Patiently,/ËˆpeÉªÊƒntli/,"KiÃªn nháº«n",The patients waited patiently.,adv
+594,Permanent,/ËˆpÉœËmÉ™nÉ™nt/,"VÄ©nh viá»…n",The damage may be permanent.,adj
+595,Popular,/ËˆpÉ’pjÉ™lÉ™(r)/,"Phá»• biáº¿n",This is a popular remedy.,adj
+596,Possible,/ËˆpÉ’sÉ™bl/,"CÃ³ thá»ƒ",Is it possible to see a doctor today?,adj
+597,Private,/ËˆpraÉªvÉ™t/,"Bao máº­t, riÃªng tÆ°",This is a private hospital.,adj
+598,Rapid,/ËˆrÃ¦pÉªd/,"Nhanh chÃ³ng",He made a rapid recovery.,adj
+599,Reasonable,/ËˆriËznÉ™bl/,"Há»£p lÃ½",The cost was reasonable.,adj
+600,Urgent,/ËˆÉœËdÊ’É™nt/,"Kháº©n cáº¥p",This is an urgent matter.,adj
