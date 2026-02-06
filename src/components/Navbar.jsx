@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Heart, BookOpen, PieChart, Zap, Gamepad2 } from 'lucide-react';
+import { Heart, BookOpen, PieChart, Zap, Gamepad2, Crown } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Navbar = () => {
@@ -10,7 +10,8 @@ const Navbar = () => {
         { path: '/', label: 'Home', icon: Heart },
         { path: '/study', label: 'Study', icon: BookOpen },
         { path: '/quiz', label: 'Quiz', icon: Zap },
-        { path: '/meme-game', label: 'Game', icon: Gamepad2 },
+        { path: '/meme-game', label: 'Meme', icon: Gamepad2 },
+        { path: '/king-game', label: 'King', icon: Crown },
         { path: '/stats', label: 'Stats', icon: PieChart },
     ];
 

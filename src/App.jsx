@@ -10,6 +10,7 @@ const Study = lazy(() => import('./pages/Study'));
 const Stats = lazy(() => import('./pages/Stats'));
 const QuizPage = lazy(() => import('./pages/QuizPage'));
 const MemeGamePage = lazy(() => import('./pages/MemeGamePage'));
+const KingOfVocabPage = lazy(() => import('./pages/KingOfVocabPage'));
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
               <Route path="/study" element={<Study />} />
               <Route path="/quiz" element={<QuizPage />} />
               <Route path="/meme-game" element={<MemeGamePage />} />
+              <Route path="/king-game" element={<KingOfVocabPage />} />
               <Route path="/stats" element={<Stats />} />
             </Routes>
           </Suspense>
