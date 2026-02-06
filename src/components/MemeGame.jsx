@@ -28,7 +28,7 @@ const MemeGame = () => {
         showFeedback, streak, roundComplete, difficulty, particles,
         showConfetti, availablePowerUps, shieldActive, doublePoints, frozenTime,
         newAchievement, gameMode, lastMeme, coins, stats, currentMeme, totalRounds,
-        
+
         // Actions
         setDifficulty, setGameMode, setGameState, startGame, continueGame, handleWordClick,
         usePowerUp, checkSavedGame
@@ -36,7 +36,7 @@ const MemeGame = () => {
 
     const handleShare = async () => {
         const text = `🎮 TOEIC Love Tracker - Meme Challenge\nScore: ${score}\nLevel: ${getLevelFromXP(stats.totalXP || 0)}\nStreak: ${stats.maxStreak}\n\nCan you beat me? #TOEICLoveTracker`;
-        
+
         if (navigator.share) {
             try {
                 await navigator.share({
@@ -70,7 +70,7 @@ const MemeGame = () => {
                     <ArrowLeft /> Back
                 </motion.button>
                 <div style={{ display: 'flex', gap: '1rem' }}>
-                     {/* Leaderboard Button */}
+                    {/* Leaderboard Button */}
                     <motion.button
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
@@ -139,7 +139,7 @@ const MemeGame = () => {
                             shieldActive={shieldActive}
                         />
 
-                        {currentMeme ? (
+                        {currentMeme && currentMeme.correctWords ? (
                             <>
                                 <MemeCard
                                     currentRound={currentRound}
@@ -148,7 +148,7 @@ const MemeGame = () => {
                                     currentMeme={currentMeme}
                                     selectedWords={selectedWords}
                                 />
-                                
+
                                 <GameControls
                                     availablePowerUps={availablePowerUps}
                                     usePowerUp={usePowerUp}
@@ -163,8 +163,8 @@ const MemeGame = () => {
                                 />
                             </>
                         ) : (
-                             // Fallback in case of data error handled in hook but render keeps going briefly
-                            <div className="glass-panel" style={{textAlign: 'center', padding: '2rem'}}>
+                            // Fallback in case of data error handled in hook but render keeps going briefly
+                            <div className="glass-panel" style={{ textAlign: 'center', padding: '2rem' }}>
                                 Loading next round...
                             </div>
                         )}
@@ -177,7 +177,7 @@ const MemeGame = () => {
                         gameState={gameState}
                         score={score}
                         stats={stats}
-                        lastMeme={lastMeme || currentMeme} 
+                        lastMeme={lastMeme || currentMeme}
                         startGame={startGame}
                         setGameState={setGameState}
                         shareResult={handleShare}

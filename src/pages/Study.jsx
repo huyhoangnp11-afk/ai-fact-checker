@@ -236,25 +236,44 @@ const Study = () => {
                     </motion.div>
                 </AnimatePresence>
 
-                <button
-                    onClick={handleNext}
-                    disabled={currentIndex === vocabData.length - 1}
-                    style={{
-                        opacity: currentIndex === vocabData.length - 1 ? 0.3 : 1,
-                        cursor: currentIndex === vocabData.length - 1 ? 'default' : 'pointer',
-                        padding: 'clamp(8px, 2vw, 10px)',
-                        background: 'var(--glass-bg)',
-                        borderRadius: '50%',
-                        boxShadow: 'var(--glass-shadow)',
-                        minWidth: '44px',
-                        minHeight: '44px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}
-                >
-                    <ChevronRight size={28} color={currentIndex === vocabData.length - 1 ? 'var(--text-muted)' : 'var(--primary)'} />
-                </button>
+                <div style={{ position: 'relative' }}>
+                    <button
+                        onClick={handleNext}
+                        disabled={currentIndex === vocabData.length - 1}
+                        style={{
+                            opacity: currentIndex === vocabData.length - 1 ? 0.5 : 1,
+                            cursor: currentIndex === vocabData.length - 1 ? 'not-allowed' : 'pointer',
+                            padding: 'clamp(8px, 2vw, 10px)',
+                            background: 'var(--glass-bg)',
+                            borderRadius: '50%',
+                            boxShadow: 'var(--glass-shadow)',
+                            minWidth: '44px',
+                            minHeight: '44px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                    >
+                        <ChevronRight size={28} color={currentIndex === vocabData.length - 1 ? 'var(--text-muted)' : 'var(--primary)'} />
+                    </button>
+                    {currentIndex === vocabData.length - 1 && (
+                        <div style={{
+                            position: 'absolute',
+                            top: '110%',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            background: 'rgba(0,0,0,0.8)',
+                            color: 'white',
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            fontSize: '0.7rem',
+                            whiteSpace: 'nowrap',
+                            pointerEvents: 'none'
+                        }}>
+                            Hết từ vựng
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Action Buttons */}

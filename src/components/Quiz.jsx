@@ -14,6 +14,7 @@ const Quiz = () => {
     const [showTip, setShowTip] = useState(false);
     const [quizHistory, setQuizHistory] = useState([]);
     const [showHistory, setShowHistory] = useState(false);
+    const [retryKey, setRetryKey] = useState(0);
 
     // Load quiz history on mount
     useEffect(() => {
@@ -42,7 +43,7 @@ const Quiz = () => {
             };
         });
         setQuestions(selected);
-    }, [vocabData, loading]);
+    }, [vocabData, loading, retryKey]);
 
     // Reset hints when question changes
     useEffect(() => {
@@ -91,6 +92,15 @@ const Quiz = () => {
         setQuizHistory(trimmedHistory);
     };
 
+    const handleRetry = () => {
+        setQuestions([]);
+        setCurrentQuestionIndex(0);
+        setScore(0);
+        setShowResult(false);
+        setSelectedOption(null);
+        setRetryKey(prev => prev + 1); // Trigger re-generation
+    };
+
     // Calculate stats
     const calculateStats = () => {
         if (quizHistory.length === 0) return null;
@@ -100,11 +110,6 @@ const Quiz = () => {
         const totalQuestions = quizHistory.reduce((sum, q) => sum + q.total, 0);
         const avgPercentage = Math.round((totalScore / totalQuestions) * 100);
         const bestScore = Math.max(...quizHistory.map(q => q.percentage || Math.round((q.score / q.total) * 100)));
-
-        // Calculate streak (consecutive days)
-        const today = new Date().toDateString();
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
 
         return {
             totalQuizzes,
@@ -196,7 +201,7 @@ const Quiz = () => {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             className="btn-primary"
-                            onClick={() => window.location.reload()}
+                            onClick={handleRetry}
                             style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                         >
                             <RotateCcw size={18} />

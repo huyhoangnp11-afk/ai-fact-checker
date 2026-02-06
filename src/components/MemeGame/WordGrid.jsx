@@ -7,7 +7,7 @@ const WordGrid = ({ options, selectedWords, currentMeme, handleWordClick }) => {
             <AnimatePresence>
                 {options.map((word, index) => {
                     const isSelected = selectedWords.includes(word);
-                    const isCorrect = currentMeme.correctWords.includes(word);
+                    const isCorrect = currentMeme.correctWords?.includes(word);
                     const meaning = currentMeme.meanings?.[word];
 
                     return (
