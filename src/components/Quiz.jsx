@@ -55,6 +55,14 @@ const Quiz = () => {
         setShowTip(false);
     }, [currentQuestionIndex]);
 
+    // Auto-speak word when question changes
+    useEffect(() => {
+        if (questions.length > 0 && questions[currentQuestionIndex]) {
+            const timer = setTimeout(() => speak(questions[currentQuestionIndex].word), 300);
+            return () => clearTimeout(timer);
+        }
+    }, [currentQuestionIndex, questions, speak]);
+
     const handleSpeak = () => {
         speak(questions[currentQuestionIndex]?.word);
     };

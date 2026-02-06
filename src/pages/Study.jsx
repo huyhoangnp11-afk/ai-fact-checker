@@ -3,6 +3,7 @@ import Flashcard from '../components/Flashcard';
 import { useVocabulary } from '../context/VocabularyContext';
 import { ChevronLeft, ChevronRight, RotateCcw, CheckCircle, BookOpen, Target } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import useTTS from '../hooks/useTTS';
 
 const Study = () => {
     const { vocabData, loading, error } = useVocabulary();
@@ -72,6 +73,19 @@ const Study = () => {
             }));
         }
     }, []);
+
+    // TTS hook for auto pronunciation
+    const { speak } = useTTS();
+
+    // Auto-speak word when it changes
+    useEffect(() => {
+        if (vocabData.length > 0 && vocabData[currentIndex]) {
+            // Small delay for card animation
+            const timer = setTimeout(() => speak(vocabData[currentIndex].word), 300);
+            return () => clearTimeout(timer);
+        }
+    }, [currentIndex, vocabData, speak]);
+
 
     if (loading) return <div style={{ textAlign: 'center', marginTop: '3rem' }}>Loading vocabulary...</div>;
     if (error) return <div style={{ textAlign: 'center', marginTop: '3rem', color: 'red' }}>Error: {error}</div>;

@@ -1,10 +1,24 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Volume2 } from 'lucide-react';
 import useTTS from '../../hooks/useTTS';
 
 const WordGrid = ({ options, selectedWords, currentMeme, handleWordClick }) => {
     const { speak, isSupported } = useTTS();
+    const prevSelectedWordsRef = useRef([]);
+
+    // Auto-speak newly selected correct words
+    useEffect(() => {
+        const newWords = selectedWords.filter(w => !prevSelectedWordsRef.current.includes(w));
+        const correctNewWords = newWords.filter(w => currentMeme.correctWords?.includes(w));
+
+        if (correctNewWords.length > 0) {
+            // Speak the first newly correct word
+            speak(correctNewWords[0]);
+        }
+
+        prevSelectedWordsRef.current = selectedWords;
+    }, [selectedWords, currentMeme.correctWords, speak]);
 
     const handleSpeak = (e, word) => {
         e.stopPropagation();
