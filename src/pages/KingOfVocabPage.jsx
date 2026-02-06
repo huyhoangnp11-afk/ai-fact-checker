@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Crown, Timer, Zap, Trophy, RotateCcw, Play, Star, Flame, Sparkles } from 'lucide-react';
+import { Crown, Timer, Zap, Trophy, RotateCcw, Play, Star, Flame, Sparkles, Volume2 } from 'lucide-react';
 import Confetti from 'react-confetti';
 import useKingGame from '../hooks/useKingGame';
+import useTTS from '../hooks/useTTS';
 
 const KingOfVocabPage = () => {
     const {
@@ -36,13 +37,25 @@ const KingOfVocabPage = () => {
     // Screen shake state for timeout
     const [screenShake, setScreenShake] = useState(false);
 
+    // TTS hook for pronunciation
+    const { speak, isSupported: ttsSupported } = useTTS();
+
     // Handle timeout shake effect
-    React.useEffect(() => {
+    useEffect(() => {
         if (gameState === 'lost') {
             setScreenShake(true);
             setTimeout(() => setScreenShake(false), 500);
         }
     }, [gameState]);
+
+    // Auto-speak when correct answer is given
+    useEffect(() => {
+        if (gameState === 'roundEnd' && currentWord && feedbackMessage?.includes('🎉')) {
+            // Short delay for better UX
+            const timer = setTimeout(() => speak(currentWord.word), 300);
+            return () => clearTimeout(timer);
+        }
+    }, [gameState, currentWord, feedbackMessage, speak]);
 
     if (loading) {
         return (
@@ -577,8 +590,30 @@ const KingOfVocabPage = () => {
                     <h2 style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>
                         {feedbackMessage || 'Thua rồi!'}
                     </h2>
-                    <p style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
+                    <p style={{ color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                         Đáp án đúng: <strong style={{ color: 'var(--primary)' }}>{currentWord?.word}</strong>
+                        {ttsSupported && (
+                            <motion.button
+                                whileHover={{ scale: 1.15 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => speak(currentWord?.word)}
+                                style={{
+                                    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                                    border: 'none',
+                                    borderRadius: '50%',
+                                    width: '28px',
+                                    height: '28px',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: 'pointer',
+                                    color: 'white'
+                                }}
+                                title="Nghe phát âm"
+                            >
+                                <Volume2 size={14} />
+                            </motion.button>
+                        )}
                     </p>
                     <p style={{ marginBottom: '1.5rem' }}>
                         Điểm: <strong>{score} XP</strong> | Từ đã ghép: <strong>{wordsCompleted}</strong>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useVocabulary } from '../context/VocabularyContext';
 import { motion } from 'framer-motion';
 import { Volume2, Lightbulb, HelpCircle, TrendingUp, Award, RotateCcw, History } from 'lucide-react';
+import useTTS from '../hooks/useTTS';
 
 const Quiz = () => {
     const { vocabData, loading, error } = useVocabulary();
@@ -15,6 +16,9 @@ const Quiz = () => {
     const [quizHistory, setQuizHistory] = useState([]);
     const [showHistory, setShowHistory] = useState(false);
     const [retryKey, setRetryKey] = useState(0);
+
+    // TTS hook for better voice selection
+    const { speak } = useTTS();
 
     // Load quiz history on mount
     useEffect(() => {
@@ -52,10 +56,7 @@ const Quiz = () => {
     }, [currentQuestionIndex]);
 
     const handleSpeak = () => {
-        const utterance = new SpeechSynthesisUtterance(questions[currentQuestionIndex].word);
-        utterance.lang = 'en-US';
-        utterance.rate = 0.7; // Even slower for quiz
-        window.speechSynthesis.speak(utterance);
+        speak(questions[currentQuestionIndex]?.word);
     };
 
     const handleOptionClick = (option) => {

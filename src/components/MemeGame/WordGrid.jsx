@@ -1,7 +1,16 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Volume2 } from 'lucide-react';
+import useTTS from '../../hooks/useTTS';
 
 const WordGrid = ({ options, selectedWords, currentMeme, handleWordClick }) => {
+    const { speak, isSupported } = useTTS();
+
+    const handleSpeak = (e, word) => {
+        e.stopPropagation();
+        speak(word);
+    };
+
     return (
         <div className="word-options-grid">
             <AnimatePresence>
@@ -35,8 +44,38 @@ const WordGrid = ({ options, selectedWords, currentMeme, handleWordClick }) => {
                                 minHeight: '44px'
                             }}
                         >
-                            <div style={{ fontSize: 'clamp(0.8rem, 3vw, 0.95rem)' }}>
+                            <div style={{
+                                fontSize: 'clamp(0.8rem, 3vw, 0.95rem)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '0.5rem'
+                            }}>
                                 {isSelected && isCorrect && '✓ '}{word}
+                                {/* Speaker button for correct words */}
+                                {isSelected && isCorrect && isSupported && (
+                                    <motion.span
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        whileHover={{ scale: 1.2 }}
+                                        whileTap={{ scale: 0.9 }}
+                                        onClick={(e) => handleSpeak(e, word)}
+                                        style={{
+                                            background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                                            borderRadius: '50%',
+                                            width: '24px',
+                                            height: '24px',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            cursor: 'pointer',
+                                            marginLeft: '0.25rem'
+                                        }}
+                                        title="Nghe phát âm"
+                                    >
+                                        <Volume2 size={14} color="white" />
+                                    </motion.span>
+                                )}
                             </div>
                             {isSelected && meaning && (
                                 <motion.div

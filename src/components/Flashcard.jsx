@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Volume2, Lightbulb } from 'lucide-react';
+import useTTS from '../hooks/useTTS';
 
 const Flashcard = ({ data }) => {
     const [isFlipped, setIsFlipped] = useState(false);
     const [showTranslation, setShowTranslation] = useState(false);
     const [showTip, setShowTip] = useState(false);
+    const { speak, isSupported } = useTTS();
 
     // Reset states when vocab changes
     useEffect(() => {
@@ -20,10 +22,7 @@ const Flashcard = ({ data }) => {
 
     const handleSpeak = (e) => {
         e.stopPropagation();
-        const utterance = new SpeechSynthesisUtterance(data.word);
-        utterance.lang = 'en-US';
-        utterance.rate = 0.8; // Slower for beginners
-        window.speechSynthesis.speak(utterance);
+        speak(data.word);
     };
 
     return (
